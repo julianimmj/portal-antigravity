@@ -382,17 +382,23 @@ st.markdown("""
 
     /* ── Responsive ───────────────────── */
     @media (max-width: 768px) {
+        .hero-portal .logo {
+            max-height: 200px !important;
+        }
+        .hero-portal .hero-text {
+            padding: 1.5rem 0.8rem 0.8rem !important;
+        }
         .hero-portal h1 {
-            font-size: 2rem !important;
+            font-size: 1.8rem !important;
+            letter-spacing: -1px !important;
+            white-space: nowrap !important;
         }
         .hero-portal .tagline {
-            font-size: 0.9rem !important;
-        }
-        .hero-portal .logo {
-            font-size: 3rem !important;
+            font-size: 0.78rem !important;
+            line-height: 1.4 !important;
         }
         .stats-bar {
-            gap: 1.2rem !important;
+            gap: 1rem !important;
             flex-wrap: wrap;
         }
         .stats-bar .stat .num {
