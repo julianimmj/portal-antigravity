@@ -12,7 +12,7 @@ from datetime import datetime
 # ─────────────────────────────────────────
 st.set_page_config(
     page_title="Trader Support · Portal de Análise Financeira",
-    page_icon="🚀",
+    page_icon="📈",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -131,10 +131,16 @@ st.markdown("""
         margin-bottom: 1rem;
     }
     .hero-portal .logo {
-        font-size: 4rem;
-        margin-bottom: 0.5rem;
-        display: block;
+        margin-bottom: 0.8rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         animation: float 3s ease-in-out infinite;
+    }
+    .hero-portal .logo svg {
+        width: 100px;
+        height: 100px;
+        filter: drop-shadow(0 0 20px rgba(124, 77, 255, 0.3));
     }
     @keyframes float {
         0%, 100% { transform: translateY(0px); }
@@ -304,18 +310,21 @@ st.markdown("""
         align-items: center;
         justify-content: center;
         gap: 8px;
-        padding: 12px 28px;
+        padding: 14px 28px;
         border-radius: 12px;
-        font-weight: 700;
-        font-size: 0.9rem;
+        font-weight: 800;
+        font-size: 0.95rem;
         text-decoration: none;
         color: #fff;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border: none;
+        border: 1px solid rgba(255,255,255,0.15);
         cursor: pointer;
         width: 100%;
         text-align: center;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.5px;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        background-image: linear-gradient(rgba(255,255,255,0.1), rgba(0,0,0,0.1));
+        background-blend-mode: overlay;
     }
     .launch-btn:hover {
         transform: translateY(-2px);
@@ -396,7 +405,61 @@ st.markdown("""
 # ─────────────────────────────────────────
 st.markdown("""
 <div class="hero-portal">
-    <span class="logo">🚀</span>
+    <span class="logo">
+        <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+            <!-- Bull (left, green, rising) -->
+            <g transform="translate(20, 10)">
+                <!-- Body -->
+                <ellipse cx="45" cy="65" rx="32" ry="22" fill="rgba(0,230,118,0.15)" stroke="#00e676" stroke-width="1.5"/>
+                <!-- Head -->
+                <circle cx="78" cy="48" r="14" fill="rgba(0,230,118,0.2)" stroke="#00e676" stroke-width="1.5"/>
+                <!-- Horns -->
+                <path d="M72 38 L65 18 L73 32" fill="none" stroke="#00e676" stroke-width="2" stroke-linecap="round"/>
+                <path d="M84 38 L91 18 L83 32" fill="none" stroke="#00e676" stroke-width="2" stroke-linecap="round"/>
+                <!-- Eye -->
+                <circle cx="80" cy="46" r="2" fill="#00e676"/>
+                <!-- Legs -->
+                <line x1="28" y1="85" x2="24" y2="100" stroke="#00e676" stroke-width="2" stroke-linecap="round"/>
+                <line x1="38" y1="85" x2="36" y2="100" stroke="#00e676" stroke-width="2" stroke-linecap="round"/>
+                <line x1="52" y1="85" x2="54" y2="100" stroke="#00e676" stroke-width="2" stroke-linecap="round"/>
+                <line x1="62" y1="85" x2="64" y2="100" stroke="#00e676" stroke-width="2" stroke-linecap="round"/>
+                <!-- Tail -->
+                <path d="M13 60 Q2 45 8 30" fill="none" stroke="#00e676" stroke-width="1.5" stroke-linecap="round"/>
+            </g>
+            <!-- VS divider -->
+            <g transform="translate(92, 45)">
+                <text x="0" y="0" font-family="Inter,sans-serif" font-size="14" font-weight="800" fill="rgba(255,255,255,0.2)" text-anchor="middle" dominant-baseline="middle">VS</text>
+            </g>
+            <!-- Bear (right, red, falling) -->
+            <g transform="translate(105, 10)">
+                <!-- Body -->
+                <ellipse cx="40" cy="60" rx="30" ry="24" fill="rgba(255,23,68,0.12)" stroke="#ff1744" stroke-width="1.5"/>
+                <!-- Head -->
+                <circle cx="10" cy="42" r="15" fill="rgba(255,23,68,0.15)" stroke="#ff1744" stroke-width="1.5"/>
+                <!-- Ears -->
+                <circle cx="2" cy="30" r="5" fill="rgba(255,23,68,0.15)" stroke="#ff1744" stroke-width="1.2"/>
+                <circle cx="18" cy="30" r="5" fill="rgba(255,23,68,0.15)" stroke="#ff1744" stroke-width="1.2"/>
+                <!-- Eye -->
+                <circle cx="7" cy="40" r="2" fill="#ff1744"/>
+                <!-- Snout -->
+                <ellipse cx="4" cy="48" rx="5" ry="3" fill="none" stroke="#ff1744" stroke-width="1"/>
+                <!-- Legs -->
+                <line x1="22" y1="82" x2="18" y2="100" stroke="#ff1744" stroke-width="2" stroke-linecap="round"/>
+                <line x1="32" y1="82" x2="30" y2="100" stroke="#ff1744" stroke-width="2" stroke-linecap="round"/>
+                <line x1="48" y1="82" x2="50" y2="100" stroke="#ff1744" stroke-width="2" stroke-linecap="round"/>
+                <line x1="58" y1="82" x2="60" y2="100" stroke="#ff1744" stroke-width="2" stroke-linecap="round"/>
+                <!-- Claws -->
+                <path d="M3 52 L-5 65 L0 60 L-3 72" fill="none" stroke="#ff1744" stroke-width="1.5" stroke-linecap="round"/>
+            </g>
+            <!-- Subtle glow effects -->
+            <circle cx="65" cy="60" r="40" fill="url(#greenGlow)" opacity="0.3"/>
+            <circle cx="145" cy="60" r="40" fill="url(#redGlow)" opacity="0.3"/>
+            <defs>
+                <radialGradient id="greenGlow"><stop offset="0%" stop-color="#00e676" stop-opacity="0.15"/><stop offset="100%" stop-color="transparent" stop-opacity="0"/></radialGradient>
+                <radialGradient id="redGlow"><stop offset="0%" stop-color="#ff1744" stop-opacity="0.15"/><stop offset="100%" stop-color="transparent" stop-opacity="0"/></radialGradient>
+            </defs>
+        </svg>
+    </span>
     <h1>Trader Support</h1>
     <p class="tagline">
         Plataforma de <b>Análise Financeira</b> — Screeners inteligentes para
