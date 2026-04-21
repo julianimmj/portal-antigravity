@@ -131,21 +131,17 @@ st.markdown("""
         margin-bottom: 1rem;
     }
     .hero-portal .logo {
-        margin-bottom: 0.8rem;
+        margin-bottom: 0.5rem;
         display: flex;
         justify-content: center;
         align-items: center;
-        animation: float 3s ease-in-out infinite;
     }
     .hero-portal .logo img {
-        width: 160px;
-        height: 160px;
-        filter: drop-shadow(0 0 30px rgba(124, 77, 255, 0.25));
-        border-radius: 16px;
-    }
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
+        width: 100%;
+        max-width: 600px;
+        height: auto;
+        border-radius: 12px;
+        opacity: 0.95;
     }
     .hero-portal h1 {
         font-size: 3.2rem;
