@@ -126,36 +126,46 @@ st.markdown("""
     /* ── Hero Section ─────────────────── */
     .hero-portal {
         text-align: center;
-        padding: 0.5rem 0 0;
+        padding: 0;
         position: relative;
-        margin-bottom: 0;
+        margin-bottom: 0.5rem;
     }
     .hero-portal .logo {
         margin: 0;
         padding: 0;
         width: 100%;
-        max-height: 150px;
+        max-height: 250px;
         overflow: hidden;
         display: flex;
         justify-content: center;
         align-items: center;
         line-height: 0;
+        position: relative;
     }
     .hero-portal .logo img {
         width: 100%;
         max-width: 100%;
         height: auto;
         object-fit: cover;
-        object-position: center 55%;
+        object-position: center 40%;
         display: block;
         margin: 0;
+    }
+    .hero-portal .hero-text {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 2rem 1rem 1rem;
+        background: linear-gradient(to top, rgba(6,6,19,0.95) 0%, rgba(6,6,19,0.6) 50%, transparent 100%);
+        z-index: 2;
     }
     .hero-portal h1 {
         font-size: 3.2rem;
         font-weight: 900;
         letter-spacing: -2px;
-        margin: -0.5rem 0 0 0;
-        padding-top: 0;
+        margin: 0;
+        padding: 0;
         background: linear-gradient(135deg, #ffffff 0%, #7c4dff 40%, #00c8ff 70%, #ffffff 100%);
         background-size: 300% 300%;
         -webkit-background-clip: text;
@@ -168,9 +178,9 @@ st.markdown("""
         100% { background-position: 0% 50%; }
     }
     .hero-portal .tagline {
-        font-size: 1.15rem;
-        color: rgba(255, 255, 255, 0.5);
-        margin-top: 0.8rem;
+        font-size: 1.05rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin-top: 0.4rem;
         font-weight: 300;
         letter-spacing: 0.5px;
     }
@@ -420,12 +430,14 @@ st.markdown(f"""
 <div class="hero-portal">
     <span class="logo">
         <img src="data:image/png;base64,{_img_b64}" alt="Trading Chart" />
+        <div class="hero-text">
+            <h1>Trader Support</h1>
+            <p class="tagline">
+                Plataforma de <b>Análise Financeira</b> — Screeners inteligentes para
+                <b>Ações</b>, <b>Opções</b>, <b>Crypto</b> e <b>Smart Money</b>
+            </p>
+        </div>
     </span>
-    <h1>Trader Support</h1>
-    <p class="tagline">
-        Plataforma de <b>Análise Financeira</b> — Screeners inteligentes para
-        <b>Ações</b>, <b>Opções</b>, <b>Crypto</b> e <b>Smart Money</b>
-    </p>
 </div>
 """, unsafe_allow_html=True)
 
