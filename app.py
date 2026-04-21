@@ -126,28 +126,32 @@ st.markdown("""
     /* ── Hero Section ─────────────────── */
     .hero-portal {
         text-align: center;
-        padding: 3rem 2rem 2rem;
+        padding: 1rem 0 0.5rem;
         position: relative;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
     }
     .hero-portal .logo {
-        margin-bottom: 0.5rem;
+        margin-bottom: 0;
         display: flex;
         justify-content: center;
         align-items: center;
+        line-height: 0;
     }
     .hero-portal .logo img {
         width: 100%;
-        max-width: 600px;
+        max-width: 960px;
         height: auto;
-        border-radius: 12px;
-        opacity: 0.95;
+        border-radius: 0;
+        opacity: 1;
+        display: block;
+        margin: 0 auto;
     }
     .hero-portal h1 {
         font-size: 3.2rem;
         font-weight: 900;
         letter-spacing: -2px;
-        margin: 0;
+        margin: -0.5rem 0 0 0;
+        padding-top: 0;
         background: linear-gradient(135deg, #ffffff 0%, #7c4dff 40%, #00c8ff 70%, #ffffff 100%);
         background-size: 300% 300%;
         -webkit-background-clip: text;
