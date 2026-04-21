@@ -1,5 +1,5 @@
 """
-app.py — Portal Antigravity
+app.py — Trader Support
 Hub profissional para acesso a todas as aplicações de análise financeira.
 Hospedado no Streamlit Cloud — apenas links, sem alterar nenhuma aplicação.
 """
@@ -11,7 +11,7 @@ from datetime import datetime
 # Page Config
 # ─────────────────────────────────────────
 st.set_page_config(
-    page_title="Antigravity · Portal de Análise Financeira",
+    page_title="Trader Support · Portal de Análise Financeira",
     page_icon="🚀",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -194,6 +194,18 @@ st.markdown("""
         margin-top: 2px;
     }
 
+    /* ── Card Grid — uniform sizing ────── */
+    div[data-testid="stHorizontalBlock"] {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 1.5rem !important;
+        align-items: stretch !important;
+    }
+    div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
+        width: 100% !important;
+        flex: none !important;
+    }
+
     /* ── App Card ──────────────────────── */
     .app-card {
         border-radius: 20px;
@@ -203,9 +215,10 @@ st.markdown("""
         border: 1px solid rgba(255,255,255,0.06);
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         height: 100%;
-        min-height: 320px;
+        min-height: 360px;
         display: flex;
         flex-direction: column;
+        box-sizing: border-box;
     }
     .app-card:hover {
         transform: translateY(-6px);
@@ -243,8 +256,9 @@ st.markdown("""
         font-size: 0.88rem;
         line-height: 1.6;
         color: rgba(255,255,255,0.6);
-        flex-grow: 1;
+        flex: 1 1 auto;
         margin-bottom: 1.2rem;
+        min-height: 80px;
     }
     .app-card .card-tags {
         display: flex;
@@ -359,12 +373,18 @@ st.markdown("""
         .stats-bar .stat .num {
             font-size: 1.3rem !important;
         }
+        div[data-testid="stHorizontalBlock"] {
+            grid-template-columns: 1fr !important;
+        }
         .app-card {
             min-height: auto !important;
             padding: 1.5rem !important;
         }
         .app-card .card-title {
             font-size: 1.2rem !important;
+        }
+        .app-card .card-desc {
+            min-height: auto !important;
         }
     }
 </style>
@@ -377,7 +397,7 @@ st.markdown("""
 st.markdown("""
 <div class="hero-portal">
     <span class="logo">🚀</span>
-    <h1>Antigravity</h1>
+    <h1>Trader Support</h1>
     <p class="tagline">
         Plataforma de <b>Análise Financeira</b> — Screeners inteligentes para
         <b>Ações</b>, <b>Opções</b>, <b>Crypto</b> e <b>Smart Money</b>
@@ -495,7 +515,7 @@ with st.expander("⚡ Stack Tecnológico", expanded=False):
 year = datetime.now().year
 st.markdown(f"""
 <div class="portal-footer">
-    <div class="brand">Antigravity</div>
+    <div class="brand">Trader Support</div>
     <div class="copy">
         © {year} · Powered by
         <a href="https://github.com/julianimmj" target="_blank">julianimmj</a>
