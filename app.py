@@ -138,9 +138,10 @@ st.markdown("""
         animation: float 3s ease-in-out infinite;
     }
     .hero-portal .logo img {
-        width: 120px;
-        height: 120px;
-        filter: drop-shadow(0 0 20px rgba(124, 77, 255, 0.3));
+        width: 160px;
+        height: 160px;
+        filter: drop-shadow(0 0 30px rgba(124, 77, 255, 0.25));
+        border-radius: 16px;
     }
     @keyframes float {
         0%, 100% { transform: translateY(0px); }
@@ -404,45 +405,17 @@ st.markdown("""
 # ─────────────────────────────────────────
 # Hero Section
 # ─────────────────────────────────────────
-import base64
+import base64 as _b64
+from pathlib import Path as _Path
 
-_SVG_ICON = '''<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-<line x1="20" y1="20" x2="20" y2="105" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
-<line x1="60" y1="20" x2="60" y2="105" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
-<line x1="100" y1="20" x2="100" y2="105" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
-<line x1="140" y1="20" x2="140" y2="105" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
-<line x1="180" y1="20" x2="180" y2="105" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
-<line x1="15" y1="30" x2="185" y2="30" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
-<line x1="15" y1="55" x2="185" y2="55" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
-<line x1="15" y1="80" x2="185" y2="80" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
-<line x1="15" y1="105" x2="185" y2="105" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
-<defs><linearGradient id="tg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ff1744" stop-opacity="0.6"/><stop offset="40%" stop-color="#ffab00" stop-opacity="0.4"/><stop offset="100%" stop-color="#00e676" stop-opacity="0.8"/></linearGradient></defs>
-<path d="M20 90 Q50 85 55 70 T75 55 Q85 50 95 58 T120 40 Q140 30 160 25 L180 22" fill="none" stroke="url(#tg)" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
-<line x1="32" y1="62" x2="32" y2="95" stroke="#ff1744" stroke-width="1.2" stroke-linecap="round"/>
-<rect x="27" y="70" width="10" height="18" rx="1.5" fill="#ff1744" opacity="0.9"/>
-<line x1="52" y1="55" x2="52" y2="88" stroke="#ff1744" stroke-width="1.2" stroke-linecap="round"/>
-<rect x="47" y="60" width="10" height="20" rx="1.5" fill="#ff1744" opacity="0.9"/>
-<line x1="72" y1="45" x2="72" y2="82" stroke="#00e676" stroke-width="1.2" stroke-linecap="round"/>
-<rect x="67" y="50" width="10" height="22" rx="1.5" fill="#00e676" opacity="0.9"/>
-<line x1="92" y1="38" x2="92" y2="72" stroke="#00e676" stroke-width="1.2" stroke-linecap="round"/>
-<rect x="87" y="42" width="10" height="20" rx="1.5" fill="#00e676" opacity="0.9"/>
-<line x1="112" y1="35" x2="112" y2="65" stroke="#ff1744" stroke-width="1.2" stroke-linecap="round"/>
-<rect x="107" y="40" width="10" height="16" rx="1.5" fill="#ff1744" opacity="0.9"/>
-<line x1="132" y1="22" x2="132" y2="55" stroke="#00e676" stroke-width="1.2" stroke-linecap="round"/>
-<rect x="127" y="26" width="10" height="22" rx="1.5" fill="#00e676" opacity="0.9"/>
-<line x1="152" y1="18" x2="152" y2="48" stroke="#00e676" stroke-width="1.2" stroke-linecap="round"/>
-<rect x="147" y="20" width="10" height="20" rx="1.5" fill="#00e676" opacity="0.9"/>
-<line x1="172" y1="14" x2="172" y2="42" stroke="#00e676" stroke-width="1.2" stroke-linecap="round"/>
-<rect x="167" y="16" width="10" height="18" rx="1.5" fill="#00e676" opacity="0.9"/>
-<path d="M178 12 L182 6 L186 12" fill="none" stroke="#00e676" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>'''
-
-_svg_b64 = base64.b64encode(_SVG_ICON.encode()).decode()
+_HERO_IMG = _Path(__file__).parent / "assets" / "hero_chart.png"
+with open(_HERO_IMG, "rb") as _f:
+    _img_b64 = _b64.b64encode(_f.read()).decode()
 
 st.markdown(f"""
 <div class="hero-portal">
     <span class="logo">
-        <img src="data:image/svg+xml;base64,{_svg_b64}" alt="Candlestick Chart" />
+        <img src="data:image/png;base64,{_img_b64}" alt="Trading Chart" />
     </span>
     <h1>Trader Support</h1>
     <p class="tagline">
