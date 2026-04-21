@@ -314,27 +314,28 @@ st.markdown("""
         border-radius: 12px;
         font-weight: 800;
         font-size: 0.95rem;
-        text-decoration: none;
-        color: #fff;
+        text-decoration: none !important;
+        color: #ffffff !important;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 1px solid rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.2);
         cursor: pointer;
         width: 100%;
         text-align: center;
         letter-spacing: 0.5px;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-        background-image: linear-gradient(rgba(255,255,255,0.1), rgba(0,0,0,0.1));
-        background-blend-mode: overlay;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.6);
     }
     .launch-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-        color: #fff;
-        text-decoration: none;
+        color: #ffffff !important;
+        text-decoration: none !important;
         filter: brightness(1.15);
     }
+    .launch-btn:visited,
+    .launch-btn:focus,
     .launch-btn:active {
-        transform: translateY(0px);
+        color: #ffffff !important;
+        text-decoration: none !important;
     }
 
     /* ── Footer ───────────────────────── */
@@ -407,56 +408,62 @@ st.markdown("""
 <div class="hero-portal">
     <span class="logo">
         <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-            <!-- Bull (left, green, rising) -->
-            <g transform="translate(20, 10)">
-                <!-- Body -->
-                <ellipse cx="45" cy="65" rx="32" ry="22" fill="rgba(0,230,118,0.15)" stroke="#00e676" stroke-width="1.5"/>
-                <!-- Head -->
-                <circle cx="78" cy="48" r="14" fill="rgba(0,230,118,0.2)" stroke="#00e676" stroke-width="1.5"/>
-                <!-- Horns -->
-                <path d="M72 38 L65 18 L73 32" fill="none" stroke="#00e676" stroke-width="2" stroke-linecap="round"/>
-                <path d="M84 38 L91 18 L83 32" fill="none" stroke="#00e676" stroke-width="2" stroke-linecap="round"/>
-                <!-- Eye -->
-                <circle cx="80" cy="46" r="2" fill="#00e676"/>
-                <!-- Legs -->
-                <line x1="28" y1="85" x2="24" y2="100" stroke="#00e676" stroke-width="2" stroke-linecap="round"/>
-                <line x1="38" y1="85" x2="36" y2="100" stroke="#00e676" stroke-width="2" stroke-linecap="round"/>
-                <line x1="52" y1="85" x2="54" y2="100" stroke="#00e676" stroke-width="2" stroke-linecap="round"/>
-                <line x1="62" y1="85" x2="64" y2="100" stroke="#00e676" stroke-width="2" stroke-linecap="round"/>
-                <!-- Tail -->
-                <path d="M13 60 Q2 45 8 30" fill="none" stroke="#00e676" stroke-width="1.5" stroke-linecap="round"/>
-            </g>
-            <!-- VS divider -->
-            <g transform="translate(92, 45)">
-                <text x="0" y="0" font-family="Inter,sans-serif" font-size="14" font-weight="800" fill="rgba(255,255,255,0.2)" text-anchor="middle" dominant-baseline="middle">VS</text>
-            </g>
-            <!-- Bear (right, red, falling) -->
-            <g transform="translate(105, 10)">
-                <!-- Body -->
-                <ellipse cx="40" cy="60" rx="30" ry="24" fill="rgba(255,23,68,0.12)" stroke="#ff1744" stroke-width="1.5"/>
-                <!-- Head -->
-                <circle cx="10" cy="42" r="15" fill="rgba(255,23,68,0.15)" stroke="#ff1744" stroke-width="1.5"/>
-                <!-- Ears -->
-                <circle cx="2" cy="30" r="5" fill="rgba(255,23,68,0.15)" stroke="#ff1744" stroke-width="1.2"/>
-                <circle cx="18" cy="30" r="5" fill="rgba(255,23,68,0.15)" stroke="#ff1744" stroke-width="1.2"/>
-                <!-- Eye -->
-                <circle cx="7" cy="40" r="2" fill="#ff1744"/>
-                <!-- Snout -->
-                <ellipse cx="4" cy="48" rx="5" ry="3" fill="none" stroke="#ff1744" stroke-width="1"/>
-                <!-- Legs -->
-                <line x1="22" y1="82" x2="18" y2="100" stroke="#ff1744" stroke-width="2" stroke-linecap="round"/>
-                <line x1="32" y1="82" x2="30" y2="100" stroke="#ff1744" stroke-width="2" stroke-linecap="round"/>
-                <line x1="48" y1="82" x2="50" y2="100" stroke="#ff1744" stroke-width="2" stroke-linecap="round"/>
-                <line x1="58" y1="82" x2="60" y2="100" stroke="#ff1744" stroke-width="2" stroke-linecap="round"/>
-                <!-- Claws -->
-                <path d="M3 52 L-5 65 L0 60 L-3 72" fill="none" stroke="#ff1744" stroke-width="1.5" stroke-linecap="round"/>
-            </g>
-            <!-- Subtle glow effects -->
-            <circle cx="65" cy="60" r="40" fill="url(#greenGlow)" opacity="0.3"/>
-            <circle cx="145" cy="60" r="40" fill="url(#redGlow)" opacity="0.3"/>
+            <!-- Grid lines (subtle) -->
+            <line x1="20" y1="20" x2="20" y2="105" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+            <line x1="60" y1="20" x2="60" y2="105" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+            <line x1="100" y1="20" x2="100" y2="105" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+            <line x1="140" y1="20" x2="140" y2="105" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+            <line x1="180" y1="20" x2="180" y2="105" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+            <line x1="15" y1="30" x2="185" y2="30" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/>
+            <line x1="15" y1="55" x2="185" y2="55" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/>
+            <line x1="15" y1="80" x2="185" y2="80" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/>
+            <line x1="15" y1="105" x2="185" y2="105" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+
+            <!-- Trend line (ascending with pull-back) -->
+            <path d="M20 90 Q50 85 55 70 T75 55 Q85 50 95 58 T120 40 Q140 30 160 25 L180 22"
+                  fill="none" stroke="url(#trendGrad)" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+
+            <!-- Bearish candle 1 -->
+            <line x1="32" y1="62" x2="32" y2="95" stroke="#ff1744" stroke-width="1.2" stroke-linecap="round"/>
+            <rect x="27" y="70" width="10" height="18" rx="1.5" fill="#ff1744" opacity="0.9"/>
+
+            <!-- Bearish candle 2 -->
+            <line x1="52" y1="55" x2="52" y2="88" stroke="#ff1744" stroke-width="1.2" stroke-linecap="round"/>
+            <rect x="47" y="60" width="10" height="20" rx="1.5" fill="#ff1744" opacity="0.9"/>
+
+            <!-- Bullish candle 3 (reversal) -->
+            <line x1="72" y1="45" x2="72" y2="82" stroke="#00e676" stroke-width="1.2" stroke-linecap="round"/>
+            <rect x="67" y="50" width="10" height="22" rx="1.5" fill="#00e676" opacity="0.9"/>
+
+            <!-- Bullish candle 4 -->
+            <line x1="92" y1="38" x2="92" y2="72" stroke="#00e676" stroke-width="1.2" stroke-linecap="round"/>
+            <rect x="87" y="42" width="10" height="20" rx="1.5" fill="#00e676" opacity="0.9"/>
+
+            <!-- Bearish candle 5 (pullback) -->
+            <line x1="112" y1="35" x2="112" y2="65" stroke="#ff1744" stroke-width="1.2" stroke-linecap="round"/>
+            <rect x="107" y="40" width="10" height="16" rx="1.5" fill="#ff1744" opacity="0.9"/>
+
+            <!-- Bullish candle 6 (breakout) -->
+            <line x1="132" y1="22" x2="132" y2="55" stroke="#00e676" stroke-width="1.2" stroke-linecap="round"/>
+            <rect x="127" y="26" width="10" height="22" rx="1.5" fill="#00e676" opacity="0.9"/>
+
+            <!-- Bullish candle 7 (continuation) -->
+            <line x1="152" y1="18" x2="152" y2="48" stroke="#00e676" stroke-width="1.2" stroke-linecap="round"/>
+            <rect x="147" y="20" width="10" height="20" rx="1.5" fill="#00e676" opacity="0.9"/>
+
+            <!-- Bullish candle 8 -->
+            <line x1="172" y1="14" x2="172" y2="42" stroke="#00e676" stroke-width="1.2" stroke-linecap="round"/>
+            <rect x="167" y="16" width="10" height="18" rx="1.5" fill="#00e676" opacity="0.9"/>
+
+            <!-- Up arrow (bull signal) -->
+            <path d="M178 12 L182 6 L186 12" fill="none" stroke="#00e676" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
             <defs>
-                <radialGradient id="greenGlow"><stop offset="0%" stop-color="#00e676" stop-opacity="0.15"/><stop offset="100%" stop-color="transparent" stop-opacity="0"/></radialGradient>
-                <radialGradient id="redGlow"><stop offset="0%" stop-color="#ff1744" stop-opacity="0.15"/><stop offset="100%" stop-color="transparent" stop-opacity="0"/></radialGradient>
+                <linearGradient id="trendGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#ff1744" stop-opacity="0.6"/>
+                    <stop offset="40%" stop-color="#ffab00" stop-opacity="0.4"/>
+                    <stop offset="100%" stop-color="#00e676" stop-opacity="0.8"/>
+                </linearGradient>
             </defs>
         </svg>
     </span>
