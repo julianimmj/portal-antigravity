@@ -93,6 +93,42 @@ APPS = [
         "tags": ["Crypto", "Bitcoin", "DeFi"],
         "status": "online",
     },
+    {
+        "id": "multistoch",
+        "title": "Screener MultiStoch",
+        "subtitle": "Confluência Multi-Timeframe",
+        "description": "Algoritmo que monitora múltiplos tempos gráficos e analisa o fluxo financeiro através da Transformada Discreta de Fourier para encontrar reversões.",
+        "url": "https://multistoch-screener.streamlit.app/",
+        "icon": "📈",
+        "accent": "#6366f1",
+        "gradient": "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)",
+        "tags": ["Stoch 80", "FMFI", "Quant"],
+        "status": "online",
+    },
+    {
+        "id": "dev1",
+        "title": "Aplicação em desenvolvimento",
+        "subtitle": "Em breve",
+        "description": "Nova ferramenta analítica em fase de construção. Aguarde as próximas atualizações do portal.",
+        "url": "#",
+        "icon": "🚧",
+        "accent": "#475569",
+        "gradient": "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+        "tags": ["Em Breve"],
+        "status": "offline",
+    },
+    {
+        "id": "dev2",
+        "title": "Aplicação em desenvolvimento",
+        "subtitle": "Em breve",
+        "description": "Nova ferramenta analítica em fase de construção. Aguarde as próximas atualizações do portal.",
+        "url": "#",
+        "icon": "🚧",
+        "accent": "#475569",
+        "gradient": "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+        "tags": ["Em Breve"],
+        "status": "offline",
+    },
 ]
 
 
@@ -479,22 +515,48 @@ def render_card(app: dict):
         f'<span class="tag">{t}</span>' for t in app["tags"]
     )
 
+    status_html = ""
+    if app['status'] == "online":
+        status_html = f'''
+        <div class="card-status">
+            <span class="status-dot"></span>
+            Online
+        </div>
+        '''
+    else:
+        status_html = f'''
+        <div class="card-status">
+            <span class="status-dot" style="background: #ef4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.5); animation: none;"></span>
+            Em Desenvolvimento
+        </div>
+        '''
+
+    btn_html = ""
+    if app['status'] == "online":
+        btn_html = f'''
+        <a href="{app['url']}" target="_blank" class="launch-btn"
+           style="background:{app['accent']};">
+            Acessar Aplicação →
+        </a>
+        '''
+    else:
+        btn_html = f'''
+        <a href="{app['url']}" class="launch-btn"
+           style="background:transparent; color: rgba(255,255,255,0.4) !important; border: 1px solid rgba(255,255,255,0.1); cursor: not-allowed; text-shadow: none;">
+            Em Construção
+        </a>
+        '''
+
     st.markdown(f"""
     <div class="app-card" style="background: {app['gradient']};">
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:{app['accent']};border-radius:20px 20px 0 0;"></div>
         <span class="card-icon">{app['icon']}</span>
         <div class="card-title">{app['title']}</div>
         <div class="card-subtitle" style="color:{app['accent']};">{app['subtitle']}</div>
-        <div class="card-status">
-            <span class="status-dot"></span>
-            Online
-        </div>
+        {status_html}
         <div class="card-desc">{app['description']}</div>
         <div class="card-tags">{tags_html}</div>
-        <a href="{app['url']}" target="_blank" class="launch-btn"
-           style="background:{app['accent']};">
-            Acessar Aplicação →
-        </a>
+        {btn_html}
     </div>
     """, unsafe_allow_html=True)
 
@@ -518,6 +580,17 @@ with col5:
     render_card(APPS[4])
 with col6:
     render_card(APPS[5])
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# Row 3
+col7, col8, col9 = st.columns(3, gap="medium")
+with col7:
+    render_card(APPS[6])
+with col8:
+    render_card(APPS[7])
+with col9:
+    render_card(APPS[8])
 
 
 # ─────────────────────────────────────────
