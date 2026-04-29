@@ -98,7 +98,7 @@ APPS = [
         "title": "Screener MultiStoch",
         "subtitle": "Confluência Multi-Timeframe",
         "description": "Algoritmo que monitora múltiplos tempos gráficos e analisa o fluxo financeiro através da Transformada Discreta de Fourier para encontrar reversões.",
-        "url": "https://multistoch-screener.streamlit.app/",
+        "url": "https://confluencescreener.streamlit.app/",
         "icon": "📈",
         "accent": "#6366f1",
         "gradient": "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)",
