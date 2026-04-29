@@ -517,35 +517,15 @@ def render_card(app: dict):
 
     status_html = ""
     if app['status'] == "online":
-        status_html = f'''
-        <div class="card-status">
-            <span class="status-dot"></span>
-            Online
-        </div>
-        '''
+        status_html = f'<div class="card-status"><span class="status-dot"></span>Online</div>'
     else:
-        status_html = f'''
-        <div class="card-status">
-            <span class="status-dot" style="background: #ef4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.5); animation: none;"></span>
-            Em Desenvolvimento
-        </div>
-        '''
+        status_html = f'<div class="card-status"><span class="status-dot" style="background: #ef4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.5); animation: none;"></span>Em Desenvolvimento</div>'
 
     btn_html = ""
     if app['status'] == "online":
-        btn_html = f'''
-        <a href="{app['url']}" target="_blank" class="launch-btn"
-           style="background:{app['accent']};">
-            Acessar Aplicação →
-        </a>
-        '''
+        btn_html = f'<a href="{app["url"]}" target="_blank" class="launch-btn" style="background:{app["accent"]};">Acessar Aplicação →</a>'
     else:
-        btn_html = f'''
-        <a href="{app['url']}" class="launch-btn"
-           style="background:transparent; color: rgba(255,255,255,0.4) !important; border: 1px solid rgba(255,255,255,0.1); cursor: not-allowed; text-shadow: none;">
-            Em Construção
-        </a>
-        '''
+        btn_html = f'<a href="{app["url"]}" class="launch-btn" style="background:transparent; color: rgba(255,255,255,0.4) !important; border: 1px solid rgba(255,255,255,0.1); cursor: not-allowed; text-shadow: none;">Em Construção</a>'
 
     st.markdown(f"""
     <div class="app-card" style="background: {app['gradient']};">
