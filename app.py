@@ -634,9 +634,7 @@ st.markdown(f"""
 <div class="portal-footer">
     <div class="brand">Trader Support</div>
     <div class="copy">
-        © {year} · Powered by
-        <a href="https://github.com/julianimmj" target="_blank">julianimmj</a>
-        · Dados via Yahoo Finance
+        © {year} · Dados via Yahoo Finance
     </div>
 </div>
 """, unsafe_allow_html=True)
