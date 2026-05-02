@@ -161,11 +161,7 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
 
-    /* Hide default Streamlit elements */
-    #MainMenu {visibility: hidden;}
-    /* header {visibility: hidden;} */
-    footer {visibility: hidden;}
-    .stDeployButton {display: none;}
+    /* Streamlit branding — gerenciado pelo bloco hide_streamlit_style */
 
     /* ── Animated background ──────────── */
     .stApp {
