@@ -259,6 +259,13 @@ st.markdown("""
         flex: none !important;
     }
 
+    /* Tablet and Portrait/Vertical Desktop Screens (widths between 769px and 1200px) */
+    @media (min-width: 769px) and (max-width: 1200px) {
+        div[data-testid="stHorizontalBlock"] {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+    }
+
     /* ── App Card ──────────────────────── */
     .app-card {
         border-radius: 20px;
@@ -537,36 +544,11 @@ def render_card(app: dict):
     """, unsafe_allow_html=True)
 
 
-# Row 1
-col1, col2, col3 = st.columns(3, gap="medium")
-with col1:
-    render_card(APPS[0])
-with col2:
-    render_card(APPS[1])
-with col3:
-    render_card(APPS[2])
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-# Row 2
-col4, col5, col6 = st.columns(3, gap="medium")
-with col4:
-    render_card(APPS[3])
-with col5:
-    render_card(APPS[4])
-with col6:
-    render_card(APPS[5])
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-# Row 3
-col7, col8, col9 = st.columns(3, gap="medium")
-with col7:
-    render_card(APPS[6])
-with col8:
-    render_card(APPS[7])
-with col9:
-    render_card(APPS[8])
+# Dynamic App Grid
+cols = st.columns(len(APPS), gap="medium")
+for i, app in enumerate(APPS):
+    with cols[i]:
+        render_card(app)
 
 
 # ─────────────────────────────────────────
