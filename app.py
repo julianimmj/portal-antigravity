@@ -61,7 +61,7 @@ APPS = [
         "id": "mfi",
         "title": "Screener MFI",
         "subtitle": "Money Flow Index · Fluxo Financeiro",
-        "description": "Screener baseado no indicador MFI com timeframe customizado de 8 dias. Detecta crossovers de sobrecompra (>86) e sobrevenda (<24) em ações e BDRs.",
+        "description": "Screener baseado no indicador MFI com timeframe customizado de 5 dias. Detecta crossovers de sobrecompra (>88) e sobrevenda (<18) em ações e BDRs.",
         "url": "https://screener-mfi.streamlit.app/",
         "icon": "💹",
         "accent": "#00c8ff",
@@ -586,7 +586,7 @@ with st.expander("⚡ Stack Tecnológico", expanded=False):
     with t2:
         st.markdown("""
         **🧠 Algoritmos**
-        - Money Flow Index (8D custom)
+        - Money Flow Index (5D custom)
         - Black-Scholes pricing
         - Smart Money Concepts (SMC)
         - Free Cash Flow valuation
