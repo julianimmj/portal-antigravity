@@ -134,7 +134,7 @@ APPS = [
         "title": "Opções Assimétricas",
         "subtitle": "Screener de Proteção Assimétrica · B3",
         "description": "Screener inteligente que identifica opções com IV historicamente barato (Percentile ≤35%) e monta estruturas Strap/Strip assimétricas com proteção clássica (2:1) ou total (cobertura dinâmica) para o mercado B3.",
-        "url": "https://opcoes-assimetricas.streamlit.app/",
+        "url": "https://opassimetricas.streamlit.app/",
         "icon": "🛡️",
         "accent": "#00d2ff",
         "gradient": "linear-gradient(135deg, #0a192f 0%, #172a45 50%, #1a1a3e 100%)",
