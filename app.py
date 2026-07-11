@@ -141,6 +141,30 @@ APPS = [
         "tags": ["Opções", "Strap/Strip", "Proteção"],
         "status": "online",
     },
+    {
+        "id": "future-1",
+        "title": "Espaço Reservado",
+        "subtitle": "Em Desenvolvimento · 🚧",
+        "description": "Este espaço está reservado para uma nova aplicação de inteligência quantitativa e análise de mercado. Em breve novidades!",
+        "url": "#",
+        "icon": "🚧",
+        "accent": "#f59e0b",
+        "gradient": "linear-gradient(135deg, #121214 0%, #1e1e24 100%)",
+        "tags": ["Novidade", "Futuro", "Quant"],
+        "status": "offline",
+    },
+    {
+        "id": "future-2",
+        "title": "Espaço Reservado",
+        "subtitle": "Em Desenvolvimento · 🏗️",
+        "description": "Ambiente preparado para futuras ferramentas de rastreamento de fluxo institucional e algoritmos proprietários de alta performance.",
+        "url": "#",
+        "icon": "🏗️",
+        "accent": "#ef4444",
+        "gradient": "linear-gradient(135deg, #121214 0%, #1e1e24 100%)",
+        "tags": ["Fluxo", "Futuro", "Algoritmos"],
+        "status": "offline",
+    },
 ]
 
 
@@ -502,7 +526,7 @@ st.markdown(f"""
 st.markdown(f"""
 <div class="stats-bar">
     <div class="stat">
-        <div class="num">{len(APPS)}</div>
+        <div class="num">{len([a for a in APPS if a['status'] == "online"])}</div>
         <div class="lbl">Aplicações</div>
     </div>
     <div class="stat">
