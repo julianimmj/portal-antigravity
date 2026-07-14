@@ -143,7 +143,7 @@ APPS = [
     },
     {
         "id": "fairprice",
-        "title": "FairPrice",
+        "title": "Fair Price",
         "subtitle": "Valuation Algorítmico · B3",
         "description": "Motor completo de valuation de ações brasileiras selecionando dinamicamente entre o Gordon Growth Model (DDM), FCD 2 Estágios (DCF) ou Múltiplos Relativos, com filtros de segurança contra endividamento e insolvência.",
         "url": "https://fair-price.streamlit.app/",
