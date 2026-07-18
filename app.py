@@ -61,12 +61,12 @@ APPS = [
         "id": "mfi",
         "title": "Screener MFI",
         "subtitle": "Money Flow Index · Fluxo Financeiro",
-        "description": "Screener baseado no indicador MFI com timeframe customizado de 5 dias. Detecta crossovers de sobrecompra (>88) e sobrevenda (<18) em ações e BDRs.",
+        "description": "Screener baseado no indicador MFI duplo com filtros cruzados (MFI1 7D e MFI2 5D). Elimina falsos positivos exigindo confluência de sobrecompra e sobrevenda em ambos os timeframes.",
         "url": "https://screener-mfi.streamlit.app/",
         "icon": "💹",
         "accent": "#00c8ff",
         "gradient": "linear-gradient(135deg, #0a0a2e 0%, #1a0a3e 100%)",
-        "tags": ["MFI", "Fluxo", "Crossover"],
+        "tags": ["MFI Duplo", "Fluxo Cruzado", "Confirmação"],
         "status": "online",
     },
     {
@@ -596,25 +596,28 @@ with st.expander("⚡ Stack Tecnológico", expanded=False):
     t1, t2, t3 = st.columns(3)
     with t1:
         st.markdown("""
-        **📡 Dados**
-        - Yahoo Finance API
-        - CoinGecko / Binance
-        - Atualização diária (GitHub Actions)
+        **📡 Dados & Integrações**
+        - Yahoo Finance API & Fundamentus
+        - CoinGecko / Binance WebSockets
+        - Cotações em tempo real e dados fundamentalistas históricos
+        - Pipelines automatizados (GitHub Actions Cron)
         """)
     with t2:
         st.markdown("""
-        **🧠 Algoritmos**
-        - Money Flow Index (5D custom)
-        - Black-Scholes pricing
-        - Smart Money Concepts (SMC)
-        - Free Cash Flow valuation
+        **🧠 Algoritmos & Modelos**
+        - **Valuation**: Gordon (DDM), FCD/DCF de 2 Estágios, Graham, FCF Yield, Bazin
+        - **Institucional (SMC)**: Order Blocks, FVG, BOS/CHOCH, Liquidity Sweeps
+        - **Opções**: Black-Scholes (IV/Gregas), Estruturas Assimétricas (Strap/Strip)
+        - **MFI Duplo**: Filtro de confluência temporal cruzada (7D & 5D)
+        - **Quant**: Transformada Discreta de Fourier (FMFI) & MultiStoch MTF
         """)
     with t3:
         st.markdown("""
-        **🚀 Infraestrutura**
-        - Streamlit Cloud
-        - GitHub CI/CD
-        - Python · Pandas · Plotly
+        **🚀 Infraestrutura & Stack**
+        - Streamlit Cloud (Hospedagem & Frontend)
+        - GitHub Actions CI/CD (Agendamento & Deploy)
+        - Python · Pandas · NumPy · SciPy
+        - Visualizações com Plotly & HTML/CSS responsivo
         """)
 
 
