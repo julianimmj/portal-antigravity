@@ -217,14 +217,74 @@ def inject_css():
             backdrop-filter: blur(10px);
         }
 
-        /* ── Sidebar Styling ─── */
+        /* ── Sidebar Container & Background ─── */
         section[data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #0a0a1f 0%, #0d0d24 100%);
-            border-right: 1px solid rgba(124, 77, 255, 0.1);
+            background: linear-gradient(180deg, #090919 0%, #0d0d26 100%) !important;
+            border-right: 1px solid rgba(124, 77, 255, 0.15) !important;
         }
-        section[data-testid="stSidebar"] .stRadio label {
-            font-size: 0.95rem !important;
-            padding: 0.4rem 0 !important;
+
+        /* ── Premium Sidebar Radio Menu Items ─── */
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] > div {
+            gap: 0.45rem !important;
+        }
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label {
+            background: rgba(255, 255, 255, 0.02) !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            border-radius: 12px !important;
+            padding: 0.7rem 1rem !important;
+            margin-bottom: 0.1rem !important;
+            cursor: pointer !important;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            width: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        /* Hide standard radio circle */
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label > div:first-child {
+            display: none !important;
+        }
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p {
+            font-size: 0.92rem !important;
+            font-weight: 500 !important;
+            color: rgba(255, 255, 255, 0.65) !important;
+            margin: 0 !important;
+            letter-spacing: 0.2px !important;
+        }
+
+        /* Hover State */
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover {
+            background: rgba(124, 77, 255, 0.12) !important;
+            border-color: rgba(124, 77, 255, 0.35) !important;
+            transform: translateX(4px) !important;
+        }
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover p {
+            color: #ffffff !important;
+        }
+
+        /* Checked / Active Menu State */
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked),
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label[aria-checked="true"] {
+            background: linear-gradient(135deg, rgba(124, 77, 255, 0.28) 0%, rgba(0, 200, 255, 0.18) 100%) !important;
+            border: 1px solid rgba(124, 77, 255, 0.6) !important;
+            box-shadow: 0 4px 20px rgba(124, 77, 255, 0.25) !important;
+            position: relative !important;
+        }
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked)::before,
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label[aria-checked="true"]::before {
+            content: '' !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 15% !important;
+            bottom: 15% !important;
+            width: 4px !important;
+            background: #7c4dff !important;
+            border-radius: 0 4px 4px 0 !important;
+            box-shadow: 0 0 10px #7c4dff !important;
+        }
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked) p,
+        section[data-testid="stSidebar"] div[data-testid="stRadio"] label[aria-checked="true"] p {
+            color: #ffffff !important;
+            font-weight: 700 !important;
         }
 
         /* ── Ticker Bar ─── */
@@ -305,14 +365,16 @@ def inject_css():
             background: linear-gradient(135deg, rgba(12, 12, 30, 0.8) 0%, rgba(18, 18, 45, 0.6) 100%);
             border: 1px solid rgba(124, 77, 255, 0.1);
             border-radius: 16px;
-            padding: 1.5rem;
+            padding: 1.2rem;
             margin-bottom: 1rem;
+            height: 100%;
+            box-sizing: border-box;
         }
         .section-title {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 700;
             color: rgba(255,255,255,0.85);
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -320,24 +382,24 @@ def inject_css():
 
         /* ── News Items ─── */
         .news-item {
-            padding: 0.8rem 0;
+            padding: 0.6rem 0;
             border-bottom: 1px solid rgba(255,255,255,0.05);
             transition: background 0.2s ease;
         }
         .news-item:hover {
             background: rgba(124, 77, 255, 0.05);
             border-radius: 8px;
-            padding-left: 0.5rem;
+            padding-left: 0.4rem;
         }
         .news-item:last-child {
             border-bottom: none;
         }
         .news-title {
-            font-size: 0.88rem;
+            font-size: 0.84rem;
             font-weight: 500;
             color: rgba(255,255,255,0.8);
-            line-height: 1.4;
-            margin-bottom: 0.3rem;
+            line-height: 1.35;
+            margin-bottom: 0.2rem;
         }
         .news-title a {
             color: rgba(255,255,255,0.8) !important;
@@ -347,7 +409,7 @@ def inject_css():
             color: #7c4dff !important;
         }
         .news-meta {
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             color: rgba(255,255,255,0.35);
         }
         .news-source {
@@ -357,13 +419,13 @@ def inject_css():
 
         /* ── Rates Table ─── */
         .rates-section {
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
         }
         .rates-country {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 700;
             color: rgba(255,255,255,0.6);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
             display: flex;
             align-items: center;
             gap: 0.4rem;
@@ -372,23 +434,23 @@ def inject_css():
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.45rem 0;
+            padding: 0.35rem 0;
             border-bottom: 1px solid rgba(255,255,255,0.04);
         }
         .rate-name {
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             color: rgba(255,255,255,0.65);
         }
         .rate-value {
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 700;
             color: #fff;
             font-family: 'JetBrains Mono', monospace;
         }
         .rate-note {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             font-weight: 500;
-            margin-left: 0.4rem;
+            margin-left: 0.3rem;
         }
 
         /* ── App Cards (Compact) ─── */
@@ -503,24 +565,24 @@ def inject_css():
         .cal-event {
             display: flex;
             align-items: center;
-            gap: 0.7rem;
-            padding: 0.6rem 0;
+            gap: 0.6rem;
+            padding: 0.5rem 0;
             border-bottom: 1px solid rgba(255,255,255,0.04);
         }
         .cal-event:last-child { border-bottom: none; }
-        .cal-flag { font-size: 1.1rem; }
+        .cal-flag { font-size: 1rem; }
         .cal-name {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: rgba(255,255,255,0.75);
             flex: 1;
         }
         .cal-importance {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             font-weight: 700;
-            padding: 2px 8px;
+            padding: 2px 6px;
             border-radius: 4px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
         }
         .cal-importance.alta {
             background: rgba(239, 68, 68, 0.15);
@@ -536,22 +598,22 @@ def inject_css():
         /* ── Fear & Greed Gauge ─── */
         .fg-gauge {
             text-align: center;
-            padding: 1rem 0;
+            padding: 0.5rem 0;
         }
         .fg-value {
-            font-size: 3rem;
+            font-size: 2.4rem;
             font-weight: 900;
             font-family: 'JetBrains Mono', monospace;
         }
         .fg-label {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            margin-top: 0.3rem;
+            margin-top: 0.2rem;
         }
         .fg-sublabel {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: rgba(255,255,255,0.35);
-            margin-top: 0.2rem;
+            margin-top: 0.1rem;
         }
 
         /* ── Movers Table ─── */
@@ -559,22 +621,22 @@ def inject_css():
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.4rem 0;
+            padding: 0.35rem 0;
             border-bottom: 1px solid rgba(255,255,255,0.04);
         }
         .mover-ticker {
-            font-size: 0.82rem;
+            font-size: 0.78rem;
             font-weight: 700;
             color: rgba(255,255,255,0.8);
             font-family: 'JetBrains Mono', monospace;
         }
         .mover-price {
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             color: rgba(255,255,255,0.5);
             font-family: 'JetBrains Mono', monospace;
         }
         .mover-change {
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
         }
@@ -658,7 +720,7 @@ def page_dashboard():
     from modules.economic_calendar import get_economic_calendar
     from modules.fear_greed import get_fear_greed
 
-    # ── Metric Cards ──
+    # ── Metric Cards (Topo) ──
     market = get_market_overview()
     main_metrics = ["IBOV", "S&P 500", "NASDAQ", "DÓLAR", "BTC"]
     cols = st.columns(len(main_metrics))
@@ -672,10 +734,10 @@ def page_dashboard():
 
     st_html('<br>')
 
-    # ── Main Content: Notícias + Agenda | Juros + Sentimento ──
-    col_main, col_side = st.columns([3, 1])
+    # ── Main Layout: Coluna Esquerda [3] | Coluna Direita [2] ──
+    col_left, col_right = st.columns([3, 2])
 
-    with col_main:
+    with col_left:
         # Notícias e Agenda lado a lado
         col_news, col_agenda = st.columns(2)
 
@@ -685,7 +747,7 @@ def page_dashboard():
             tab_br, tab_world = st.tabs(["🇧🇷 Brasil", "🌎 Mundo"])
 
             with tab_br:
-                news_br = get_news("Brasil", max_items=6)
+                news_br = get_news("Brasil", max_items=5)
                 if news_br:
                     news_html = ""
                     for item in news_br:
@@ -695,7 +757,7 @@ def page_dashboard():
                     st.caption("Nenhuma notícia disponível no momento.")
 
             with tab_world:
-                news_world = get_news("Mundo", max_items=6)
+                news_world = get_news("Mundo", max_items=5)
                 if news_world:
                     news_html = ""
                     for item in news_world:
@@ -714,7 +776,7 @@ def page_dashboard():
             with tab_all:
                 events = get_economic_calendar()
                 events_html = ""
-                for ev in events[:8]:
+                for ev in events[:6]:
                     imp_class = "alta" if ev["importance"] == "Alta" else "media"
                     events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
                 st_html(events_html)
@@ -723,7 +785,7 @@ def page_dashboard():
                 from modules.economic_calendar import get_events_by_country
                 events_br = get_events_by_country("Brasil")
                 events_html = ""
-                for ev in events_br:
+                for ev in events_br[:6]:
                     imp_class = "alta" if ev["importance"] == "Alta" else "media"
                     events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
                 st_html(events_html)
@@ -731,71 +793,71 @@ def page_dashboard():
             with tab_eua:
                 events_eua = get_events_by_country("EUA")
                 events_html = ""
-                for ev in events_eua:
+                for ev in events_eua[:6]:
                     imp_class = "alta" if ev["importance"] == "Alta" else "media"
                     events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
                 st_html(events_html)
 
             st_html('</div>')
 
-    with col_side:
-        # Taxas de Juros
+    with col_right:
+        # Taxas de Juros (Compacto lado a lado dentro da coluna direita)
         st_html('<div class="section-panel"><div class="section-title">💰 Taxas de Juros</div>')
 
         br_rates = get_brazilian_rates()
         intl_rates = get_international_rates()
 
-        # Brasil
-        rates_html = '<div class="rates-section"><div class="rates-country">🇧🇷 Brasil</div>'
-        for name, data in br_rates.items():
-            rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><span class="rate-value">{data["formatted"]}</span></div>'
-        rates_html += '</div>'
+        col_r_br, col_r_intl = st.columns(2)
 
-        # Internacional
-        rates_html += '<div class="rates-section" style="margin-top: 0.8rem;"><div class="rates-country">🇺🇸 Estados Unidos</div>'
-        for name in ["Fed Funds Rate", "Treasury 10Y"]:
-            if name in intl_rates:
-                d = intl_rates[name]
-                note_html = f'<span class="rate-note" style="color:{d["color"]}">{d["change_formatted"]}</span>'
-                rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><span class="rate-value">{d["formatted"]} {note_html}</span></div>'
-        rates_html += '</div>'
+        with col_r_br:
+            rates_html = '<div class="rates-section"><div class="rates-country">🇧🇷 Brasil</div>'
+            for name, data in br_rates.items():
+                rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><span class="rate-value">{data["formatted"]}</span></div>'
+            rates_html += '</div>'
+            st_html(rates_html)
 
-        rates_html += '<div class="rates-section" style="margin-top: 0.8rem;"><div class="rates-country">🇪🇺 Europa / 🇯🇵 Japão</div>'
-        for name in ["BCE (Europa)", "BoJ (Japão)"]:
-            if name in intl_rates:
-                d = intl_rates[name]
-                rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><span class="rate-value">{d["formatted"]} <span class="rate-note" style="color:#888">{d["change_formatted"]}</span></span></div>'
-        rates_html += '</div>'
+        with col_r_intl:
+            rates_html = '<div class="rates-section"><div class="rates-country">🌎 Internacional</div>'
+            for name in ["Fed Funds Rate", "Treasury 10Y", "BCE (Europa)", "BoJ (Japão)"]:
+                if name in intl_rates:
+                    d = intl_rates[name]
+                    note = f' <span class="rate-note" style="color:{d["color"]}">{d["change_formatted"]}</span>' if d.get("change_formatted") else ''
+                    rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><span class="rate-value">{d["formatted"]}{note}</span></div>'
+            rates_html += '</div>'
+            st_html(rates_html)
 
-        st_html(rates_html)
         st_html('</div>')
 
-        # Fear & Greed
-        fg = get_fear_greed()
-        st_html('<div class="section-panel"><div class="section-title">🎯 Sentimento do Mercado</div>')
-        if fg["value"] is not None:
-            st_html(f'<div class="fg-gauge"><div class="fg-value" style="color:{fg["color"]}">{fg["value"]}</div><div class="fg-label" style="color:{fg["color"]}">{fg["classification"]}</div><div class="fg-sublabel">Fear & Greed Index (Crypto)</div></div>')
-        else:
-            st.caption("Indisponível no momento")
-        st_html('</div>')
+        # Sub-colunas: Sentimento do Mercado | Destaques do Dia (Lado a lado!)
+        col_fg, col_mov = st.columns(2)
 
-        # Maiores Altas e Baixas
-        movers = get_top_movers(n=4)
-        if movers.get("altas"):
-            st_html('<div class="section-panel"><div class="section-title">🔥 Destaques do Dia</div>')
+        with col_fg:
+            fg = get_fear_greed()
+            st_html('<div class="section-panel"><div class="section-title">🎯 Sentimento</div>')
+            if fg["value"] is not None:
+                st_html(f'<div class="fg-gauge"><div class="fg-value" style="color:{fg["color"]}">{fg["value"]}</div><div class="fg-label" style="color:{fg["color"]}">{fg["classification"]}</div><div class="fg-sublabel">Fear & Greed Index</div></div>')
+            else:
+                st.caption("Indisponível")
+            st_html('</div>')
 
-            movers_html = '<div style="margin-bottom:0.8rem"><span style="font-size:0.75rem;font-weight:700;color:#00e676">▲ Maiores Altas</span></div>'
-            for m in movers["altas"]:
-                pct = f"+{m['change_pct']:.2f}%".replace(".", ",")
-                movers_html += f'<div class="mover-row"><span class="mover-ticker">{m["ticker"]}</span><span class="mover-price">{m["formatted_price"]}</span><span class="mover-change" style="color:#00e676">{pct}</span></div>'
+        with col_mov:
+            movers = get_top_movers(n=3)
+            st_html('<div class="section-panel"><div class="section-title">🔥 Destaques</div>')
+            if movers.get("altas"):
+                movers_html = '<div style="margin-bottom:0.4rem"><span style="font-size:0.7rem;font-weight:700;color:#00e676">▲ Altas</span></div>'
+                for m in movers["altas"]:
+                    pct = f"+{m['change_pct']:.1f}%".replace(".", ",")
+                    movers_html += f'<div class="mover-row"><span class="mover-ticker">{m["ticker"]}</span><span class="mover-change" style="color:#00e676">{pct}</span></div>'
 
-            if movers.get("baixas"):
-                movers_html += '<div style="margin: 0.8rem 0 0.5rem"><span style="font-size:0.75rem;font-weight:700;color:#ef4444">▼ Maiores Baixas</span></div>'
-                for m in movers["baixas"]:
-                    pct = f"{m['change_pct']:.2f}%".replace(".", ",")
-                    movers_html += f'<div class="mover-row"><span class="mover-ticker">{m["ticker"]}</span><span class="mover-price">{m["formatted_price"]}</span><span class="mover-change" style="color:#ef4444">{pct}</span></div>'
+                if movers.get("baixas"):
+                    movers_html += '<div style="margin: 0.5rem 0 0.3rem"><span style="font-size:0.7rem;font-weight:700;color:#ef4444">▼ Baixas</span></div>'
+                    for m in movers["baixas"]:
+                        pct = f"{m['change_pct']:.1f}%".replace(".", ",")
+                        movers_html += f'<div class="mover-row"><span class="mover-ticker">{m["ticker"]}</span><span class="mover-change" style="color:#ef4444">{pct}</span></div>'
 
-            st_html(movers_html)
+                st_html(movers_html)
+            else:
+                st.caption("Carregando...")
             st_html('</div>')
 
 
@@ -1003,11 +1065,30 @@ def page_about():
 # Sidebar Navigation
 # ─────────────────────────────────────────
 def render_sidebar():
-    """Renderiza a sidebar de navegação."""
+    """Renderiza a sidebar de navegação estilo plataforma profissional."""
     with st.sidebar:
-        st_html('<div style="text-align:center; padding: 1rem 0 1.5rem;"><div style="font-size: 1.5rem; font-weight: 900; background: linear-gradient(135deg, #fff 0%, #7c4dff 50%, #00c8ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px;">📈 Trader Support</div><div style="font-size: 0.7rem; color: rgba(255,255,255,0.35); letter-spacing: 1px; text-transform: uppercase; margin-top: 0.3rem;">Portal de Análise Financeira</div></div>')
-
-        st.markdown("---")
+        st_html("""
+        <div style="padding: 0.8rem 0 1.2rem; border-bottom: 1px solid rgba(124, 77, 255, 0.12); margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <div style="background: linear-gradient(135deg, #7c4dff 0%, #00c8ff 100%); 
+                            width: 36px; height: 36px; border-radius: 10px; 
+                            display: flex; align-items: center; justify-content: center; 
+                            font-size: 1.2rem; box-shadow: 0 4px 15px rgba(124, 77, 255, 0.4);">
+                    📈
+                </div>
+                <div>
+                    <div style="font-size: 1.15rem; font-weight: 900; color: #ffffff; 
+                                letter-spacing: -0.5px; line-height: 1.1;">
+                        Trader Support
+                    </div>
+                    <div style="font-size: 0.65rem; color: #00c8ff; font-weight: 700; 
+                                letter-spacing: 1px; text-transform: uppercase; margin-top: 2px;">
+                        PRO PORTAL
+                    </div>
+                </div>
+            </div>
+        </div>
+        """)
 
         page = st.radio(
             "Navegação",
@@ -1024,9 +1105,21 @@ def render_sidebar():
 
         st.markdown("---")
 
-        # Stats rápidas
+        # Status do Sistema
         online_count = len([a for a in APPS if a["status"] == "online"])
-        st_html(f'<div style="text-align:center; padding: 0.5rem 0;"><div style="font-size: 1.6rem; font-weight: 800; color: #7c4dff; font-family: \'JetBrains Mono\', monospace;">{online_count}</div><div style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.35);">Aplicações Online</div></div>')
+        st_html(f"""
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); 
+                    border-radius: 12px; padding: 0.8rem; text-align: center;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 6px; 
+                        font-size: 0.72rem; color: #00e676; font-weight: 600; margin-bottom: 4px;">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: #00e676; 
+                             box-shadow: 0 0 8px #00e676;"></span>
+                SISTEMA OPERACIONAL
+            </div>
+            <div style="font-size: 1.4rem; font-weight: 800; color: #ffffff; 
+                        font-family: 'JetBrains Mono', monospace;">{online_count} <span style="font-size: 0.75rem; font-weight: 400; color: rgba(255,255,255,0.4);">/ 12 APPS</span></div>
+        </div>
+        """)
 
         return page
 
