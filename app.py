@@ -8,6 +8,7 @@ Hospedado no Streamlit Cloud.
 import streamlit as st
 from datetime import datetime
 import base64 as _b64
+import math
 from pathlib import Path as _Path
 
 # ─────────────────────────────────────────
@@ -188,6 +189,59 @@ def st_html(content: str):
     st.markdown("".join(clean_lines), unsafe_allow_html=True)
 
 
+def render_fear_greed_gauge_svg(value: int, classification: str, color: str) -> str:
+    """
+    Renderiza um velocímetro (Gauge) SVG em formato semicircular
+    com faixas em Vermelho, Laranja, Amarelo, Verde Claro e Verde Brilhante,
+    ponteiro direcionado e valor numérico do índice em destaque.
+    """
+    val = max(0, min(100, int(value)))
+    angle_deg = -180.0 + (val / 100.0) * 180.0
+    rad = math.radians(angle_deg)
+    nx = 100.0 + 52.0 * math.cos(rad)
+    ny = 90.0 + 52.0 * math.sin(rad)
+
+    return f"""
+    <div style="text-align: center; padding: 0.1rem 0;">
+        <svg viewBox="0 0 200 110" width="100%" height="135" style="max-width: 220px; margin: 0 auto; display: block;">
+            <defs>
+                <filter id="needleGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="1.5" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+            </defs>
+
+            <!-- Arcos Coloridos do Velocímetro (Vermelho -> Laranja -> Amarelo -> Verde Claro -> Verde) -->
+            <path d="M 30,90 A 70,70 0 0,1 50.5,40.5" fill="none" stroke="#ef4444" stroke-width="11" stroke-linecap="round" />
+            <path d="M 50.5,40.5 A 70,70 0 0,1 89,21" fill="none" stroke="#f97316" stroke-width="11" />
+            <path d="M 89,21 A 70,70 0 0,1 111,21" fill="none" stroke="#eab308" stroke-width="11" />
+            <path d="M 111,21 A 70,70 0 0,1 149.5,40.5" fill="none" stroke="#84cc16" stroke-width="11" />
+            <path d="M 149.5,40.5 A 70,70 0 0,1 170,90" fill="none" stroke="#00e676" stroke-width="11" stroke-linecap="round" />
+
+            <!-- Marcas de escala -->
+            <text x="20" y="104" font-size="7.5" font-weight="700" fill="rgba(255,255,255,0.4)" font-family="sans-serif">0</text>
+            <text x="96" y="12" font-size="7.5" font-weight="700" fill="rgba(255,255,255,0.4)" font-family="sans-serif">50</text>
+            <text x="171" y="104" font-size="7.5" font-weight="700" fill="rgba(255,255,255,0.4)" font-family="sans-serif">100</text>
+
+            <!-- Ponteiro / Agulha -->
+            <line x1="100" y1="90" x2="{nx:.1f}" y2="{ny:.1f}" stroke="#ffffff" stroke-width="3" stroke-linecap="round" filter="url(#needleGlow)" />
+            <circle cx="100" cy="90" r="6" fill="#7c4dff" />
+            <circle cx="100" cy="90" r="3" fill="#ffffff" />
+        </svg>
+
+        <div style="font-size: 2.2rem; font-weight: 900; color: #ffffff; font-family: 'JetBrains Mono', monospace; line-height: 1; margin-top: -10px;">
+            {val}
+        </div>
+        <div style="font-size: 0.82rem; font-weight: 700; color: {color}; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">
+            {classification}
+        </div>
+        <div style="font-size: 0.65rem; color: rgba(255,255,255,0.35); margin-top: 2px;">
+            Fear & Greed Index
+        </div>
+    </div>
+    """
+
+
 # ─────────────────────────────────────────
 # Custom CSS
 # ─────────────────────────────────────────
@@ -296,7 +350,7 @@ def inject_css():
             font-weight: 700 !important;
         }
 
-        /* ── Ticker Bar (Com Rótulos Destacados) ─── */
+        /* ── Ticker Bar ─── */
         .ticker-bar {
             display: flex;
             justify-content: space-between;
@@ -604,27 +658,6 @@ def inject_css():
             border: 1px solid rgba(245, 158, 11, 0.3);
         }
 
-        /* ── Fear & Greed Gauge ─── */
-        .fg-gauge {
-            text-align: center;
-            padding: 0.6rem 0;
-        }
-        .fg-value {
-            font-size: 2.5rem;
-            font-weight: 900;
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .fg-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-top: 0.1rem;
-        }
-        .fg-sublabel {
-            font-size: 0.65rem;
-            color: rgba(255,255,255,0.35);
-            margin-top: 0.1rem;
-        }
-
         /* ── Movers Table ─── */
         .mover-row {
             display: flex;
@@ -727,7 +760,7 @@ def render_ticker_bar():
 # Page: Dashboard
 # ─────────────────────────────────────────
 def page_dashboard():
-    """Visão geral do portal com reestruturação dos boxes."""
+    """Visão geral do portal com velocímetro SVG para Sentimento de Mercado."""
     from modules.market_data import get_market_overview, get_top_movers
     from modules.interest_rates import get_brazilian_rates, get_international_rates
     from modules.news_feed import get_news
@@ -748,11 +781,7 @@ def page_dashboard():
 
     st_html('<div style="margin-bottom: 0.8rem;"></div>')
 
-    # ── Main Layout (4 Colunas na Ordem Exata Solicitada pelo Usuário):
-    # Col 1: 🔥 Destaques (à esquerda de Principais Notícias)
-    # Col 2: 📰 Principais Notícias (Centralizado)
-    # Col 3: 📅 Agenda Econômica (Centralizado)
-    # Col 4: 💰 Taxas de Juros (à direita da Agenda) & 🎯 Sentimento (Abaixo de Taxas de Juros, mesma largura)
+    # ── Main Layout (4 Colunas): Destaques | Notícias | Agenda | Juros + Sentimento (Velocímetro) ──
     col_mov, col_news, col_agenda, col_right = st.columns([1.3, 2.1, 2.1, 1.8])
 
     # ── Col 1: 🔥 Destaques do Dia (À esquerda de Notícias) ──
@@ -837,7 +866,7 @@ def page_dashboard():
 
         st_html('</div>')
 
-    # ── Col 4: 💰 Taxas de Juros (À direita da Agenda) & 🎯 Sentimento (Diretamente Abaixo, mesma largura) ──
+    # ── Col 4: 💰 Taxas de Juros & 🎯 Sentimento (Velocímetro em SVG) ──
     with col_right:
         # Box Taxas de Juros
         st_html('<div class="section-panel"><div class="section-title">💰 Taxas de Juros</div>')
@@ -861,11 +890,12 @@ def page_dashboard():
         st_html(rates_html)
         st_html('</div>')
 
-        # Box Sentimento do Mercado (Diretamente Abaixo de Taxas de Juros, Mesma Largura)
+        # Box Sentimento do Mercado (Velocímetro SVG)
         fg = get_fear_greed()
         st_html('<div class="section-panel"><div class="section-title">🎯 Sentimento do Mercado</div>')
         if fg["value"] is not None:
-            st_html(f'<div class="fg-gauge"><div class="fg-value" style="color:{fg["color"]}">{fg["value"]}</div><div class="fg-label" style="color:{fg["color"]}">{fg["classification"]}</div><div class="fg-sublabel">Fear & Greed Index</div></div>')
+            svg_gauge = render_fear_greed_gauge_svg(fg["value"], fg["classification"], fg["color"])
+            st_html(svg_gauge)
         else:
             st.caption("Indisponível no momento")
         st_html('</div>')
