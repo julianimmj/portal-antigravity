@@ -201,10 +201,10 @@ def inject_css():
             font-family: 'Inter', sans-serif;
         }
 
-        /* ── Main Container Padding ─── */
+        /* ── Main Container Top Padding (Prevents Top Clipping) ─── */
         .block-container {
-            padding-top: 1.5rem !important;
-            padding-bottom: 1rem !important;
+            padding-top: 3.2rem !important;
+            padding-bottom: 1.2rem !important;
             padding-left: 1.8rem !important;
             padding-right: 1.8rem !important;
             max-width: 98% !important;
@@ -218,12 +218,12 @@ def inject_css():
                 radial-gradient(circle at 85% 30%, rgba(0, 200, 255, 0.02) 0%, transparent 50%);
         }
 
-        /* ── Hide Streamlit branding ─── */
+        /* ── Streamlit Header Transparent ─── */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header[data-testid="stHeader"] {
-            background: rgba(6, 6, 19, 0.95);
-            backdrop-filter: blur(10px);
+            background: transparent !important;
+            height: 2.2rem !important;
         }
 
         /* ── Sidebar Container & Background ─── */
@@ -302,7 +302,7 @@ def inject_css():
             justify-content: space-between;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.55rem 1rem;
+            padding: 0.6rem 1rem;
             background: linear-gradient(135deg, rgba(10, 10, 30, 0.95) 0%, rgba(15, 15, 45, 0.95) 100%);
             border: 1px solid rgba(124, 77, 255, 0.2);
             border-radius: 12px;
@@ -335,7 +335,7 @@ def inject_css():
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* ── Metric Cards (Cards Destacados Sem Duplicação) ─── */
+        /* ── Metric Cards ─── */
         .metric-card {
             background: linear-gradient(135deg, rgba(15, 15, 35, 0.85) 0%, rgba(20, 20, 50, 0.65) 100%);
             border: 1px solid rgba(124, 77, 255, 0.18);
@@ -377,6 +377,7 @@ def inject_css():
             padding: 0.95rem 1.1rem;
             margin-bottom: 0.8rem;
             box-sizing: border-box;
+            height: 100%;
         }
         .section-title {
             font-size: 0.92rem;
@@ -606,15 +607,15 @@ def inject_css():
         /* ── Fear & Greed Gauge ─── */
         .fg-gauge {
             text-align: center;
-            padding: 0.4rem 0;
+            padding: 0.6rem 0;
         }
         .fg-value {
-            font-size: 2.2rem;
+            font-size: 2.5rem;
             font-weight: 900;
             font-family: 'JetBrains Mono', monospace;
         }
         .fg-label {
-            font-size: 0.82rem;
+            font-size: 0.85rem;
             font-weight: 600;
             margin-top: 0.1rem;
         }
@@ -672,7 +673,7 @@ def inject_css():
         /* ── Responsive ─── */
         @media (max-width: 768px) {
             .block-container {
-                padding-top: 1rem !important;
+                padding-top: 2rem !important;
                 padding-left: 0.8rem !important;
                 padding-right: 0.8rem !important;
             }
@@ -726,7 +727,7 @@ def render_ticker_bar():
 # Page: Dashboard
 # ─────────────────────────────────────────
 def page_dashboard():
-    """Visão geral do portal com métricas sem duplicação do BTC."""
+    """Visão geral do portal com reestruturação dos boxes."""
     from modules.market_data import get_market_overview, get_top_movers
     from modules.interest_rates import get_brazilian_rates, get_international_rates
     from modules.news_feed import get_news
@@ -747,131 +748,127 @@ def page_dashboard():
 
     st_html('<div style="margin-bottom: 0.8rem;"></div>')
 
-    # ── Main Layout: Coluna Esquerda [3] | Coluna Direita [2] ──
-    col_left, col_right = st.columns([3, 2])
+    # ── Main Layout (4 Colunas na Ordem Exata Solicitada pelo Usuário):
+    # Col 1: 🔥 Destaques (à esquerda de Principais Notícias)
+    # Col 2: 📰 Principais Notícias (Centralizado)
+    # Col 3: 📅 Agenda Econômica (Centralizado)
+    # Col 4: 💰 Taxas de Juros (à direita da Agenda) & 🎯 Sentimento (Abaixo de Taxas de Juros, mesma largura)
+    col_mov, col_news, col_agenda, col_right = st.columns([1.3, 2.1, 2.1, 1.8])
 
-    with col_left:
-        # Notícias e Agenda lado a lado
-        col_news, col_agenda = st.columns(2)
+    # ── Col 1: 🔥 Destaques do Dia (À esquerda de Notícias) ──
+    with col_mov:
+        movers = get_top_movers(n=4)
+        st_html('<div class="section-panel"><div class="section-title">🔥 Destaques</div>')
+        if movers.get("altas"):
+            movers_html = '<div style="margin-bottom:0.2rem"><span style="font-size:0.72rem;font-weight:700;color:#00e676">▲ Altas</span></div>'
+            for m in movers["altas"]:
+                pct = f"+{m['change_pct']:.1f}%".replace(".", ",")
+                movers_html += f'<div class="mover-row"><span class="mover-ticker">{m["ticker"]}</span><span class="mover-price">{m["formatted_price"]}</span><span class="mover-change" style="color:#00e676">{pct}</span></div>'
 
-        with col_news:
-            st_html('<div class="section-panel"><div class="section-title">📰 Principais Notícias</div>')
+            if movers.get("baixas"):
+                movers_html += '<div style="margin: 0.4rem 0 0.2rem"><span style="font-size:0.72rem;font-weight:700;color:#ef4444">▼ Baixas</span></div>'
+                for m in movers["baixas"]:
+                    pct = f"{m['change_pct']:.1f}%".replace(".", ",")
+                    movers_html += f'<div class="mover-row"><span class="mover-ticker">{m["ticker"]}</span><span class="mover-price">{m["formatted_price"]}</span><span class="mover-change" style="color:#ef4444">{pct}</span></div>'
 
-            tab_br, tab_world = st.tabs(["Brasil", "Mundo"])
+            st_html(movers_html)
+        else:
+            st.caption("Carregando...")
+        st_html('</div>')
 
-            with tab_br:
-                news_br = get_news("Brasil", max_items=6)
-                if news_br:
-                    news_html = ""
-                    for item in news_br:
-                        news_html += f'<div class="news-item"><div class="news-title"><a href="{item["link"]}" target="_blank">{item["title"]}</a></div><div class="news-meta"><span class="news-source">{item["source"]}</span> · {item["time_ago"]}</div></div>'
-                    st_html(news_html)
-                else:
-                    st.caption("Nenhuma notícia disponível no momento.")
+    # ── Col 2: 📰 Principais Notícias (Centro) ──
+    with col_news:
+        st_html('<div class="section-panel"><div class="section-title">📰 Principais Notícias</div>')
 
-            with tab_world:
-                news_world = get_news("Mundo", max_items=6)
-                if news_world:
-                    news_html = ""
-                    for item in news_world:
-                        news_html += f'<div class="news-item"><div class="news-title"><a href="{item["link"]}" target="_blank">{item["title"]}</a></div><div class="news-meta"><span class="news-source">{item["source"]}</span> · {item["time_ago"]}</div></div>'
-                    st_html(news_html)
-                else:
-                    st.caption("Nenhuma notícia disponível no momento.")
+        tab_br, tab_world = st.tabs(["Brasil", "Mundo"])
 
-            st_html('</div>')
+        with tab_br:
+            news_br = get_news("Brasil", max_items=6)
+            if news_br:
+                news_html = ""
+                for item in news_br:
+                    news_html += f'<div class="news-item"><div class="news-title"><a href="{item["link"]}" target="_blank">{item["title"]}</a></div><div class="news-meta"><span class="news-source">{item["source"]}</span> · {item["time_ago"]}</div></div>'
+                st_html(news_html)
+            else:
+                st.caption("Nenhuma notícia disponível no momento.")
 
-        with col_agenda:
-            st_html('<div class="section-panel"><div class="section-title">📅 Agenda Econômica</div>')
+        with tab_world:
+            news_world = get_news("Mundo", max_items=6)
+            if news_world:
+                news_html = ""
+                for item in news_world:
+                    news_html += f'<div class="news-item"><div class="news-title"><a href="{item["link"]}" target="_blank">{item["title"]}</a></div><div class="news-meta"><span class="news-source">{item["source"]}</span> · {item["time_ago"]}</div></div>'
+                st_html(news_html)
+            else:
+                st.caption("Nenhuma notícia disponível no momento.")
 
-            tab_all, tab_br2, tab_eua = st.tabs(["Todos", "Brasil", "EUA"])
+        st_html('</div>')
 
-            with tab_all:
-                events = get_economic_calendar()
-                events_html = ""
-                for ev in events[:6]:
-                    imp_class = "alta" if ev["importance"] == "Alta" else "media"
-                    events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
-                st_html(events_html)
+    # ── Col 3: 📅 Agenda Econômica (Centro) ──
+    with col_agenda:
+        st_html('<div class="section-panel"><div class="section-title">📅 Agenda Econômica</div>')
 
-            with tab_br2:
-                from modules.economic_calendar import get_events_by_country
-                events_br = get_events_by_country("Brasil")
-                events_html = ""
-                for ev in events_br[:6]:
-                    imp_class = "alta" if ev["importance"] == "Alta" else "media"
-                    events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
-                st_html(events_html)
+        tab_all, tab_br2, tab_eua = st.tabs(["Todos", "Brasil", "EUA"])
 
-            with tab_eua:
-                events_eua = get_events_by_country("EUA")
-                events_html = ""
-                for ev in events_eua[:6]:
-                    imp_class = "alta" if ev["importance"] == "Alta" else "media"
-                    events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
-                st_html(events_html)
+        with tab_all:
+            events = get_economic_calendar()
+            events_html = ""
+            for ev in events[:6]:
+                imp_class = "alta" if ev["importance"] == "Alta" else "media"
+                events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
+            st_html(events_html)
 
-            st_html('</div>')
+        with tab_br2:
+            from modules.economic_calendar import get_events_by_country
+            events_br = get_events_by_country("Brasil")
+            events_html = ""
+            for ev in events_br[:6]:
+                imp_class = "alta" if ev["importance"] == "Alta" else "media"
+                events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
+            st_html(events_html)
 
+        with tab_eua:
+            events_eua = get_events_by_country("EUA")
+            events_html = ""
+            for ev in events_eua[:6]:
+                imp_class = "alta" if ev["importance"] == "Alta" else "media"
+                events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
+            st_html(events_html)
+
+        st_html('</div>')
+
+    # ── Col 4: 💰 Taxas de Juros (À direita da Agenda) & 🎯 Sentimento (Diretamente Abaixo, mesma largura) ──
     with col_right:
-        # Taxas de Juros (Compacto lado a lado)
+        # Box Taxas de Juros
         st_html('<div class="section-panel"><div class="section-title">💰 Taxas de Juros</div>')
 
         br_rates = get_brazilian_rates()
         intl_rates = get_international_rates()
 
-        col_r_br, col_r_intl = st.columns(2)
+        rates_html = '<div class="rates-section"><div class="rates-country">Brasil</div>'
+        for name, data in br_rates.items():
+            rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><span class="rate-value">{data["formatted"]}</span></div>'
+        rates_html += '</div>'
 
-        with col_r_br:
-            rates_html = '<div class="rates-section"><div class="rates-country">Brasil</div>'
-            for name, data in br_rates.items():
-                rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><span class="rate-value">{data["formatted"]}</span></div>'
-            rates_html += '</div>'
-            st_html(rates_html)
+        rates_html += '<div class="rates-section" style="margin-top:0.4rem"><div class="rates-country">EUA / Internacional</div>'
+        for name in ["Fed Funds Rate", "Treasury 10Y", "BCE (Europa)", "BoJ (Japão)"]:
+            if name in intl_rates:
+                d = intl_rates[name]
+                note = f' <span class="rate-note" style="color:{d["color"]}">{d["change_formatted"]}</span>' if d.get("change_formatted") else ''
+                rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><span class="rate-value">{d["formatted"]}{note}</span></div>'
+        rates_html += '</div>'
 
-        with col_r_intl:
-            rates_html = '<div class="rates-section"><div class="rates-country">EUA / Internacional</div>'
-            for name in ["Fed Funds Rate", "Treasury 10Y", "BCE (Europa)", "BoJ (Japão)"]:
-                if name in intl_rates:
-                    d = intl_rates[name]
-                    note = f' <span class="rate-note" style="color:{d["color"]}">{d["change_formatted"]}</span>' if d.get("change_formatted") else ''
-                    rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><span class="rate-value">{d["formatted"]}{note}</span></div>'
-            rates_html += '</div>'
-            st_html(rates_html)
-
+        st_html(rates_html)
         st_html('</div>')
 
-        # Sub-colunas: Sentimento do Mercado | Destaques do Dia
-        col_fg, col_mov = st.columns(2)
-
-        with col_fg:
-            fg = get_fear_greed()
-            st_html('<div class="section-panel"><div class="section-title">🎯 Sentimento</div>')
-            if fg["value"] is not None:
-                st_html(f'<div class="fg-gauge"><div class="fg-value" style="color:{fg["color"]}">{fg["value"]}</div><div class="fg-label" style="color:{fg["color"]}">{fg["classification"]}</div><div class="fg-sublabel">Fear & Greed Index</div></div>')
-            else:
-                st.caption("Indisponível")
-            st_html('</div>')
-
-        with col_mov:
-            movers = get_top_movers(n=4)
-            st_html('<div class="section-panel"><div class="section-title">🔥 Destaques</div>')
-            if movers.get("altas"):
-                movers_html = '<div style="margin-bottom:0.2rem"><span style="font-size:0.7rem;font-weight:700;color:#00e676">▲ Altas</span></div>'
-                for m in movers["altas"]:
-                    pct = f"+{m['change_pct']:.1f}%".replace(".", ",")
-                    movers_html += f'<div class="mover-row"><span class="mover-ticker">{m["ticker"]}</span><span class="mover-price">{m["formatted_price"]}</span><span class="mover-change" style="color:#00e676">{pct}</span></div>'
-
-                if movers.get("baixas"):
-                    movers_html += '<div style="margin: 0.4rem 0 0.2rem"><span style="font-size:0.7rem;font-weight:700;color:#ef4444">▼ Baixas</span></div>'
-                    for m in movers["baixas"]:
-                        pct = f"{m['change_pct']:.1f}%".replace(".", ",")
-                        movers_html += f'<div class="mover-row"><span class="mover-ticker">{m["ticker"]}</span><span class="mover-price">{m["formatted_price"]}</span><span class="mover-change" style="color:#ef4444">{pct}</span></div>'
-
-                st_html(movers_html)
-            else:
-                st.caption("Carregando...")
-            st_html('</div>')
+        # Box Sentimento do Mercado (Diretamente Abaixo de Taxas de Juros, Mesma Largura)
+        fg = get_fear_greed()
+        st_html('<div class="section-panel"><div class="section-title">🎯 Sentimento do Mercado</div>')
+        if fg["value"] is not None:
+            st_html(f'<div class="fg-gauge"><div class="fg-value" style="color:{fg["color"]}">{fg["value"]}</div><div class="fg-label" style="color:{fg["color"]}">{fg["classification"]}</div><div class="fg-sublabel">Fear & Greed Index</div></div>')
+        else:
+            st.caption("Indisponível no momento")
+        st_html('</div>')
 
 
 # ─────────────────────────────────────────
