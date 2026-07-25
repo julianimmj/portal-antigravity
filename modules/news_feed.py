@@ -1,6 +1,6 @@
 """
 news_feed.py — Feed de notícias financeiras via RSS.
-Fontes: InfoMoney, Valor Econômico, Yahoo Finance, CNBC.
+Fontes: InfoMoney, Valor Econômico, Exame, G1 Economia, Yahoo Finance, CNBC, MarketWatch, Reuters.
 """
 
 import streamlit as st
@@ -12,11 +12,15 @@ import time as _time
 FEEDS_BR = [
     {"name": "InfoMoney",       "url": "https://www.infomoney.com.br/feed/",           "icon": "📰"},
     {"name": "Valor Econômico", "url": "https://pox.globo.com/rss/valor/",             "icon": "📰"},
+    {"name": "Exame",           "url": "https://exame.com/feed/",                      "icon": "📰"},
+    {"name": "G1 Economia",     "url": "https://g1.globo.com/rss/g1/economia/",        "icon": "📰"},
 ]
 
 FEEDS_WORLD = [
     {"name": "Yahoo Finance",   "url": "https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US", "icon": "🌎"},
-    {"name": "CNBC",            "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114", "icon": "🌎"},
+    {"name": "CNBC",            "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664",   "icon": "🌎"},
+    {"name": "MarketWatch",     "url": "https://feeds.content.dowjones.io/public/rss/mw_topstories",                           "icon": "🌎"},
+    {"name": "Reuters",         "url": "https://www.reutersagency.com/feed/?taxonomy=best-topics&post_type=best",              "icon": "🌎"},
 ]
 
 
@@ -51,13 +55,13 @@ def _clean_title(title: str) -> str:
     """Remove tags HTML residuais e trunca títulos longos."""
     import re
     title = re.sub(r"<[^>]+>", "", title)
-    if len(title) > 120:
-        title = title[:117] + "..."
+    if len(title) > 130:
+        title = title[:127] + "..."
     return title.strip()
 
 
 @st.cache_data(ttl=600, show_spinner=False)
-def get_news(region: str = "Brasil", max_items: int = 8) -> list:
+def get_news(region: str = "Brasil", max_items: int = 10) -> list:
     """
     Busca notícias via RSS.
     Args:
