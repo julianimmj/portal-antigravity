@@ -179,11 +179,20 @@ CATEGORIES = {
 }
 
 
+def st_html(content: str):
+    """
+    Renderiza HTML limpando qualquer espaçamento no início das linhas.
+    Isso impede que o Markdown do Streamlit confunda HTML com blocos de código (<pre><code>).
+    """
+    clean_lines = [line.strip() for line in content.split("\n") if line.strip()]
+    st.markdown("".join(clean_lines), unsafe_allow_html=True)
+
+
 # ─────────────────────────────────────────
 # Custom CSS
 # ─────────────────────────────────────────
 def inject_css():
-    st.markdown("""
+    st_html("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
@@ -617,7 +626,7 @@ def inject_css():
             }
         }
     </style>
-    """, unsafe_allow_html=True)
+    """)
 
 
 # ─────────────────────────────────────────
@@ -633,15 +642,9 @@ def render_ticker_bar():
 
     items_html = ""
     for name, data in market.items():
-        items_html += f"""
-        <div class="ticker-item">
-            <div class="ticker-name">{name}</div>
-            <div class="ticker-price">{data['formatted_price']}</div>
-            <div class="ticker-change" style="color:{data['color']}">{data['formatted_change']}</div>
-        </div>
-        """
+        items_html += f'<div class="ticker-item"><div class="ticker-name">{name}</div><div class="ticker-price">{data["formatted_price"]}</div><div class="ticker-change" style="color:{data["color"]}">{data["formatted_change"]}</div></div>'
 
-    st.markdown(f'<div class="ticker-bar">{items_html}</div>', unsafe_allow_html=True)
+    st_html(f'<div class="ticker-bar">{items_html}</div>')
 
 
 # ─────────────────────────────────────────
@@ -663,23 +666,11 @@ def page_dashboard():
         with cols[i]:
             if name in market:
                 d = market[name]
-                st.markdown(f"""
-                <div class="metric-card">
-                    <div class="metric-label">{name}</div>
-                    <div class="metric-value">{d['formatted_price']}</div>
-                    <div class="metric-change" style="color:{d['color']}">{d['formatted_change']}</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st_html(f'<div class="metric-card"><div class="metric-label">{name}</div><div class="metric-value">{d["formatted_price"]}</div><div class="metric-change" style="color:{d["color"]}">{d["formatted_change"]}</div></div>')
             else:
-                st.markdown(f"""
-                <div class="metric-card">
-                    <div class="metric-label">{name}</div>
-                    <div class="metric-value">—</div>
-                    <div class="metric-change" style="color:#666">carregando...</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st_html(f'<div class="metric-card"><div class="metric-label">{name}</div><div class="metric-value">—</div><div class="metric-change" style="color:#666">carregando...</div></div>')
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st_html('<br>')
 
     # ── Main Content: Notícias + Agenda | Juros + Sentimento ──
     col_main, col_side = st.columns([3, 1])
@@ -689,8 +680,7 @@ def page_dashboard():
         col_news, col_agenda = st.columns(2)
 
         with col_news:
-            st.markdown('<div class="section-panel">', unsafe_allow_html=True)
-            st.markdown('<div class="section-title">📰 Principais Notícias</div>', unsafe_allow_html=True)
+            st_html('<div class="section-panel"><div class="section-title">📰 Principais Notícias</div>')
 
             tab_br, tab_world = st.tabs(["🇧🇷 Brasil", "🌎 Mundo"])
 
@@ -699,13 +689,8 @@ def page_dashboard():
                 if news_br:
                     news_html = ""
                     for item in news_br:
-                        news_html += f"""
-                        <div class="news-item">
-                            <div class="news-title"><a href="{item['link']}" target="_blank">{item['title']}</a></div>
-                            <div class="news-meta"><span class="news-source">{item['source']}</span> · {item['time_ago']}</div>
-                        </div>
-                        """
-                    st.markdown(news_html, unsafe_allow_html=True)
+                        news_html += f'<div class="news-item"><div class="news-title"><a href="{item["link"]}" target="_blank">{item["title"]}</a></div><div class="news-meta"><span class="news-source">{item["source"]}</span> · {item["time_ago"]}</div></div>'
+                    st_html(news_html)
                 else:
                     st.caption("Nenhuma notícia disponível no momento.")
 
@@ -714,21 +699,15 @@ def page_dashboard():
                 if news_world:
                     news_html = ""
                     for item in news_world:
-                        news_html += f"""
-                        <div class="news-item">
-                            <div class="news-title"><a href="{item['link']}" target="_blank">{item['title']}</a></div>
-                            <div class="news-meta"><span class="news-source">{item['source']}</span> · {item['time_ago']}</div>
-                        </div>
-                        """
-                    st.markdown(news_html, unsafe_allow_html=True)
+                        news_html += f'<div class="news-item"><div class="news-title"><a href="{item["link"]}" target="_blank">{item["title"]}</a></div><div class="news-meta"><span class="news-source">{item["source"]}</span> · {item["time_ago"]}</div></div>'
+                    st_html(news_html)
                 else:
                     st.caption("Nenhuma notícia disponível no momento.")
 
-            st.markdown('</div>', unsafe_allow_html=True)
+            st_html('</div>')
 
         with col_agenda:
-            st.markdown('<div class="section-panel">', unsafe_allow_html=True)
-            st.markdown('<div class="section-title">📅 Agenda Econômica</div>', unsafe_allow_html=True)
+            st_html('<div class="section-panel"><div class="section-title">📅 Agenda Econômica</div>')
 
             tab_all, tab_br2, tab_eua = st.tabs(["Todos", "🇧🇷 Brasil", "🇺🇸 EUA"])
 
@@ -737,14 +716,8 @@ def page_dashboard():
                 events_html = ""
                 for ev in events[:8]:
                     imp_class = "alta" if ev["importance"] == "Alta" else "media"
-                    events_html += f"""
-                    <div class="cal-event">
-                        <span class="cal-flag">{ev['flag']}</span>
-                        <span class="cal-name">{ev['name']}</span>
-                        <span class="cal-importance {imp_class}">{ev['importance']}</span>
-                    </div>
-                    """
-                st.markdown(events_html, unsafe_allow_html=True)
+                    events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
+                st_html(events_html)
 
             with tab_br2:
                 from modules.economic_calendar import get_events_by_country
@@ -752,35 +725,22 @@ def page_dashboard():
                 events_html = ""
                 for ev in events_br:
                     imp_class = "alta" if ev["importance"] == "Alta" else "media"
-                    events_html += f"""
-                    <div class="cal-event">
-                        <span class="cal-flag">{ev['flag']}</span>
-                        <span class="cal-name">{ev['name']}</span>
-                        <span class="cal-importance {imp_class}">{ev['importance']}</span>
-                    </div>
-                    """
-                st.markdown(events_html, unsafe_allow_html=True)
+                    events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
+                st_html(events_html)
 
             with tab_eua:
                 events_eua = get_events_by_country("EUA")
                 events_html = ""
                 for ev in events_eua:
                     imp_class = "alta" if ev["importance"] == "Alta" else "media"
-                    events_html += f"""
-                    <div class="cal-event">
-                        <span class="cal-flag">{ev['flag']}</span>
-                        <span class="cal-name">{ev['name']}</span>
-                        <span class="cal-importance {imp_class}">{ev['importance']}</span>
-                    </div>
-                    """
-                st.markdown(events_html, unsafe_allow_html=True)
+                    events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
+                st_html(events_html)
 
-            st.markdown('</div>', unsafe_allow_html=True)
+            st_html('</div>')
 
     with col_side:
         # Taxas de Juros
-        st.markdown('<div class="section-panel">', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">💰 Taxas de Juros</div>', unsafe_allow_html=True)
+        st_html('<div class="section-panel"><div class="section-title">💰 Taxas de Juros</div>')
 
         br_rates = get_brazilian_rates()
         intl_rates = get_international_rates()
@@ -788,12 +748,7 @@ def page_dashboard():
         # Brasil
         rates_html = '<div class="rates-section"><div class="rates-country">🇧🇷 Brasil</div>'
         for name, data in br_rates.items():
-            rates_html += f"""
-            <div class="rate-row">
-                <span class="rate-name">{name}</span>
-                <span class="rate-value">{data['formatted']}</span>
-            </div>
-            """
+            rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><span class="rate-value">{data["formatted"]}</span></div>'
         rates_html += '</div>'
 
         # Internacional
@@ -802,76 +757,46 @@ def page_dashboard():
             if name in intl_rates:
                 d = intl_rates[name]
                 note_html = f'<span class="rate-note" style="color:{d["color"]}">{d["change_formatted"]}</span>'
-                rates_html += f"""
-                <div class="rate-row">
-                    <span class="rate-name">{name}</span>
-                    <span class="rate-value">{d['formatted']} {note_html}</span>
-                </div>
-                """
+                rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><span class="rate-value">{d["formatted"]} {note_html}</span></div>'
         rates_html += '</div>'
 
         rates_html += '<div class="rates-section" style="margin-top: 0.8rem;"><div class="rates-country">🇪🇺 Europa / 🇯🇵 Japão</div>'
         for name in ["BCE (Europa)", "BoJ (Japão)"]:
             if name in intl_rates:
                 d = intl_rates[name]
-                rates_html += f"""
-                <div class="rate-row">
-                    <span class="rate-name">{name}</span>
-                    <span class="rate-value">{d['formatted']} <span class="rate-note" style="color:#888">{d['change_formatted']}</span></span>
-                </div>
-                """
+                rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><span class="rate-value">{d["formatted"]} <span class="rate-note" style="color:#888">{d["change_formatted"]}</span></span></div>'
         rates_html += '</div>'
 
-        st.markdown(rates_html, unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        st_html(rates_html)
+        st_html('</div>')
 
         # Fear & Greed
         fg = get_fear_greed()
-        st.markdown('<div class="section-panel">', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">🎯 Sentimento do Mercado</div>', unsafe_allow_html=True)
+        st_html('<div class="section-panel"><div class="section-title">🎯 Sentimento do Mercado</div>')
         if fg["value"] is not None:
-            st.markdown(f"""
-            <div class="fg-gauge">
-                <div class="fg-value" style="color:{fg['color']}">{fg['value']}</div>
-                <div class="fg-label" style="color:{fg['color']}">{fg['classification']}</div>
-                <div class="fg-sublabel">Fear & Greed Index (Crypto)</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st_html(f'<div class="fg-gauge"><div class="fg-value" style="color:{fg["color"]}">{fg["value"]}</div><div class="fg-label" style="color:{fg["color"]}">{fg["classification"]}</div><div class="fg-sublabel">Fear & Greed Index (Crypto)</div></div>')
         else:
             st.caption("Indisponível no momento")
-        st.markdown('</div>', unsafe_allow_html=True)
+        st_html('</div>')
 
         # Maiores Altas e Baixas
         movers = get_top_movers(n=4)
         if movers.get("altas"):
-            st.markdown('<div class="section-panel">', unsafe_allow_html=True)
-            st.markdown('<div class="section-title">🔥 Destaques do Dia</div>', unsafe_allow_html=True)
+            st_html('<div class="section-panel"><div class="section-title">🔥 Destaques do Dia</div>')
 
             movers_html = '<div style="margin-bottom:0.8rem"><span style="font-size:0.75rem;font-weight:700;color:#00e676">▲ Maiores Altas</span></div>'
             for m in movers["altas"]:
                 pct = f"+{m['change_pct']:.2f}%".replace(".", ",")
-                movers_html += f"""
-                <div class="mover-row">
-                    <span class="mover-ticker">{m['ticker']}</span>
-                    <span class="mover-price">{m['formatted_price']}</span>
-                    <span class="mover-change" style="color:#00e676">{pct}</span>
-                </div>
-                """
+                movers_html += f'<div class="mover-row"><span class="mover-ticker">{m["ticker"]}</span><span class="mover-price">{m["formatted_price"]}</span><span class="mover-change" style="color:#00e676">{pct}</span></div>'
 
             if movers.get("baixas"):
                 movers_html += '<div style="margin: 0.8rem 0 0.5rem"><span style="font-size:0.75rem;font-weight:700;color:#ef4444">▼ Maiores Baixas</span></div>'
                 for m in movers["baixas"]:
                     pct = f"{m['change_pct']:.2f}%".replace(".", ",")
-                    movers_html += f"""
-                    <div class="mover-row">
-                        <span class="mover-ticker">{m['ticker']}</span>
-                        <span class="mover-price">{m['formatted_price']}</span>
-                        <span class="mover-change" style="color:#ef4444">{pct}</span>
-                    </div>
-                    """
+                    movers_html += f'<div class="mover-row"><span class="mover-ticker">{m["ticker"]}</span><span class="mover-price">{m["formatted_price"]}</span><span class="mover-change" style="color:#ef4444">{pct}</span></div>'
 
-            st.markdown(movers_html, unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+            st_html(movers_html)
+            st_html('</div>')
 
 
 # ─────────────────────────────────────────
@@ -919,7 +844,7 @@ def page_apps():
             continue
 
         icon = CATEGORIES.get(cat, "📌")
-        st.markdown(f'<div class="category-header">{icon} {cat}</div>', unsafe_allow_html=True)
+        st_html(f'<div class="category-header">{icon} {cat}</div>')
 
         apps_in_cat = grouped[cat]
         cols = st.columns(3)
@@ -932,20 +857,7 @@ def render_app_card(app: dict):
     """Renderiza um card de aplicação compacto."""
     tags_html = "".join(f'<span class="tag">{t}</span>' for t in app["tags"])
 
-    st.markdown(f"""
-    <div class="app-card-compact" style="border-top: 2px solid {app['accent']};">
-        <div class="card-header">
-            <span class="card-icon">{app['icon']}</span>
-            <div>
-                <div class="card-title">{app['title']}</div>
-                <div class="card-subtitle" style="color:{app['accent']}">{app['subtitle']}</div>
-            </div>
-        </div>
-        <div class="card-desc">{app['description']}</div>
-        <div class="card-tags">{tags_html}</div>
-        <a href="{app['url']}" target="_blank" class="launch-btn" style="background:{app['accent']}">Acessar →</a>
-    </div>
-    """, unsafe_allow_html=True)
+    st_html(f'<div class="app-card-compact" style="border-top: 2px solid {app["accent"]};"><div class="card-header"><span class="card-icon">{app["icon"]}</span><div><div class="card-title">{app["title"]}</div><div class="card-subtitle" style="color:{app["accent"]}">{app["subtitle"]}</div></div></div><div class="card-desc">{app["description"]}</div><div class="card-tags">{tags_html}</div><a href="{app["url"]}" target="_blank" class="launch-btn" style="background:{app["accent"]}">Acessar →</a></div>')
 
 
 # ─────────────────────────────────────────
@@ -961,37 +873,25 @@ def page_rates():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown('<div class="section-panel">', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">🇧🇷 Brasil</div>', unsafe_allow_html=True)
+        st_html('<div class="section-panel"><div class="section-title">🇧🇷 Brasil</div>')
 
         br_rates = get_brazilian_rates()
         for name, data in br_rates.items():
-            st.markdown(f"""
-            <div class="rate-row">
-                <span class="rate-name" style="font-size:1rem">{name}</span>
-                <span class="rate-value" style="font-size:1.1rem">{data['formatted']}</span>
-            </div>
-            """, unsafe_allow_html=True)
+            st_html(f'<div class="rate-row"><span class="rate-name" style="font-size:1rem">{name}</span><span class="rate-value" style="font-size:1.1rem">{data["formatted"]}</span></div>')
             if data["data"] != "—":
                 st.caption(f"  Última atualização: {data['data']}")
 
-        st.markdown('</div>', unsafe_allow_html=True)
+        st_html('</div>')
 
     with col2:
-        st.markdown('<div class="section-panel">', unsafe_allow_html=True)
-        st.markdown('<div class="section-title">🌎 Internacional</div>', unsafe_allow_html=True)
+        st_html('<div class="section-panel"><div class="section-title">🌎 Internacional</div>')
 
         intl_rates = get_international_rates()
         for name, data in intl_rates.items():
             note_html = f'<span class="rate-note" style="color:{data["color"]}">{data["change_formatted"]}</span>'
-            st.markdown(f"""
-            <div class="rate-row">
-                <span class="rate-name" style="font-size:1rem">{name}</span>
-                <span class="rate-value" style="font-size:1.1rem">{data['formatted']} {note_html}</span>
-            </div>
-            """, unsafe_allow_html=True)
+            st_html(f'<div class="rate-row"><span class="rate-name" style="font-size:1rem">{name}</span><span class="rate-value" style="font-size:1.1rem">{data["formatted"]} {note_html}</span></div>')
 
-        st.markdown('</div>', unsafe_allow_html=True)
+        st_html('</div>')
 
 
 # ─────────────────────────────────────────
@@ -1010,12 +910,7 @@ def page_news():
         news = get_news("Brasil", max_items=15)
         if news:
             for item in news:
-                st.markdown(f"""
-                <div class="news-item">
-                    <div class="news-title"><a href="{item['link']}" target="_blank">{item['title']}</a></div>
-                    <div class="news-meta"><span class="news-source">{item['source']}</span> · {item['time_ago']}</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st_html(f'<div class="news-item"><div class="news-title"><a href="{item["link"]}" target="_blank">{item["title"]}</a></div><div class="news-meta"><span class="news-source">{item["source"]}</span> · {item["time_ago"]}</div></div>')
         else:
             st.info("Nenhuma notícia disponível no momento.")
 
@@ -1023,12 +918,7 @@ def page_news():
         news = get_news("Mundo", max_items=15)
         if news:
             for item in news:
-                st.markdown(f"""
-                <div class="news-item">
-                    <div class="news-title"><a href="{item['link']}" target="_blank">{item['title']}</a></div>
-                    <div class="news-meta"><span class="news-source">{item['source']}</span> · {item['time_ago']}</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st_html(f'<div class="news-item"><div class="news-title"><a href="{item["link"]}" target="_blank">{item["title"]}</a></div><div class="news-meta"><span class="news-source">{item["source"]}</span> · {item["time_ago"]}</div></div>')
         else:
             st.info("Nenhuma notícia disponível no momento.")
 
@@ -1048,14 +938,7 @@ def page_calendar():
     def render_events(events):
         for ev in events:
             imp_class = "alta" if ev["importance"] == "Alta" else "media"
-            st.markdown(f"""
-            <div class="cal-event">
-                <span class="cal-flag">{ev['flag']}</span>
-                <span class="cal-name">{ev['name']}</span>
-                <span style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-right:0.5rem">{ev['frequency']}</span>
-                <span class="cal-importance {imp_class}">{ev['importance']}</span>
-            </div>
-            """, unsafe_allow_html=True)
+            st_html(f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-right:0.5rem">{ev["frequency"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>')
 
     with tab_all:
         render_events(get_economic_calendar())
@@ -1113,11 +996,7 @@ def page_about():
         """)
 
     st.markdown("---")
-    st.markdown(f"""
-    <div style="text-align:center; color: rgba(255,255,255,0.3); font-size: 0.8rem;">
-        Versão 2.0 · Atualizado em {datetime.now().strftime('%d/%m/%Y')}
-    </div>
-    """, unsafe_allow_html=True)
+    st_html(f'<div style="text-align:center; color: rgba(255,255,255,0.3); font-size: 0.8rem;">Versão 2.0 · Atualizado em {datetime.now().strftime("%d/%m/%Y")}</div>')
 
 
 # ─────────────────────────────────────────
@@ -1126,20 +1005,7 @@ def page_about():
 def render_sidebar():
     """Renderiza a sidebar de navegação."""
     with st.sidebar:
-        st.markdown("""
-        <div style="text-align:center; padding: 1rem 0 1.5rem;">
-            <div style="font-size: 1.5rem; font-weight: 900; 
-                        background: linear-gradient(135deg, #fff 0%, #7c4dff 50%, #00c8ff 100%);
-                        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-                        letter-spacing: -1px;">
-                📈 Trader Support
-            </div>
-            <div style="font-size: 0.7rem; color: rgba(255,255,255,0.35); 
-                        letter-spacing: 1px; text-transform: uppercase; margin-top: 0.3rem;">
-                Portal de Análise Financeira
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st_html('<div style="text-align:center; padding: 1rem 0 1.5rem;"><div style="font-size: 1.5rem; font-weight: 900; background: linear-gradient(135deg, #fff 0%, #7c4dff 50%, #00c8ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px;">📈 Trader Support</div><div style="font-size: 0.7rem; color: rgba(255,255,255,0.35); letter-spacing: 1px; text-transform: uppercase; margin-top: 0.3rem;">Portal de Análise Financeira</div></div>')
 
         st.markdown("---")
 
@@ -1160,14 +1026,7 @@ def render_sidebar():
 
         # Stats rápidas
         online_count = len([a for a in APPS if a["status"] == "online"])
-        st.markdown(f"""
-        <div style="text-align:center; padding: 0.5rem 0;">
-            <div style="font-size: 1.6rem; font-weight: 800; color: #7c4dff; 
-                        font-family: 'JetBrains Mono', monospace;">{online_count}</div>
-            <div style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; 
-                        color: rgba(255,255,255,0.35);">Aplicações Online</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st_html(f'<div style="text-align:center; padding: 0.5rem 0;"><div style="font-size: 1.6rem; font-weight: 800; color: #7c4dff; font-family: \'JetBrains Mono\', monospace;">{online_count}</div><div style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.35);">Aplicações Online</div></div>')
 
         return page
 
@@ -1200,12 +1059,7 @@ def main():
 
     # Footer
     year = datetime.now().year
-    st.markdown(f"""
-    <div class="portal-footer">
-        <div class="brand">Trader Support</div>
-        <div class="copy">© {year} · Dados via Yahoo Finance, Banco Central do Brasil, RSS Feeds</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st_html(f'<div class="portal-footer"><div class="brand">Trader Support</div><div class="copy">© {year} · Dados via Yahoo Finance, Banco Central do Brasil, RSS Feeds</div></div>')
 
 
 if __name__ == "__main__":
