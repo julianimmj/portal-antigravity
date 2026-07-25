@@ -201,6 +201,15 @@ def inject_css():
             font-family: 'Inter', sans-serif;
         }
 
+        /* ── Compact Main Container for Zero Scroll ─── */
+        .block-container {
+            padding-top: 1.5rem !important;
+            padding-bottom: 0.5rem !important;
+            padding-left: 1.8rem !important;
+            padding-right: 1.8rem !important;
+            max-width: 98% !important;
+        }
+
         /* ── Global Background ─── */
         .stApp {
             background: #060613;
@@ -225,13 +234,13 @@ def inject_css():
 
         /* ── Premium Sidebar Radio Menu Items ─── */
         section[data-testid="stSidebar"] div[data-testid="stRadio"] > div {
-            gap: 0.45rem !important;
+            gap: 0.4rem !important;
         }
         section[data-testid="stSidebar"] div[data-testid="stRadio"] label {
             background: rgba(255, 255, 255, 0.02) !important;
             border: 1px solid rgba(255, 255, 255, 0.06) !important;
             border-radius: 12px !important;
-            padding: 0.7rem 1rem !important;
+            padding: 0.65rem 1rem !important;
             margin-bottom: 0.1rem !important;
             cursor: pointer !important;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -244,7 +253,7 @@ def inject_css():
             display: none !important;
         }
         section[data-testid="stSidebar"] div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p {
-            font-size: 0.92rem !important;
+            font-size: 0.9rem !important;
             font-weight: 500 !important;
             color: rgba(255, 255, 255, 0.65) !important;
             margin: 0 !important;
@@ -292,46 +301,46 @@ def inject_css():
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.7rem 1rem;
+            gap: 0.4rem;
+            padding: 0.45rem 0.8rem;
             background: linear-gradient(135deg, rgba(10, 10, 30, 0.9) 0%, rgba(15, 15, 40, 0.9) 100%);
             border: 1px solid rgba(124, 77, 255, 0.1);
             border-radius: 12px;
-            margin-bottom: 1.2rem;
+            margin-bottom: 0.8rem;
             overflow-x: auto;
             flex-wrap: nowrap;
         }
         .ticker-item {
             text-align: center;
-            min-width: 90px;
+            min-width: 85px;
             flex-shrink: 0;
         }
         .ticker-name {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             font-weight: 600;
             color: rgba(255,255,255,0.45);
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
         }
         .ticker-price {
-            font-size: 0.95rem;
+            font-size: 0.88rem;
             font-weight: 700;
             color: #fff;
             font-family: 'JetBrains Mono', monospace;
         }
         .ticker-change {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             font-weight: 600;
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* ── Metric Cards ─── */
+        /* ── Metric Cards (Compact Top Row) ─── */
         .metric-card {
             background: linear-gradient(135deg, rgba(15, 15, 35, 0.8) 0%, rgba(20, 20, 50, 0.6) 100%);
             border: 1px solid rgba(124, 77, 255, 0.12);
-            border-radius: 16px;
-            padding: 1.2rem;
+            border-radius: 14px;
+            padding: 0.75rem 0.6rem;
             text-align: center;
             transition: all 0.3s ease;
         }
@@ -340,66 +349,65 @@ def inject_css():
             transform: translateY(-2px);
         }
         .metric-label {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             font-weight: 600;
             color: rgba(255,255,255,0.4);
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin-bottom: 0.4rem;
+            letter-spacing: 1.2px;
+            margin-bottom: 0.2rem;
         }
         .metric-value {
-            font-size: 1.6rem;
+            font-size: 1.35rem;
             font-weight: 800;
             color: #fff;
             font-family: 'JetBrains Mono', monospace;
         }
         .metric-change {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 600;
             font-family: 'JetBrains Mono', monospace;
-            margin-top: 0.2rem;
+            margin-top: 0.1rem;
         }
 
         /* ── Section Panel ─── */
         .section-panel {
             background: linear-gradient(135deg, rgba(12, 12, 30, 0.8) 0%, rgba(18, 18, 45, 0.6) 100%);
             border: 1px solid rgba(124, 77, 255, 0.1);
-            border-radius: 16px;
-            padding: 1.2rem;
-            margin-bottom: 1rem;
-            height: 100%;
+            border-radius: 14px;
+            padding: 0.9rem 1rem;
+            margin-bottom: 0.6rem;
             box-sizing: border-box;
         }
         .section-title {
-            font-size: 0.95rem;
+            font-size: 0.88rem;
             font-weight: 700;
             color: rgba(255,255,255,0.85);
-            margin-bottom: 0.8rem;
+            margin-bottom: 0.5rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
         }
 
         /* ── News Items ─── */
         .news-item {
-            padding: 0.6rem 0;
+            padding: 0.4rem 0;
             border-bottom: 1px solid rgba(255,255,255,0.05);
             transition: background 0.2s ease;
         }
         .news-item:hover {
             background: rgba(124, 77, 255, 0.05);
-            border-radius: 8px;
-            padding-left: 0.4rem;
+            border-radius: 6px;
+            padding-left: 0.3rem;
         }
         .news-item:last-child {
             border-bottom: none;
         }
         .news-title {
-            font-size: 0.84rem;
+            font-size: 0.8rem;
             font-weight: 500;
             color: rgba(255,255,255,0.8);
-            line-height: 1.35;
-            margin-bottom: 0.2rem;
+            line-height: 1.25;
+            margin-bottom: 0.15rem;
         }
         .news-title a {
             color: rgba(255,255,255,0.8) !important;
@@ -409,7 +417,7 @@ def inject_css():
             color: #7c4dff !important;
         }
         .news-meta {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             color: rgba(255,255,255,0.35);
         }
         .news-source {
@@ -419,38 +427,38 @@ def inject_css():
 
         /* ── Rates Table ─── */
         .rates-section {
-            margin-bottom: 0.8rem;
+            margin-bottom: 0.5rem;
         }
         .rates-country {
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             font-weight: 700;
             color: rgba(255,255,255,0.6);
-            margin-bottom: 0.4rem;
+            margin-bottom: 0.3rem;
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.3rem;
         }
         .rate-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.35rem 0;
+            padding: 0.25rem 0;
             border-bottom: 1px solid rgba(255,255,255,0.04);
         }
         .rate-name {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: rgba(255,255,255,0.65);
         }
         .rate-value {
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             font-weight: 700;
             color: #fff;
             font-family: 'JetBrains Mono', monospace;
         }
         .rate-note {
-            font-size: 0.68rem;
+            font-size: 0.65rem;
             font-weight: 500;
-            margin-left: 0.3rem;
+            margin-left: 0.2rem;
         }
 
         /* ── App Cards (Compact) ─── */
@@ -565,24 +573,24 @@ def inject_css():
         .cal-event {
             display: flex;
             align-items: center;
-            gap: 0.6rem;
-            padding: 0.5rem 0;
+            gap: 0.5rem;
+            padding: 0.35rem 0;
             border-bottom: 1px solid rgba(255,255,255,0.04);
         }
         .cal-event:last-child { border-bottom: none; }
-        .cal-flag { font-size: 1rem; }
+        .cal-flag { font-size: 0.95rem; }
         .cal-name {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: rgba(255,255,255,0.75);
             flex: 1;
         }
         .cal-importance {
-            font-size: 0.6rem;
+            font-size: 0.58rem;
             font-weight: 700;
-            padding: 2px 6px;
+            padding: 1px 5px;
             border-radius: 4px;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.3px;
         }
         .cal-importance.alta {
             background: rgba(239, 68, 68, 0.15);
@@ -598,20 +606,20 @@ def inject_css():
         /* ── Fear & Greed Gauge ─── */
         .fg-gauge {
             text-align: center;
-            padding: 0.5rem 0;
+            padding: 0.3rem 0;
         }
         .fg-value {
-            font-size: 2.4rem;
+            font-size: 2.1rem;
             font-weight: 900;
             font-family: 'JetBrains Mono', monospace;
         }
         .fg-label {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
-            margin-top: 0.2rem;
+            margin-top: 0.1rem;
         }
         .fg-sublabel {
-            font-size: 0.65rem;
+            font-size: 0.62rem;
             color: rgba(255,255,255,0.35);
             margin-top: 0.1rem;
         }
@@ -621,22 +629,22 @@ def inject_css():
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.35rem 0;
+            padding: 0.25rem 0;
             border-bottom: 1px solid rgba(255,255,255,0.04);
         }
         .mover-ticker {
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             font-weight: 700;
             color: rgba(255,255,255,0.8);
             font-family: 'JetBrains Mono', monospace;
         }
         .mover-price {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: rgba(255,255,255,0.5);
             font-family: 'JetBrains Mono', monospace;
         }
         .mover-change {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
         }
@@ -644,28 +652,33 @@ def inject_css():
         /* ── Footer ─── */
         .portal-footer {
             text-align: center;
-            padding: 2rem 0 1.5rem;
+            padding: 1.5rem 0 1rem;
             border-top: 1px solid rgba(124, 77, 255, 0.08);
-            margin-top: 2rem;
+            margin-top: 1.5rem;
         }
         .portal-footer .brand {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 700;
             color: rgba(255,255,255,0.2);
             letter-spacing: 2px;
             text-transform: uppercase;
         }
         .portal-footer .copy {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             color: rgba(255,255,255,0.12);
-            margin-top: 0.3rem;
+            margin-top: 0.2rem;
         }
 
         /* ── Responsive ─── */
         @media (max-width: 768px) {
+            .block-container {
+                padding-top: 1rem !important;
+                padding-left: 0.8rem !important;
+                padding-right: 0.8rem !important;
+            }
             .ticker-bar {
                 gap: 0.3rem;
-                padding: 0.5rem 0.6rem;
+                padding: 0.4rem 0.5rem;
             }
             .ticker-item {
                 min-width: 70px;
@@ -713,7 +726,7 @@ def render_ticker_bar():
 # Page: Dashboard
 # ─────────────────────────────────────────
 def page_dashboard():
-    """Visão geral do portal com métricas, notícias, agenda e juros."""
+    """Visão geral do portal compacta sem rolagem no desktop."""
     from modules.market_data import get_market_overview, get_top_movers
     from modules.interest_rates import get_brazilian_rates, get_international_rates
     from modules.news_feed import get_news
@@ -732,8 +745,6 @@ def page_dashboard():
             else:
                 st_html(f'<div class="metric-card"><div class="metric-label">{name}</div><div class="metric-value">—</div><div class="metric-change" style="color:#666">carregando...</div></div>')
 
-    st_html('<br>')
-
     # ── Main Layout: Coluna Esquerda [3] | Coluna Direita [2] ──
     col_left, col_right = st.columns([3, 2])
 
@@ -747,7 +758,7 @@ def page_dashboard():
             tab_br, tab_world = st.tabs(["🇧🇷 Brasil", "🌎 Mundo"])
 
             with tab_br:
-                news_br = get_news("Brasil", max_items=5)
+                news_br = get_news("Brasil", max_items=4)
                 if news_br:
                     news_html = ""
                     for item in news_br:
@@ -757,7 +768,7 @@ def page_dashboard():
                     st.caption("Nenhuma notícia disponível no momento.")
 
             with tab_world:
-                news_world = get_news("Mundo", max_items=5)
+                news_world = get_news("Mundo", max_items=4)
                 if news_world:
                     news_html = ""
                     for item in news_world:
@@ -776,7 +787,7 @@ def page_dashboard():
             with tab_all:
                 events = get_economic_calendar()
                 events_html = ""
-                for ev in events[:6]:
+                for ev in events[:5]:
                     imp_class = "alta" if ev["importance"] == "Alta" else "media"
                     events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
                 st_html(events_html)
@@ -785,7 +796,7 @@ def page_dashboard():
                 from modules.economic_calendar import get_events_by_country
                 events_br = get_events_by_country("Brasil")
                 events_html = ""
-                for ev in events_br[:6]:
+                for ev in events_br[:5]:
                     imp_class = "alta" if ev["importance"] == "Alta" else "media"
                     events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
                 st_html(events_html)
@@ -793,7 +804,7 @@ def page_dashboard():
             with tab_eua:
                 events_eua = get_events_by_country("EUA")
                 events_html = ""
-                for ev in events_eua[:6]:
+                for ev in events_eua[:5]:
                     imp_class = "alta" if ev["importance"] == "Alta" else "media"
                     events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
                 st_html(events_html)
@@ -841,16 +852,16 @@ def page_dashboard():
             st_html('</div>')
 
         with col_mov:
-            movers = get_top_movers(n=3)
+            movers = get_top_movers(n=2)
             st_html('<div class="section-panel"><div class="section-title">🔥 Destaques</div>')
             if movers.get("altas"):
-                movers_html = '<div style="margin-bottom:0.4rem"><span style="font-size:0.7rem;font-weight:700;color:#00e676">▲ Altas</span></div>'
+                movers_html = '<div style="margin-bottom:0.2rem"><span style="font-size:0.68rem;font-weight:700;color:#00e676">▲ Altas</span></div>'
                 for m in movers["altas"]:
                     pct = f"+{m['change_pct']:.1f}%".replace(".", ",")
                     movers_html += f'<div class="mover-row"><span class="mover-ticker">{m["ticker"]}</span><span class="mover-change" style="color:#00e676">{pct}</span></div>'
 
                 if movers.get("baixas"):
-                    movers_html += '<div style="margin: 0.5rem 0 0.3rem"><span style="font-size:0.7rem;font-weight:700;color:#ef4444">▼ Baixas</span></div>'
+                    movers_html += '<div style="margin: 0.3rem 0 0.2rem"><span style="font-size:0.68rem;font-weight:700;color:#ef4444">▼ Baixas</span></div>'
                     for m in movers["baixas"]:
                         pct = f"{m['change_pct']:.1f}%".replace(".", ",")
                         movers_html += f'<div class="mover-row"><span class="mover-ticker">{m["ticker"]}</span><span class="mover-change" style="color:#ef4444">{pct}</span></div>'
