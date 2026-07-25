@@ -296,51 +296,51 @@ def inject_css():
             font-weight: 700 !important;
         }
 
-        /* ── Ticker Bar ─── */
+        /* ── Ticker Bar (Com Rótulos Destacados) ─── */
         .ticker-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 0.4rem;
-            padding: 0.45rem 0.8rem;
-            background: linear-gradient(135deg, rgba(10, 10, 30, 0.9) 0%, rgba(15, 15, 40, 0.9) 100%);
-            border: 1px solid rgba(124, 77, 255, 0.1);
+            gap: 0.5rem;
+            padding: 0.55rem 1rem;
+            background: linear-gradient(135deg, rgba(10, 10, 30, 0.95) 0%, rgba(15, 15, 45, 0.95) 100%);
+            border: 1px solid rgba(124, 77, 255, 0.2);
             border-radius: 12px;
-            margin-bottom: 0.8rem;
+            margin-bottom: 1rem;
             overflow-x: auto;
             flex-wrap: nowrap;
         }
         .ticker-item {
             text-align: center;
-            min-width: 85px;
+            min-width: 90px;
             flex-shrink: 0;
         }
         .ticker-name {
-            font-size: 0.62rem;
-            font-weight: 600;
-            color: rgba(255,255,255,0.45);
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: #00c8ff;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 1px;
+            margin-bottom: 2px;
         }
         .ticker-price {
-            font-size: 0.88rem;
+            font-size: 0.92rem;
             font-weight: 700;
-            color: #fff;
+            color: #ffffff;
             font-family: 'JetBrains Mono', monospace;
         }
         .ticker-change {
-            font-size: 0.68rem;
+            font-size: 0.72rem;
             font-weight: 600;
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* ── Metric Cards (Prominent Clear Identification Labels) ─── */
+        /* ── Metric Cards (Cards Destacados Sem Duplicação) ─── */
         .metric-card {
             background: linear-gradient(135deg, rgba(15, 15, 35, 0.85) 0%, rgba(20, 20, 50, 0.65) 100%);
             border: 1px solid rgba(124, 77, 255, 0.18);
             border-radius: 14px;
-            padding: 0.8rem 0.6rem;
+            padding: 0.85rem 0.8rem;
             text-align: center;
             transition: all 0.3s ease;
         }
@@ -349,7 +349,7 @@ def inject_css():
             transform: translateY(-2px);
         }
         .metric-label {
-            font-size: 0.82rem;
+            font-size: 0.85rem;
             font-weight: 800;
             color: #7c4dff;
             text-transform: uppercase;
@@ -357,7 +357,7 @@ def inject_css():
             margin-bottom: 0.25rem;
         }
         .metric-value {
-            font-size: 1.4rem;
+            font-size: 1.45rem;
             font-weight: 800;
             color: #ffffff;
             font-family: 'JetBrains Mono', monospace;
@@ -705,10 +705,10 @@ def inject_css():
 
 
 # ─────────────────────────────────────────
-# Ticker Bar Component
+# Ticker Bar Component (Barra Superior Completa)
 # ─────────────────────────────────────────
 def render_ticker_bar():
-    """Renderiza a barra de cotações no topo."""
+    """Renderiza a barra de cotações no topo com nomes destacados."""
     from modules.market_data import get_market_overview
 
     market = get_market_overview()
@@ -726,16 +726,16 @@ def render_ticker_bar():
 # Page: Dashboard
 # ─────────────────────────────────────────
 def page_dashboard():
-    """Visão geral do portal com métricas claras, notícias, agenda e juros."""
+    """Visão geral do portal com métricas sem duplicação do BTC."""
     from modules.market_data import get_market_overview, get_top_movers
     from modules.interest_rates import get_brazilian_rates, get_international_rates
     from modules.news_feed import get_news
     from modules.economic_calendar import get_economic_calendar
     from modules.fear_greed import get_fear_greed
 
-    # ── Metric Cards (Topo) com Identificação Destacada ──
+    # ── Metric Cards (4 Indicadores Principais Sem Repetir o BTC) ──
     market = get_market_overview()
-    main_metrics = ["IBOV", "S&P 500", "NASDAQ", "DÓLAR", "BTC"]
+    main_metrics = ["IBOV", "S&P 500", "NASDAQ", "DÓLAR"]
     cols = st.columns(len(main_metrics))
     for i, name in enumerate(main_metrics):
         with cols[i]:
@@ -841,7 +841,7 @@ def page_dashboard():
 
         st_html('</div>')
 
-        # Sub-colunas: Sentimento do Mercado | Destaques do Dia (Lado a lado!)
+        # Sub-colunas: Sentimento do Mercado | Destaques do Dia
         col_fg, col_mov = st.columns(2)
 
         with col_fg:
