@@ -9,15 +9,14 @@ import pandas as pd
 
 
 TICKERS_CONFIG = {
-    "IBOV":    {"symbol": "^BVSP",    "prefix": "",     "suffix": "",  "decimals": 0},
-    "S&P 500": {"symbol": "^GSPC",    "prefix": "",     "suffix": "",  "decimals": 2},
-    "NASDAQ":  {"symbol": "^IXIC",    "prefix": "",     "suffix": "",  "decimals": 2},
-    "DÓLAR":   {"symbol": "BRL=X",    "prefix": "R$ ",  "suffix": "",  "decimals": 2},
-    "SELIC":   {"symbol": None,       "prefix": "",     "suffix": "%", "decimals": 2},
-    "VIX":     {"symbol": "^VIX",     "prefix": "",     "suffix": "",  "decimals": 2},
-    "BTC":     {"symbol": "BTC-USD",  "prefix": "US$ ", "suffix": "",  "decimals": 0},
-    "PETR4":   {"symbol": "PETR4.SA", "prefix": "R$ ",  "suffix": "",  "decimals": 2},
-    "VALE3":   {"symbol": "VALE3.SA", "prefix": "R$ ",  "suffix": "",  "decimals": 2},
+    "IBOV":             {"symbol": "^BVSP",     "prefix": "",     "suffix": "",  "decimals": 0},
+    "STOXX 50":         {"symbol": "^STOXX50E", "prefix": "",     "suffix": "",  "decimals": 2},
+    "NIKKEI 225":       {"symbol": "^N225",     "prefix": "",     "suffix": "",  "decimals": 2},
+    "DÓLAR":            {"symbol": "BRL=X",     "prefix": "R$ ",  "suffix": "",  "decimals": 2},
+    "VIX":              {"symbol": "^VIX",      "prefix": "",     "suffix": "",  "decimals": 2},
+    "BTC":              {"symbol": "BTC-USD",   "prefix": "US$ ", "suffix": "",  "decimals": 0},
+    "BRENT":            {"symbol": "BZ=F",      "prefix": "US$ ", "suffix": "",  "decimals": 2},
+    "MINÉRIO (DALIAN)": {"symbol": "TIO=F",     "prefix": "US$ ", "suffix": "",  "decimals": 2},
 }
 
 
@@ -120,7 +119,7 @@ def get_market_overview() -> dict:
 
 
 @st.cache_data(ttl=300, show_spinner=False)
-def get_top_movers(n: int = 6) -> dict:
+def get_top_movers(n: int = 5) -> dict:
     """Retorna as maiores altas e baixas do dia entre os principais ativos da B3."""
     ibov_tickers = [
         "PETR4.SA", "VALE3.SA", "ITUB4.SA", "BBDC4.SA", "BBAS3.SA",

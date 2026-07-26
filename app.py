@@ -760,16 +760,16 @@ def render_ticker_bar():
 # Page: Dashboard
 # ─────────────────────────────────────────
 def page_dashboard():
-    """Visão geral do portal com velocímetro SVG para Sentimento de Mercado."""
+    """Visão geral do portal com 5 Destaques, Notícias expandidas e novos índices globais."""
     from modules.market_data import get_market_overview, get_top_movers
     from modules.interest_rates import get_brazilian_rates, get_international_rates
     from modules.news_feed import get_news
     from modules.economic_calendar import get_economic_calendar
     from modules.fear_greed import get_fear_greed
 
-    # ── Metric Cards (4 Indicadores Principais Sem Repetir o BTC) ──
+    # ── Metric Cards (4 Indicadores Globais Principais) ──
     market = get_market_overview()
-    main_metrics = ["IBOV", "S&P 500", "NASDAQ", "DÓLAR"]
+    main_metrics = ["IBOV", "STOXX 50", "NIKKEI 225", "DÓLAR"]
     cols = st.columns(len(main_metrics))
     for i, name in enumerate(main_metrics):
         with cols[i]:
@@ -781,21 +781,21 @@ def page_dashboard():
 
     st_html('<div style="margin-bottom: 0.8rem;"></div>')
 
-    # ── Main Layout (4 Colunas): Destaques | Notícias | Agenda | Juros + Sentimento (Velocímetro) ──
-    col_mov, col_news, col_agenda, col_right = st.columns([1.3, 2.1, 2.1, 1.8])
+    # ── Main Layout (4 Colunas): Destaques (5 Altas/Baixas) | Notícias (10 itens) | Agenda | Juros + Sentimento (Velocímetro) ──
+    col_mov, col_news, col_agenda, col_right = st.columns([1.4, 2.2, 2.0, 1.8])
 
-    # ── Col 1: 🔥 Destaques do Dia (À esquerda de Notícias) ──
+    # ── Col 1: 🔥 Destaques do Dia (5 Altas e 5 Baixas mais relevantes) ──
     with col_mov:
-        movers = get_top_movers(n=4)
+        movers = get_top_movers(n=5)
         st_html('<div class="section-panel"><div class="section-title">🔥 Destaques</div>')
         if movers.get("altas"):
-            movers_html = '<div style="margin-bottom:0.2rem"><span style="font-size:0.72rem;font-weight:700;color:#00e676">▲ Altas</span></div>'
+            movers_html = '<div style="margin-bottom:0.2rem"><span style="font-size:0.72rem;font-weight:700;color:#00e676">▲ Altas (Top 5)</span></div>'
             for m in movers["altas"]:
                 pct = f"+{m['change_pct']:.1f}%".replace(".", ",")
                 movers_html += f'<div class="mover-row"><span class="mover-ticker">{m["ticker"]}</span><span class="mover-price">{m["formatted_price"]}</span><span class="mover-change" style="color:#00e676">{pct}</span></div>'
 
             if movers.get("baixas"):
-                movers_html += '<div style="margin: 0.4rem 0 0.2rem"><span style="font-size:0.72rem;font-weight:700;color:#ef4444">▼ Baixas</span></div>'
+                movers_html += '<div style="margin: 0.5rem 0 0.2rem"><span style="font-size:0.72rem;font-weight:700;color:#ef4444">▼ Baixas (Top 5)</span></div>'
                 for m in movers["baixas"]:
                     pct = f"{m['change_pct']:.1f}%".replace(".", ",")
                     movers_html += f'<div class="mover-row"><span class="mover-ticker">{m["ticker"]}</span><span class="mover-price">{m["formatted_price"]}</span><span class="mover-change" style="color:#ef4444">{pct}</span></div>'
@@ -805,14 +805,14 @@ def page_dashboard():
             st.caption("Carregando...")
         st_html('</div>')
 
-    # ── Col 2: 📰 Principais Notícias (Centro) ──
+    # ── Col 2: 📰 Principais Notícias (Feed Expandido com 10 notícias intercaladas) ──
     with col_news:
         st_html('<div class="section-panel"><div class="section-title">📰 Principais Notícias</div>')
 
         tab_br, tab_world = st.tabs(["Brasil", "Mundo"])
 
         with tab_br:
-            news_br = get_news("Brasil", max_items=6)
+            news_br = get_news("Brasil", max_items=10)
             if news_br:
                 news_html = ""
                 for item in news_br:
@@ -822,7 +822,7 @@ def page_dashboard():
                 st.caption("Nenhuma notícia disponível no momento.")
 
         with tab_world:
-            news_world = get_news("Mundo", max_items=6)
+            news_world = get_news("Mundo", max_items=10)
             if news_world:
                 news_html = ""
                 for item in news_world:
@@ -833,7 +833,7 @@ def page_dashboard():
 
         st_html('</div>')
 
-    # ── Col 3: 📅 Agenda Econômica (Centro) ──
+    # ── Col 3: 📅 Agenda Econômica ──
     with col_agenda:
         st_html('<div class="section-panel"><div class="section-title">📅 Agenda Econômica</div>')
 
@@ -842,7 +842,7 @@ def page_dashboard():
         with tab_all:
             events = get_economic_calendar()
             events_html = ""
-            for ev in events[:6]:
+            for ev in events[:8]:
                 imp_class = "alta" if ev["importance"] == "Alta" else "media"
                 events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
             st_html(events_html)
@@ -851,7 +851,7 @@ def page_dashboard():
             from modules.economic_calendar import get_events_by_country
             events_br = get_events_by_country("Brasil")
             events_html = ""
-            for ev in events_br[:6]:
+            for ev in events_br[:8]:
                 imp_class = "alta" if ev["importance"] == "Alta" else "media"
                 events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
             st_html(events_html)
@@ -859,7 +859,7 @@ def page_dashboard():
         with tab_eua:
             events_eua = get_events_by_country("EUA")
             events_html = ""
-            for ev in events_eua[:6]:
+            for ev in events_eua[:8]:
                 imp_class = "alta" if ev["importance"] == "Alta" else "media"
                 events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
             st_html(events_html)
@@ -1004,7 +1004,7 @@ def page_news():
     from modules.news_feed import get_news
 
     st.markdown("### 📰 Notícias Financeiras")
-    st.caption("Fontes: InfoMoney, Valor Econômico, Exame, G1 Economia, Yahoo Finance, CNBC, MarketWatch, Reuters")
+    st.caption("Fontes: InfoMoney, Valor Econômico, Exame, G1 Economia, Money Times, Investing.com, CNN Economia, Yahoo Finance, CNBC, MarketWatch, Reuters, WSJ")
 
     tab_br, tab_world = st.tabs(["Brasil", "Mundo"])
 
@@ -1075,7 +1075,7 @@ def page_about():
         - Yahoo Finance API & Fundamentus
         - API do Banco Central do Brasil (SGS)
         - CoinGecko / Binance WebSockets
-        - RSS Feeds (InfoMoney, Valor, Exame, G1, CNBC, MarketWatch, Reuters)
+        - RSS Feeds (InfoMoney, Valor, Exame, G1, Money Times, Investing, CNBC, Reuters)
         - Pipelines automatizados (GitHub Actions)
         """)
     with t2:

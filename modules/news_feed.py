@@ -1,12 +1,12 @@
 """
-news_feed.py — Feed de notícias financeiras via RSS.
-Fontes: InfoMoney, Valor Econômico, Exame, G1 Economia, Yahoo Finance, CNBC, MarketWatch, Reuters.
+news_feed.py — Feed de notícias financeiras via RSS com múltiplas fontes intercaladas.
+Fontes: InfoMoney, Valor Econômico, Exame, G1 Economia, Money Times, Investing.com, CNN Economia, Yahoo Finance, CNBC, MarketWatch, Reuters.
 """
 
 import streamlit as st
 import feedparser
 from datetime import datetime, timezone
-import time as _time
+import re
 
 
 FEEDS_BR = [
@@ -14,6 +14,9 @@ FEEDS_BR = [
     {"name": "Valor Econômico", "url": "https://pox.globo.com/rss/valor/",             "icon": "📰"},
     {"name": "Exame",           "url": "https://exame.com/feed/",                      "icon": "📰"},
     {"name": "G1 Economia",     "url": "https://g1.globo.com/rss/g1/economia/",        "icon": "📰"},
+    {"name": "Money Times",     "url": "https://www.moneytimes.com.br/feed/",          "icon": "📰"},
+    {"name": "Investing.com BR","url": "https://br.investing.com/rss/news_285.rss",    "icon": "📰"},
+    {"name": "CNN Economia",    "url": "https://www.cnnbrasil.com.br/economia/feed/",  "icon": "📰"},
 ]
 
 FEEDS_WORLD = [
@@ -21,6 +24,8 @@ FEEDS_WORLD = [
     {"name": "CNBC",            "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664",   "icon": "🌎"},
     {"name": "MarketWatch",     "url": "https://feeds.content.dowjones.io/public/rss/mw_topstories",                           "icon": "🌎"},
     {"name": "Reuters",         "url": "https://www.reutersagency.com/feed/?taxonomy=best-topics&post_type=best",              "icon": "🌎"},
+    {"name": "Investing.com",   "url": "https://www.investing.com/rss/news_1.rss",                                            "icon": "🌎"},
+    {"name": "WSJ Markets",     "url": "https://feeds.a.dj.com/rss/RSSMarketsMain.xml",                                        "icon": "🌎"},
 ]
 
 
@@ -53,17 +58,16 @@ def _parse_date(entry) -> str:
 
 def _clean_title(title: str) -> str:
     """Remove tags HTML residuais e trunca títulos longos."""
-    import re
     title = re.sub(r"<[^>]+>", "", title)
-    if len(title) > 130:
-        title = title[:127] + "..."
+    if len(title) > 120:
+        title = title[:117] + "..."
     return title.strip()
 
 
 @st.cache_data(ttl=600, show_spinner=False)
 def get_news(region: str = "Brasil", max_items: int = 10) -> list:
     """
-    Busca notícias via RSS.
+    Busca notícias via RSS intercalando múltiplas fontes para máxima diversidade.
     Args:
         region: 'Brasil' ou 'Mundo'
         max_items: Número máximo de notícias
@@ -71,32 +75,43 @@ def get_news(region: str = "Brasil", max_items: int = 10) -> list:
         Lista de dicts: {title, link, source, time_ago, icon}
     """
     feeds = FEEDS_BR if region == "Brasil" else FEEDS_WORLD
-    all_entries = []
+    feed_buckets = []
 
     for feed_info in feeds:
         try:
             parsed = feedparser.parse(feed_info["url"])
-            for entry in parsed.entries[:max_items]:
+            bucket = []
+            for entry in parsed.entries[:5]:
                 title = _clean_title(entry.get("title", ""))
                 link = entry.get("link", "#")
                 time_ago = _parse_date(entry)
 
                 if title:
-                    all_entries.append({
+                    bucket.append({
                         "title": title,
                         "link": link,
                         "source": feed_info["name"],
                         "time_ago": time_ago,
                         "icon": feed_info["icon"],
                     })
+            if bucket:
+                feed_buckets.append(bucket)
         except Exception:
             continue
+
+    # Intercalar notícias de diferentes fontes (Round-Robin)
+    all_entries = []
+    max_len = max((len(b) for b in feed_buckets), default=0)
+    for i in range(max_len):
+        for bucket in feed_buckets:
+            if i < len(bucket):
+                all_entries.append(bucket[i])
 
     # Remove duplicatas por título similar
     seen = set()
     unique = []
     for item in all_entries:
-        key = item["title"][:50].lower()
+        key = item["title"][:40].lower()
         if key not in seen:
             seen.add(key)
             unique.append(item)
