@@ -364,7 +364,7 @@ def inject_css():
         .ticker-anim-track {
             display: inline-flex;
             white-space: nowrap;
-            animation: tickerMarquee 22s linear infinite;
+            animation: tickerMarquee 38s linear infinite;
             will-change: transform;
         }
         .ticker-anim-item {
@@ -680,14 +680,17 @@ def inject_css():
 # Ticker Bar Component (Carrossel Animado Continuo)
 # ─────────────────────────────────────────
 def render_ticker_bar():
-    """Renderiza a barra de cotações animada no topo (carrossel contínuo)."""
+    """Renderiza a barra de cotações animada no topo (carrossel contínuo com todos os 12 índices mundiais)."""
     from modules.market_data import get_market_overview
 
     market = get_market_overview()
     if not market:
         return
 
-    ticker_items = ["S&P 500", "DOW JONES", "NASDAQ", "RUSSELL 2000"]
+    ticker_items = [
+        "IBOV", "STOXX 50", "NIKKEI 225", "DÓLAR", "VIX", "BTC",
+        "BRENT", "MINÉRIO (DALIAN)", "S&P 500", "DOW JONES", "NASDAQ", "RUSSELL 2000"
+    ]
     single_set_html = ""
     for name in ticker_items:
         if name in market:
@@ -702,7 +705,7 @@ def render_ticker_bar():
             """
 
     # Duplicar o conjunto de ativos para loop contínuo e infinito sem solavancos
-    full_track_html = single_set_html * 5
+    full_track_html = single_set_html * 3
 
     st_html(f"""
     <div class="ticker-anim-wrap">
