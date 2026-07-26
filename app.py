@@ -29,7 +29,7 @@ APPS = [
         "id": "smc",
         "title": "SMC Screener v3.0",
         "subtitle": "Smart Money Concepts",
-        "description": "Detecção automatizada de estruturas institucionais: Order Blocks, Fair Value Gaps, pontos de entrada e saída com Risk/Reward calculado.",
+        "description": "Detecção automatizada de estruturas institucionais: Order Blocks, Fair Value Gaps, pontos de entrada e saída com Risk/Reward calculated.",
         "url": "https://smc-v30.streamlit.app/",
         "icon": "🏦",
         "accent": "#4ecdc4",
@@ -255,7 +255,7 @@ def inject_css():
             font-family: 'Inter', sans-serif;
         }
 
-        /* ── Main Container Top Padding (Prevents Top Clipping) ─── */
+        /* ── Main Container Top Padding ─── */
         .block-container {
             padding-top: 3.2rem !important;
             padding-bottom: 1.2rem !important;
@@ -389,7 +389,7 @@ def inject_css():
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* ── Metric Cards ─── */
+        /* ── Metric Cards (Caixas Maiores Segunda Linha) ─── */
         .metric-card {
             background: linear-gradient(135deg, rgba(15, 15, 35, 0.85) 0%, rgba(20, 20, 50, 0.65) 100%);
             border: 1px solid rgba(124, 77, 255, 0.18);
@@ -749,9 +749,12 @@ def render_ticker_bar():
     if not market:
         return
 
+    top_bar_items = ["IBOV", "STOXX 50", "NIKKEI 225", "DÓLAR", "VIX", "BTC", "BRENT", "MINÉRIO (DALIAN)"]
     items_html = ""
-    for name, data in market.items():
-        items_html += f'<div class="ticker-item"><div class="ticker-name">{name}</div><div class="ticker-price">{data["formatted_price"]}</div><div class="ticker-change" style="color:{data["color"]}">{data["formatted_change"]}</div></div>'
+    for name in top_bar_items:
+        if name in market:
+            data = market[name]
+            items_html += f'<div class="ticker-item"><div class="ticker-name">{name}</div><div class="ticker-price">{data["formatted_price"]}</div><div class="ticker-change" style="color:{data["color"]}">{data["formatted_change"]}</div></div>'
 
     st_html(f'<div class="ticker-bar">{items_html}</div>')
 
@@ -760,16 +763,16 @@ def render_ticker_bar():
 # Page: Dashboard
 # ─────────────────────────────────────────
 def page_dashboard():
-    """Visão geral do portal com 5 Destaques, Notícias expandidas e novos índices globais."""
+    """Visão geral do portal com métricas da segunda linha configuradas para S&P 500, DOW JONES, NASDAQ e RUSSELL 2000."""
     from modules.market_data import get_market_overview, get_top_movers
     from modules.interest_rates import get_brazilian_rates, get_international_rates
     from modules.news_feed import get_news
     from modules.economic_calendar import get_economic_calendar
     from modules.fear_greed import get_fear_greed
 
-    # ── Metric Cards (4 Indicadores Globais Principais) ──
+    # ── Metric Cards (Segunda Linha com Caixas Maiores: S&P 500, DOW JONES, NASDAQ, RUSSELL 2000) ──
     market = get_market_overview()
-    main_metrics = ["IBOV", "STOXX 50", "NIKKEI 225", "DÓLAR"]
+    main_metrics = ["S&P 500", "DOW JONES", "NASDAQ", "RUSSELL 2000"]
     cols = st.columns(len(main_metrics))
     for i, name in enumerate(main_metrics):
         with cols[i]:

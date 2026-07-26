@@ -17,6 +17,10 @@ TICKERS_CONFIG = {
     "BTC":              {"symbol": "BTC-USD",   "prefix": "US$ ", "suffix": "",  "decimals": 0},
     "BRENT":            {"symbol": "BZ=F",      "prefix": "US$ ", "suffix": "",  "decimals": 2},
     "MINÉRIO (DALIAN)": {"symbol": "TIO=F",     "prefix": "US$ ", "suffix": "",  "decimals": 2},
+    "S&P 500":          {"symbol": "^GSPC",     "prefix": "",     "suffix": "",  "decimals": 2},
+    "DOW JONES":        {"symbol": "^DJI",      "prefix": "",     "suffix": "",  "decimals": 2},
+    "NASDAQ":           {"symbol": "^IXIC",     "prefix": "",     "suffix": "",  "decimals": 2},
+    "RUSSELL 2000":     {"symbol": "^RUT",      "prefix": "",     "suffix": "",  "decimals": 2},
 }
 
 
