@@ -29,7 +29,7 @@ APPS = [
         "id": "smc",
         "title": "SMC Screener v3.0",
         "subtitle": "Smart Money Concepts",
-        "description": "Detecção automatizada de estruturas institucionais: Order Blocks, Fair Value Gaps, pontos de entrada e saída com Risk/Reward calculated.",
+        "description": "Detecção automatizada de estruturas institucionais: Order Blocks, Fair Value Gaps, pontos de entrada e saída com Risk/Reward calculado.",
         "url": "https://smc-v30.streamlit.app/",
         "icon": "🏦",
         "accent": "#4ecdc4",
@@ -389,7 +389,7 @@ def inject_css():
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* ── Metric Cards (Caixas Maiores Segunda Linha) ─── */
+        /* ── Metric Cards ─── */
         .metric-card {
             background: linear-gradient(135deg, rgba(15, 15, 35, 0.85) 0%, rgba(20, 20, 50, 0.65) 100%);
             border: 1px solid rgba(124, 77, 255, 0.18);
@@ -637,7 +637,7 @@ def inject_css():
         .cal-name {
             font-size: 0.8rem;
             color: rgba(255,255,255,0.75);
-            flex: 1;
+            line-height: 1.2;
         }
         .cal-importance {
             font-size: 0.6rem;
@@ -784,7 +784,7 @@ def page_dashboard():
 
     st_html('<div style="margin-bottom: 0.8rem;"></div>')
 
-    # ── Main Layout (4 Colunas): Destaques (5 Altas/Baixas) | Notícias (10 itens) | Agenda | Juros + Sentimento (Velocímetro) ──
+    # ── Main Layout (4 Colunas): Destaques (5 Altas/Baixas) | Notícias (10 itens) | Agenda (com datas) | Juros + Sentimento (Velocímetro) ──
     col_mov, col_news, col_agenda, col_right = st.columns([1.4, 2.2, 2.0, 1.8])
 
     # ── Col 1: 🔥 Destaques do Dia (5 Altas e 5 Baixas mais relevantes) ──
@@ -836,7 +836,7 @@ def page_dashboard():
 
         st_html('</div>')
 
-    # ── Col 3: 📅 Agenda Econômica ──
+    # ── Col 3: 📅 Agenda Econômica (Com Datas e Horários de Divulgação Exatos) ──
     with col_agenda:
         st_html('<div class="section-panel"><div class="section-title">📅 Agenda Econômica</div>')
 
@@ -847,7 +847,7 @@ def page_dashboard():
             events_html = ""
             for ev in events[:8]:
                 imp_class = "alta" if ev["importance"] == "Alta" else "media"
-                events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
+                events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><div style="flex:1;min-width:0"><div class="cal-name">{ev["name"]}</div><div style="font-size:0.68rem;color:#00c8ff">📅 Divulgação: {ev["date_formatted"]}</div></div><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
             st_html(events_html)
 
         with tab_br2:
@@ -856,7 +856,7 @@ def page_dashboard():
             events_html = ""
             for ev in events_br[:8]:
                 imp_class = "alta" if ev["importance"] == "Alta" else "media"
-                events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
+                events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><div style="flex:1;min-width:0"><div class="cal-name">{ev["name"]}</div><div style="font-size:0.68rem;color:#00c8ff">📅 Divulgação: {ev["date_formatted"]}</div></div><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
             st_html(events_html)
 
         with tab_eua:
@@ -864,7 +864,7 @@ def page_dashboard():
             events_html = ""
             for ev in events_eua[:8]:
                 imp_class = "alta" if ev["importance"] == "Alta" else "media"
-                events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
+                events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><div style="flex:1;min-width:0"><div class="cal-name">{ev["name"]}</div><div style="font-size:0.68rem;color:#00c8ff">📅 Divulgação: {ev["date_formatted"]}</div></div><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
             st_html(events_html)
 
         st_html('</div>')
@@ -1032,18 +1032,18 @@ def page_news():
 # Page: Agenda Econômica (Expandida)
 # ─────────────────────────────────────────
 def page_calendar():
-    """Agenda econômica expandida com filtros."""
+    """Agenda econômica expandida com datas e horários de divulgação."""
     from modules.economic_calendar import get_economic_calendar, get_events_by_country
 
     st.markdown("### 📅 Agenda Econômica")
-    st.caption("Principais eventos econômicos recorrentes que impactam os mercados.")
+    st.caption("Datas e horários exatos de divulgação dos principais eventos macroeconômicos.")
 
     tab_all, tab_br, tab_eua, tab_global = st.tabs(["📋 Todos", "Brasil", "EUA", "🌎 Global"])
 
     def render_events(events):
         for ev in events:
             imp_class = "alta" if ev["importance"] == "Alta" else "media"
-            st_html(f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><span class="cal-name">{ev["name"]}</span><span style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-right:0.5rem">{ev["frequency"]}</span><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>')
+            st_html(f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><div style="flex:1;min-width:0"><div class="cal-name" style="font-size:0.88rem;font-weight:600;color:#fff">{ev["name"]}</div><div style="font-size:0.75rem;color:#00c8ff">📅 Divulgação: {ev["date_formatted"]} ({ev["frequency"]})</div></div><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>')
 
     with tab_all:
         render_events(get_economic_calendar())
