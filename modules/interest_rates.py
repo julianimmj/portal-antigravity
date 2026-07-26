@@ -21,7 +21,7 @@ BCB_SERIES = {
 def get_brazilian_rates() -> dict:
     """
     Busca as taxas de juros brasileiras na API pública do BCB.
-    Retorna dict com nome -> {valor, data}
+    Retorna dict com nome -> {valor, formatted, data, status}
     """
     result = {}
     for name, serie_id in BCB_SERIES.items():
@@ -38,12 +38,14 @@ def get_brazilian_rates() -> dict:
                     "valor": valor,
                     "formatted": f"{valor:.2f}%".replace(".", ","),
                     "data": date_str,
+                    "status": "Vigente",
                 }
         except Exception:
             result[name] = {
                 "valor": None,
                 "formatted": "—",
                 "data": "—",
+                "status": "Indisponível",
             }
 
     return result
@@ -52,12 +54,13 @@ def get_brazilian_rates() -> dict:
 @st.cache_data(ttl=86400, show_spinner=False)
 def get_international_rates() -> dict:
     """
-    Retorna taxas de juros internacionais de referência.
-    Usa yfinance para Treasury 10Y e valores de referência para Fed Funds, BCE e BoJ.
+    Retorna taxas de juros internacionais de referência com formatação uniforme.
     """
     result = {}
 
     # Treasury 10Y via yfinance
+    treasury_val = 4.25
+    treasury_status = "Estável"
     try:
         import yfinance as yf
         t10 = yf.download("^TNX", period="2d", interval="1d", progress=False)
@@ -66,30 +69,31 @@ def get_international_rates() -> dict:
             val = float(closes.iloc[-1])
             prev = float(closes.iloc[-2]) if len(closes) >= 2 else val
             change = val - prev
-            result["Treasury 10Y"] = {
-                "valor": val,
-                "formatted": f"{val:.2f}%".replace(".", ","),
-                "change": change,
-                "change_formatted": f"{change:+.2f}%".replace(".", ",") if abs(change) > 0.001 else "(estável)",
-                "color": "#ef4444" if change > 0.01 else ("#00e676" if change < -0.01 else "#888"),
-            }
+            treasury_val = val
+            treasury_status = f"{change:+.2f}%".replace(".", ",") if abs(change) > 0.01 else "Estável"
     except Exception:
         pass
 
-    # Valores de referência (atualizados periodicamente)
+    result["Treasury 10Y (EUA)"] = {
+        "valor": treasury_val,
+        "formatted": f"{treasury_val:.2f}%".replace(".", ","),
+        "status": treasury_status,
+        "color": "#00c8ff",
+    }
+
+    # Taxas centrais globais padronizadas
     reference_rates = {
-        "Fed Funds Rate": {"valor": 5.50, "note": "estável"},
-        "BCE (Europa)":   {"valor": 4.50, "note": "estável"},
-        "BoJ (Japão)":    {"valor": 0.10, "note": "estável"},
+        "Fed Funds Rate (EUA)": {"valor": 5.50, "status": "Estável"},
+        "BCE (Europa)":          {"valor": 4.50, "status": "Estável"},
+        "BoJ (Japão)":           {"valor": 0.10, "status": "Estável"},
     }
 
     for name, info in reference_rates.items():
         result[name] = {
             "valor": info["valor"],
             "formatted": f'{info["valor"]:.2f}%'.replace(".", ","),
-            "change": 0,
-            "change_formatted": f'({info["note"]})',
-            "color": "#888",
+            "status": info["status"],
+            "color": "rgba(255,255,255,0.45)",
         }
 
     return result

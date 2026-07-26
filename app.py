@@ -486,34 +486,44 @@ def inject_css():
         }
         .rates-country {
             font-size: 0.78rem;
-            font-weight: 700;
-            color: rgba(255,255,255,0.65);
-            margin-bottom: 0.3rem;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
+            font-weight: 800;
+            color: #00c8ff;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 0.4rem;
+            padding-bottom: 0.2rem;
+            border-bottom: 1px solid rgba(0, 200, 255, 0.15);
         }
         .rate-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.28rem 0;
+            padding: 0.45rem 0;
             border-bottom: 1px solid rgba(255,255,255,0.04);
         }
+        .rate-row:last-child {
+            border-bottom: none;
+        }
         .rate-name {
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.7);
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.85);
+        }
+        .rate-val-group {
+            display: flex;
+            align-items: baseline;
+            gap: 0.35rem;
         }
         .rate-value {
-            font-size: 0.82rem;
-            font-weight: 700;
-            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #ffffff;
             font-family: 'JetBrains Mono', monospace;
         }
-        .rate-note {
+        .rate-status {
             font-size: 0.68rem;
             font-weight: 500;
-            margin-left: 0.2rem;
+            color: rgba(255,255,255,0.4);
         }
 
         /* ── App Cards (Compact) ─── */
@@ -879,15 +889,12 @@ def page_dashboard():
 
         rates_html = '<div class="rates-section"><div class="rates-country">Brasil</div>'
         for name, data in br_rates.items():
-            rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><span class="rate-value">{data["formatted"]}</span></div>'
+            rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><div class="rate-val-group"><span class="rate-value">{data["formatted"]}</span></div></div>'
         rates_html += '</div>'
 
-        rates_html += '<div class="rates-section" style="margin-top:0.4rem"><div class="rates-country">EUA / Internacional</div>'
-        for name in ["Fed Funds Rate", "Treasury 10Y", "BCE (Europa)", "BoJ (Japão)"]:
-            if name in intl_rates:
-                d = intl_rates[name]
-                note = f' <span class="rate-note" style="color:{d["color"]}">{d["change_formatted"]}</span>' if d.get("change_formatted") else ''
-                rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><span class="rate-value">{d["formatted"]}{note}</span></div>'
+        rates_html += '<div class="rates-section" style="margin-top:0.6rem"><div class="rates-country">EUA / Internacional</div>'
+        for name, data in intl_rates.items():
+            rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><div class="rate-val-group"><span class="rate-value">{data["formatted"]}</span><span class="rate-status">({data["status"]})</span></div></div>'
         rates_html += '</div>'
 
         st_html(rates_html)
@@ -966,36 +973,34 @@ def render_app_card(app: dict):
 
 
 # ─────────────────────────────────────────
-# Page: Taxas de Juros (Detalhada)
+# Page: Taxas de Juros (Detalhada com Alinhamento Perfeito)
 # ─────────────────────────────────────────
 def page_rates():
     """Página detalhada de taxas de juros nacionais e internacionais."""
     from modules.interest_rates import get_brazilian_rates, get_international_rates
 
     st.markdown("### 💰 Taxas de Juros — Panorama Global")
-    st.caption("Dados atualizados via API do Banco Central do Brasil e referências internacionais.")
+    st.caption("Dados atualizados via API do Banco Central do Brasil (SGS) e referências internacionais.")
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st_html('<div class="section-panel"><div class="section-title">Brasil</div>')
-
+        st_html('<div class="section-panel"><div class="section-title">🇧🇷 Brasil (Banco Central)</div>')
         br_rates = get_brazilian_rates()
+        rates_html = ""
         for name, data in br_rates.items():
-            st_html(f'<div class="rate-row"><span class="rate-name" style="font-size:1rem">{name}</span><span class="rate-value" style="font-size:1.1rem">{data["formatted"]}</span></div>')
-            if data["data"] != "—":
-                st.caption(f"  Última atualização: {data['data']}")
-
+            sub = f' · Última atualização: {data["data"]}' if data.get("data") and data["data"] != "—" else ""
+            rates_html += f'<div class="rate-row" style="padding: 0.75rem 0.2rem;"><div style="flex:1"><div class="rate-name" style="font-size:0.92rem;font-weight:700;color:#fff">{name}</div><div style="font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:2px">Status: {data.get("status", "Vigente")}{sub}</div></div><div style="text-align:right"><span class="rate-value" style="font-size:1.25rem;color:#00e676">{data["formatted"]}</span></div></div>'
+        st_html(rates_html)
         st_html('</div>')
 
     with col2:
-        st_html('<div class="section-panel"><div class="section-title">EUA / Internacional</div>')
-
+        st_html('<div class="section-panel"><div class="section-title">🌎 EUA / Internacional</div>')
         intl_rates = get_international_rates()
+        rates_html = ""
         for name, data in intl_rates.items():
-            note_html = f'<span class="rate-note" style="color:{data["color"]}">{data["change_formatted"]}</span>'
-            st_html(f'<div class="rate-row"><span class="rate-name" style="font-size:1rem">{name}</span><span class="rate-value" style="font-size:1.1rem">{data["formatted"]} {note_html}</span></div>')
-
+            rates_html += f'<div class="rate-row" style="padding: 0.75rem 0.2rem;"><div style="flex:1"><div class="rate-name" style="font-size:0.92rem;font-weight:700;color:#fff">{name}</div><div style="font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:2px">Status: {data.get("status", "Estável")}</div></div><div style="text-align:right"><span class="rate-value" style="font-size:1.25rem;color:#00c8ff">{data["formatted"]}</span></div></div>'
+        st_html(rates_html)
         st_html('</div>')
 
 
