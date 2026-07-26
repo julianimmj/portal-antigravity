@@ -80,7 +80,7 @@ APPS = [
         "description": "Screener de ações otimizado para dispositivos móveis com algoritmos de seleção baseados em análise técnica e fundamentalista.",
         "url": "https://screenermobile.streamlit.app/",
         "icon": "📱",
-        "accent": "#45b7d1",
+        "accent": "#ffaa00",
         "tags": ["Ações", "Mobile", "Técnica"],
         "category": "Screening & Análise Técnica",
         "status": "online",
@@ -92,7 +92,7 @@ APPS = [
         "description": "Motor quantitativo de análise fundamentalista completo. Inclui painel macroeconômico, mapa setorial, e screener com modelos de valuation e pontuação customizada.",
         "url": "https://fundamentus-engine.streamlit.app/",
         "icon": "🏛️",
-        "accent": "#00ff88",
+        "accent": "#00e676",
         "tags": ["Top-Down", "Macro", "Valuation"],
         "category": "Fundamentalista & Valuation",
         "status": "online",
@@ -104,7 +104,7 @@ APPS = [
         "description": "Motor completo de valuation selecionando entre Gordon Growth Model (DDM), FCD 2 Estágios (DCF) ou Múltiplos Relativos, com filtros de segurança.",
         "url": "https://fair-price.streamlit.app/",
         "icon": "🎯",
-        "accent": "#00e676",
+        "accent": "#ff007a",
         "tags": ["Valuation", "Gordon DDM", "FCD/DCF"],
         "category": "Fundamentalista & Valuation",
         "status": "online",
@@ -128,7 +128,7 @@ APPS = [
         "description": "Screener de opções com precificação Black-Scholes, identificação de opções subavaliadas e análise de volatilidade implícita para o mercado brasileiro.",
         "url": "https://opcoes-screener.streamlit.app/",
         "icon": "📊",
-        "accent": "#ff6b6b",
+        "accent": "#ff3366",
         "tags": ["Opções", "Black-Scholes", "B3"],
         "category": "Opções",
         "status": "online",
@@ -140,7 +140,7 @@ APPS = [
         "description": "Screener que identifica opções com IV historicamente barato (Percentile ≤35%) e monta estruturas Strap/Strip assimétricas com proteção.",
         "url": "https://opassimetricas.streamlit.app/",
         "icon": "🛡️",
-        "accent": "#00d2ff",
+        "accent": "#00e5ff",
         "tags": ["Opções", "Strap/Strip", "Proteção"],
         "category": "Opções",
         "status": "online",
@@ -152,7 +152,7 @@ APPS = [
         "description": "Sistema completo para controle de carteira, custódia e apuração mensal de IR em Ações, BDRs, Opções e FIIs na B3. Gera DARF (6015).",
         "url": "https://positionandtax.streamlit.app/",
         "icon": "💼",
-        "accent": "#7c4dff",
+        "accent": "#e040fb",
         "tags": ["Imposto de Renda", "Custódia", "DARF B3"],
         "category": "Ferramentas & Carteira",
         "status": "online",
@@ -594,7 +594,7 @@ def inject_css():
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            height: 270px;
+            height: 285px;
             box-sizing: border-box;
             position: relative;
             overflow: hidden;
@@ -606,17 +606,23 @@ def inject_css():
             box-shadow: 0 12px 40px rgba(0,0,0,0.4);
         }
         .app-card-compact .card-desc {
-            font-size: 0.8rem;
+            font-size: 0.79rem;
             line-height: 1.45;
             color: rgba(255,255,255,0.55);
-            margin-bottom: 0.8rem;
-            flex: 1;
+            margin-bottom: 0.6rem;
+            height: 3.4em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
         }
         .app-card-compact .card-tags {
             display: flex;
             gap: 0.4rem;
             flex-wrap: wrap;
-            margin-bottom: 1.1rem;
+            margin-bottom: 1.0rem;
+            height: 26px;
+            overflow: hidden;
         }
         .app-card-compact .launch-btn {
             display: inline-flex;
