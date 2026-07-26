@@ -569,7 +569,7 @@ def inject_css():
             color: rgba(255,255,255,0.4);
         }
 
-        /* ── App Cards (Compact) ─── */
+        /* ── App Cards (Compact & Professional Buttons) ─── */
         .app-card-compact {
             background: linear-gradient(135deg, rgba(12, 12, 30, 0.9) 0%, rgba(20, 20, 50, 0.7) 100%);
             border: 1px solid rgba(255,255,255,0.06);
@@ -587,6 +587,35 @@ def inject_css():
             transform: translateY(-4px);
             border-color: rgba(255,255,255,0.15);
             box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+        }
+        .app-card-compact .launch-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0.7rem 1.2rem;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            text-decoration: none !important;
+            color: #ffffff !important;
+            background: linear-gradient(135deg, rgba(20, 20, 45, 0.95) 0%, rgba(30, 30, 65, 0.95) 100%);
+            border: 1px solid var(--btn-accent, #7c4dff);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            letter-spacing: 0.4px;
+            margin-top: auto;
+        }
+        .app-card-compact .launch-btn:hover {
+            background: var(--btn-accent, #7c4dff) !important;
+            color: #060613 !important;
+            font-weight: 900 !important;
+            box-shadow: 0 6px 22px var(--btn-accent, #7c4dff);
+            transform: translateY(-2px);
+            text-decoration: none !important;
         }
 
         /* ── Calendar Event ─── */
@@ -668,12 +697,17 @@ def inject_css():
             margin-top: 0.2rem;
         }
 
-        /* ── Responsive ─── */
+        /* ── Responsive Mobile Spacing Fix ─── */
         @media (max-width: 768px) {
             .block-container {
-                padding-top: 2rem !important;
+                padding-top: 6.8rem !important;
                 padding-left: 0.8rem !important;
                 padding-right: 0.8rem !important;
+            }
+            .ticker-anim-wrap {
+                left: 0.8rem !important;
+                right: 0.8rem !important;
+                top: 2.8rem !important;
             }
             .metric-value {
                 font-size: 1.1rem;
@@ -906,10 +940,26 @@ def page_apps():
 
 
 def render_app_card(app: dict):
-    """Renderiza um card de aplicação compacto."""
+    """Renderiza um card de aplicação compacto com botão de alto contraste e estilo profissional."""
     tags_html = "".join(f'<span class="tag">{t}</span>' for t in app["tags"])
+    accent = app["accent"]
 
-    st_html(f'<div class="app-card-compact" style="border-top: 2px solid {app["accent"]};"><div class="card-header"><span class="card-icon">{app["icon"]}</span><div><div class="card-title">{app["title"]}</div><div class="card-subtitle" style="color:{app["accent"]}">{app["subtitle"]}</div></div></div><div class="card-desc">{app["description"]}</div><div class="card-tags">{tags_html}</div><a href="{app["url"]}" target="_blank" class="launch-btn" style="background:{app["accent"]}">Acessar →</a></div>')
+    st_html(f"""
+    <div class="app-card-compact" style="border-top: 2px solid {accent};">
+        <div class="card-header">
+            <span class="card-icon">{app["icon"]}</span>
+            <div>
+                <div class="card-title">{app["title"]}</div>
+                <div class="card-subtitle" style="color:{accent}">{app["subtitle"]}</div>
+            </div>
+        </div>
+        <div class="card-desc">{app["description"]}</div>
+        <div class="card-tags">{tags_html}</div>
+        <a href="{app["url"]}" target="_blank" class="launch-btn" style="--btn-accent: {accent};">
+            Acessar Aplicação <span style="font-size: 1.05rem; margin-left: 2px;">→</span>
+        </a>
+    </div>
+    """)
 
 
 # ─────────────────────────────────────────
