@@ -733,7 +733,11 @@ def inject_css():
             margin-top: 0.2rem;
         }
 
-        /* ── Responsive Mobile Spacing Fix ─── */
+        /* ── Responsive Mobile Spacing & Layout Fixes ─── */
+        section[data-testid="stSidebar"] {
+            z-index: 1000005 !important;
+        }
+
         @media (max-width: 768px) {
             .block-container {
                 padding-top: 6.8rem !important;
@@ -744,12 +748,36 @@ def inject_css():
                 left: 0.8rem !important;
                 right: 0.8rem !important;
                 top: 2.8rem !important;
+                z-index: 99999 !important;
             }
             .metric-value {
                 font-size: 1.1rem;
             }
             .section-panel {
                 height: auto;
+            }
+            /* Exibir descrição completa sem omissão ou cortes no celular */
+            .app-card-compact {
+                height: auto !important;
+                min-height: 240px !important;
+                padding: 1.2rem 1.1rem !important;
+                margin-bottom: 1.4rem !important;
+            }
+            .app-card-compact .card-desc {
+                height: auto !important;
+                max-height: none !important;
+                -webkit-line-clamp: initial !important;
+                display: block !important;
+                overflow: visible !important;
+                font-size: 0.82rem !important;
+                line-height: 1.5 !important;
+                margin-bottom: 1.0rem !important;
+            }
+            .app-card-compact .card-tags {
+                height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
+                margin-bottom: 1.2rem !important;
             }
         }
     </style>
