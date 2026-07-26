@@ -348,15 +348,18 @@ def inject_css():
             100% { transform: translateX(-50%); }
         }
         .ticker-anim-wrap {
+            position: sticky !important;
+            top: 2.2rem !important;
+            z-index: 99999 !important;
             width: 100%;
             overflow: hidden;
-            background: linear-gradient(135deg, rgba(10, 10, 30, 0.95) 0%, rgba(15, 15, 45, 0.95) 100%);
-            border: 1px solid rgba(124, 77, 255, 0.25);
+            background: linear-gradient(135deg, rgba(10, 10, 30, 0.98) 0%, rgba(15, 15, 45, 0.98) 100%);
+            border: 1px solid rgba(124, 77, 255, 0.35);
             border-radius: 12px;
             padding: 0.65rem 0;
             margin-bottom: 1.1rem;
-            position: relative;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
         }
         .ticker-anim-wrap:hover .ticker-anim-track {
             animation-play-state: paused;
