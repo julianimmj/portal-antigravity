@@ -569,24 +569,54 @@ def inject_css():
             color: rgba(255,255,255,0.4);
         }
 
-        /* ── App Cards (Compact & Professional Buttons) ─── */
+        /* ── Category Header (Subtítulos das Categorias) ─── */
+        .category-header {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-top: 2.2rem;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(124, 77, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: -0.2px;
+        }
+
+        /* ── App Cards (Altura Uniforme & Espaçamento Perfeito) ─── */
         .app-card-compact {
             background: linear-gradient(135deg, rgba(12, 12, 30, 0.9) 0%, rgba(20, 20, 50, 0.7) 100%);
             border: 1px solid rgba(255,255,255,0.06);
             border-radius: 14px;
-            padding: 1.2rem 1.4rem;
+            padding: 1.3rem 1.4rem;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
-            height: 100%;
-            min-height: 220px;
+            justify-content: space-between;
+            height: 270px;
+            box-sizing: border-box;
             position: relative;
             overflow: hidden;
+            margin-bottom: 1.2rem;
         }
         .app-card-compact:hover {
             transform: translateY(-4px);
             border-color: rgba(255,255,255,0.15);
             box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+        }
+        .app-card-compact .card-desc {
+            font-size: 0.8rem;
+            line-height: 1.45;
+            color: rgba(255,255,255,0.55);
+            margin-bottom: 0.8rem;
+            flex: 1;
+        }
+        .app-card-compact .card-tags {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.1rem;
         }
         .app-card-compact .launch-btn {
             display: inline-flex;
