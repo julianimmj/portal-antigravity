@@ -252,9 +252,9 @@ def inject_css():
             font-family: 'Inter', sans-serif;
         }
 
-        /* ── Main Container Padding ─── */
+        /* ── Main Container Padding (com topo ajustado para o Ticker Fixo) ─── */
         .block-container {
-            padding-top: 3.2rem !important;
+            padding-top: 5.6rem !important;
             padding-bottom: 1.2rem !important;
             padding-left: 1.8rem !important;
             padding-right: 1.8rem !important;
@@ -342,32 +342,31 @@ def inject_css():
             font-weight: 700 !important;
         }
 
-        /* ── Ticker Animado Sticky (Fixo no topo de todas as páginas ao rolar) ─── */
-        div[data-testid="element-container"]:has(.ticker-anim-wrap),
-        div[data-testid="stMarkdownContainer"]:has(.ticker-anim-wrap),
-        div:has(> .ticker-anim-wrap) {
-            position: sticky !important;
-            top: 2.2rem !important;
-            z-index: 99999 !important;
-            background: #060613 !important;
-            padding-bottom: 0.2rem !important;
-        }
-
+        /* ── Ticker Animado Fixed (Fixo no topo de todas as páginas ao rolar) ─── */
         @keyframes tickerMarquee {
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
         }
         .ticker-anim-wrap {
-            position: relative !important;
-            width: 100%;
+            position: fixed !important;
+            top: 2.3rem !important;
+            left: 20rem !important;
+            right: 1.8rem !important;
+            z-index: 999999 !important;
             overflow: hidden;
             background: linear-gradient(135deg, rgba(10, 10, 30, 0.98) 0%, rgba(15, 15, 45, 0.98) 100%);
             border: 1px solid rgba(124, 77, 255, 0.35);
             border-radius: 12px;
             padding: 0.65rem 0;
-            margin-bottom: 0.5rem;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(12px);
+        }
+        @media (max-width: 992px) {
+            .ticker-anim-wrap {
+                left: 1rem !important;
+                right: 1rem !important;
+                top: 2.6rem !important;
+            }
         }
         .ticker-anim-wrap:hover .ticker-anim-track {
             animation-play-state: paused;
