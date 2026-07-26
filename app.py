@@ -203,7 +203,7 @@ def render_fear_greed_gauge_svg(value: int, classification: str, color: str) -> 
 
     return f"""
     <div style="text-align: center; padding: 0.1rem 0;">
-        <svg viewBox="0 0 200 110" width="100%" height="135" style="max-width: 220px; margin: 0 auto; display: block;">
+        <svg viewBox="0 0 200 110" width="100%" height="130" style="max-width: 210px; margin: 0 auto; display: block;">
             <defs>
                 <filter id="needleGlow" x="-20%" y="-20%" width="140%" height="140%">
                     <feGaussianBlur stdDeviation="1.5" result="blur" />
@@ -229,10 +229,10 @@ def render_fear_greed_gauge_svg(value: int, classification: str, color: str) -> 
             <circle cx="100" cy="90" r="3" fill="#ffffff" />
         </svg>
 
-        <div style="font-size: 2.2rem; font-weight: 900; color: #ffffff; font-family: 'JetBrains Mono', monospace; line-height: 1; margin-top: -10px;">
+        <div style="font-size: 2.1rem; font-weight: 900; color: #ffffff; font-family: 'JetBrains Mono', monospace; line-height: 1; margin-top: -10px;">
             {val}
         </div>
-        <div style="font-size: 0.82rem; font-weight: 700; color: {color}; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">
+        <div style="font-size: 0.8rem; font-weight: 700; color: {color}; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">
             {classification}
         </div>
         <div style="font-size: 0.65rem; color: rgba(255,255,255,0.35); margin-top: 2px;">
@@ -243,7 +243,7 @@ def render_fear_greed_gauge_svg(value: int, classification: str, color: str) -> 
 
 
 # ─────────────────────────────────────────
-# Custom CSS
+# Custom CSS (Equal Height Flexbox Grid & Animated Ticker)
 # ─────────────────────────────────────────
 def inject_css():
     st_html("""
@@ -350,46 +350,59 @@ def inject_css():
             font-weight: 700 !important;
         }
 
-        /* ── Ticker Bar ─── */
-        .ticker-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.6rem 1rem;
-            background: linear-gradient(135deg, rgba(10, 10, 30, 0.95) 0%, rgba(15, 15, 45, 0.95) 100%);
-            border: 1px solid rgba(124, 77, 255, 0.2);
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            overflow-x: auto;
-            flex-wrap: nowrap;
+        /* ── Ticker Animado (Carrossel Contínuo) ─── */
+        @keyframes tickerMarquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
         }
-        .ticker-item {
-            text-align: center;
-            min-width: 90px;
+        .ticker-anim-wrap {
+            width: 100%;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(10, 10, 30, 0.95) 0%, rgba(15, 15, 45, 0.95) 100%);
+            border: 1px solid rgba(124, 77, 255, 0.25);
+            border-radius: 12px;
+            padding: 0.65rem 0;
+            margin-bottom: 1.1rem;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        .ticker-anim-wrap:hover .ticker-anim-track {
+            animation-play-state: paused;
+        }
+        .ticker-anim-track {
+            display: inline-flex;
+            white-space: nowrap;
+            animation: tickerMarquee 22s linear infinite;
+            will-change: transform;
+        }
+        .ticker-anim-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0 2rem;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
             flex-shrink: 0;
         }
-        .ticker-name {
-            font-size: 0.72rem;
+        .ticker-anim-name {
+            font-size: 0.8rem;
             font-weight: 800;
             color: #00c8ff;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 2px;
         }
-        .ticker-price {
-            font-size: 0.92rem;
+        .ticker-anim-price {
+            font-size: 0.95rem;
             font-weight: 700;
             color: #ffffff;
             font-family: 'JetBrains Mono', monospace;
         }
-        .ticker-change {
-            font-size: 0.72rem;
-            font-weight: 600;
+        .ticker-anim-change {
+            font-size: 0.8rem;
+            font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* ── Metric Cards ─── */
+        /* ── Metric Cards (Segunda Linha: Indicadores Macroeconômicos) ─── */
         .metric-card {
             background: linear-gradient(135deg, rgba(15, 15, 35, 0.85) 0%, rgba(20, 20, 50, 0.65) 100%);
             border: 1px solid rgba(124, 77, 255, 0.18);
@@ -397,6 +410,10 @@ def inject_css():
             padding: 0.85rem 0.8rem;
             text-align: center;
             transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .metric-card:hover {
             border-color: rgba(124, 77, 255, 0.4);
@@ -408,30 +425,46 @@ def inject_css():
             color: #7c4dff;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.15rem;
+        }
+        .metric-subtitle {
+            font-size: 0.68rem;
+            color: rgba(255, 255, 255, 0.45);
+            margin-bottom: 0.3rem;
+            font-weight: 500;
         }
         .metric-value {
-            font-size: 1.45rem;
+            font-size: 1.35rem;
             font-weight: 800;
             color: #ffffff;
             font-family: 'JetBrains Mono', monospace;
         }
         .metric-change {
-            font-size: 0.78rem;
+            font-size: 0.72rem;
             font-weight: 600;
             font-family: 'JetBrains Mono', monospace;
-            margin-top: 0.1rem;
+            margin-top: 0.15rem;
         }
 
-        /* ── Section Panel ─── */
+        /* ── Equal Height Flexbox Grid Setup ─── */
+        div[data-testid="column"] > div[data-testid="stVerticalBlock"] {
+            height: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+        }
+
+        /* ── Section Panel (Grid Principal) ─── */
         .section-panel {
             background: linear-gradient(135deg, rgba(12, 12, 30, 0.8) 0%, rgba(18, 18, 45, 0.6) 100%);
-            border: 1px solid rgba(124, 77, 255, 0.1);
+            border: 1px solid rgba(124, 77, 255, 0.12);
             border-radius: 14px;
             padding: 0.95rem 1.1rem;
-            margin-bottom: 0.8rem;
             box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
             height: 100%;
+            min-height: 520px;
         }
         .section-title {
             font-size: 0.92rem;
@@ -441,6 +474,23 @@ def inject_css():
             display: flex;
             align-items: center;
             gap: 0.4rem;
+            flex-shrink: 0;
+        }
+        .section-panel-content {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 440px;
+            padding-right: 0.2rem;
+        }
+        .section-panel-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        .section-panel-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .section-panel-content::-webkit-scrollbar-thumb {
+            background: rgba(124, 77, 255, 0.3);
+            border-radius: 4px;
         }
 
         /* ── News Items ─── */
@@ -461,7 +511,7 @@ def inject_css():
             font-size: 0.82rem;
             font-weight: 500;
             color: rgba(255,255,255,0.85);
-            line-height: 1.3;
+            line-height: 1.35;
             margin-bottom: 0.15rem;
         }
         .news-title a {
@@ -614,25 +664,6 @@ def inject_css():
             color: #ffffff !important;
             text-decoration: none !important;
         }
-        .app-card-compact .launch-btn:visited,
-        .app-card-compact .launch-btn:focus,
-        .app-card-compact .launch-btn:active {
-            color: #ffffff !important;
-            text-decoration: none !important;
-        }
-
-        /* ── Category Header ─── */
-        .category-header {
-            font-size: 1.15rem;
-            font-weight: 800;
-            color: rgba(255,255,255,0.85);
-            margin: 1.8rem 0 1rem;
-            padding-bottom: 0.6rem;
-            border-bottom: 1px solid rgba(124, 77, 255, 0.15);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
 
         /* ── Calendar Event ─── */
         .cal-event {
@@ -720,28 +751,15 @@ def inject_css():
                 padding-left: 0.8rem !important;
                 padding-right: 0.8rem !important;
             }
-            .ticker-bar {
-                gap: 0.3rem;
-                padding: 0.4rem 0.5rem;
-            }
-            .ticker-item {
-                min-width: 70px;
-            }
-            .ticker-price {
-                font-size: 0.78rem;
-            }
-            .ticker-name {
-                font-size: 0.55rem;
-            }
             .metric-value {
-                font-size: 1.2rem;
+                font-size: 1.1rem;
             }
             .app-card-compact {
                 min-height: auto;
                 padding: 1rem;
             }
-            .category-header {
-                font-size: 1rem;
+            .section-panel {
+                min-height: auto;
             }
         }
     </style>
@@ -749,58 +767,82 @@ def inject_css():
 
 
 # ─────────────────────────────────────────
-# Ticker Bar Component (Barra Superior Completa)
+# Ticker Bar Component (Carrossel Animado Continuo)
 # ─────────────────────────────────────────
 def render_ticker_bar():
-    """Renderiza a barra de cotações no topo com nomes destacados."""
+    """Renderiza a barra de cotações animada no topo (carrossel contínuo)."""
     from modules.market_data import get_market_overview
 
     market = get_market_overview()
     if not market:
         return
 
-    top_bar_items = ["IBOV", "STOXX 50", "NIKKEI 225", "DÓLAR", "VIX", "BTC", "BRENT", "MINÉRIO (DALIAN)"]
-    items_html = ""
-    for name in top_bar_items:
+    ticker_items = ["S&P 500", "DOW JONES", "NASDAQ", "RUSSELL 2000"]
+    single_set_html = ""
+    for name in ticker_items:
         if name in market:
             data = market[name]
-            items_html += f'<div class="ticker-item"><div class="ticker-name">{name}</div><div class="ticker-price">{data["formatted_price"]}</div><div class="ticker-change" style="color:{data["color"]}">{data["formatted_change"]}</div></div>'
+            icon = "▲" if data["change_pct"] >= 0 else "▼"
+            single_set_html += f"""
+            <div class="ticker-anim-item">
+                <span class="ticker-anim-name">{name}</span>
+                <span class="ticker-anim-price">{data["formatted_price"]}</span>
+                <span class="ticker-anim-change" style="color:{data["color"]}">{icon} {data["formatted_change"].replace("▲","").replace("▼","")}</span>
+            </div>
+            """
 
-    st_html(f'<div class="ticker-bar">{items_html}</div>')
+    # Duplicar o conjunto de ativos para loop contínuo e infinito sem solavancos
+    full_track_html = single_set_html * 5
+
+    st_html(f"""
+    <div class="ticker-anim-wrap">
+        <div class="ticker-anim-track">
+            {full_track_html}
+        </div>
+    </div>
+    """)
 
 
 # ─────────────────────────────────────────
 # Page: Dashboard
 # ─────────────────────────────────────────
 def page_dashboard():
-    """Visão geral do portal com métricas da segunda linha configuradas para S&P 500, DOW JONES, NASDAQ e RUSSELL 2000."""
-    from modules.market_data import get_market_overview, get_top_movers
+    """Visão geral do portal com 4 indicadores macroeconômicos e alinhamento de grid perfeito."""
+    from modules.market_data import get_top_movers
+    from modules.macro_indicators import get_macro_indicators
     from modules.interest_rates import get_brazilian_rates, get_international_rates
     from modules.news_feed import get_news
     from modules.economic_calendar import get_economic_calendar
     from modules.fear_greed import get_fear_greed
 
-    # ── Metric Cards (Segunda Linha com Caixas Maiores: S&P 500, DOW JONES, NASDAQ, RUSSELL 2000) ──
-    market = get_market_overview()
-    main_metrics = ["S&P 500", "DOW JONES", "NASDAQ", "RUSSELL 2000"]
-    cols = st.columns(len(main_metrics))
-    for i, name in enumerate(main_metrics):
+    # ── Metric Cards (Segunda Linha: 4 Indicadores Macroeconômicos com Comparação Divulgação Anterior) ──
+    macros = get_macro_indicators()
+    macro_keys = ["caged", "ibcbr", "adp", "cass"]
+    cols = st.columns(len(macro_keys))
+    for i, key in enumerate(macro_keys):
         with cols[i]:
-            if name in market:
-                d = market[name]
-                st_html(f'<div class="metric-card"><div class="metric-label">{name}</div><div class="metric-value">{d["formatted_price"]}</div><div class="metric-change" style="color:{d["color"]}">{d["formatted_change"]}</div></div>')
-            else:
-                st_html(f'<div class="metric-card"><div class="metric-label">{name}</div><div class="metric-value">—</div><div class="metric-change" style="color:#666">carregando...</div></div>')
+            if key in macros:
+                m = macros[key]
+                st_html(f"""
+                <div class="metric-card">
+                    <div class="metric-label">{m["name"]}</div>
+                    <div class="metric-subtitle">{m["subtitle"]}</div>
+                    <div class="metric-value">{m["formatted_val"]}</div>
+                    <div class="metric-change" style="color:{m["color"]}">
+                        {m["formatted_change"]} vs anterior
+                    </div>
+                </div>
+                """)
 
-    st_html('<div style="margin-bottom: 0.8rem;"></div>')
+    st_html('<div style="margin-bottom: 0.9rem;"></div>')
 
-    # ── Main Layout (4 Colunas): Destaques (5 Altas/Baixas) | Notícias (10 itens) | Agenda (com datas) | Juros + Sentimento (Velocímetro) ──
+    # ── Main Layout (4 Colunas com Alinhamento na Mesma Linha Inferior) ──
     col_mov, col_news, col_agenda, col_right = st.columns([1.4, 2.2, 2.0, 1.8])
 
-    # ── Col 1: 🔥 Destaques do Dia (5 Altas e 5 Baixas mais relevantes) ──
+    # ── Col 1: 🔥 Destaques do Dia (5 Altas e 5 Baixas) ──
     with col_mov:
         movers = get_top_movers(n=5)
-        st_html('<div class="section-panel"><div class="section-title">🔥 Destaques</div>')
+        st_html('<div class="section-panel"><div class="section-title">🔥 Destaques</div><div class="section-panel-content">')
         if movers.get("altas"):
             movers_html = '<div style="margin-bottom:0.2rem"><span style="font-size:0.72rem;font-weight:700;color:#00e676">▲ Altas (Top 5)</span></div>'
             for m in movers["altas"]:
@@ -816,11 +858,11 @@ def page_dashboard():
             st_html(movers_html)
         else:
             st.caption("Carregando...")
-        st_html('</div>')
+        st_html('</div></div>')
 
-    # ── Col 2: 📰 Principais Notícias (Feed Expandido com 10 notícias intercaladas) ──
+    # ── Col 2: 📰 Principais Notícias ──
     with col_news:
-        st_html('<div class="section-panel"><div class="section-title">📰 Principais Notícias</div>')
+        st_html('<div class="section-panel"><div class="section-title">📰 Principais Notícias</div><div class="section-panel-content">')
 
         tab_br, tab_world = st.tabs(["Brasil", "Mundo"])
 
@@ -844,11 +886,11 @@ def page_dashboard():
             else:
                 st.caption("Nenhuma notícia disponível no momento.")
 
-        st_html('</div>')
+        st_html('</div></div>')
 
-    # ── Col 3: 📅 Agenda Econômica (Com Datas e Horários de Divulgação Exatos) ──
+    # ── Col 3: 📅 Agenda Econômica ──
     with col_agenda:
-        st_html('<div class="section-panel"><div class="section-title">📅 Agenda Econômica</div>')
+        st_html('<div class="section-panel"><div class="section-title">📅 Agenda Econômica</div><div class="section-panel-content">')
 
         tab_all, tab_br2, tab_eua = st.tabs(["Todos", "Brasil", "EUA"])
 
@@ -877,12 +919,12 @@ def page_dashboard():
                 events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><div style="flex:1;min-width:0"><div class="cal-name">{ev["name"]}</div><div style="font-size:0.68rem;color:#00c8ff">📅 Divulgação: {ev["date_formatted"]}</div></div><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
             st_html(events_html)
 
-        st_html('</div>')
+        st_html('</div></div>')
 
     # ── Col 4: 💰 Taxas de Juros & 🎯 Sentimento (Velocímetro em SVG) ──
     with col_right:
-        # Box Taxas de Juros
-        st_html('<div class="section-panel"><div class="section-title">💰 Taxas de Juros</div>')
+        # Box Taxas de Juros (Superior)
+        st_html('<div class="section-panel" style="min-height: auto; margin-bottom: 0.8rem;"><div class="section-title">💰 Taxas de Juros</div>')
 
         br_rates = get_brazilian_rates()
         intl_rates = get_international_rates()
@@ -892,7 +934,7 @@ def page_dashboard():
             rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><div class="rate-val-group"><span class="rate-value">{data["formatted"]}</span></div></div>'
         rates_html += '</div>'
 
-        rates_html += '<div class="rates-section" style="margin-top:0.6rem"><div class="rates-country">EUA / Internacional</div>'
+        rates_html += '<div class="rates-section" style="margin-top:0.4rem"><div class="rates-country">EUA / Internacional</div>'
         for name, data in intl_rates.items():
             rates_html += f'<div class="rate-row"><span class="rate-name">{name}</span><div class="rate-val-group"><span class="rate-value">{data["formatted"]}</span><span class="rate-status">({data["status"]})</span></div></div>'
         rates_html += '</div>'
@@ -900,9 +942,9 @@ def page_dashboard():
         st_html(rates_html)
         st_html('</div>')
 
-        # Box Sentimento do Mercado (Velocímetro SVG)
+        # Box Sentimento do Mercado (Inferior — Define a linha de base)
         fg = get_fear_greed()
-        st_html('<div class="section-panel"><div class="section-title">🎯 Sentimento do Mercado</div>')
+        st_html('<div class="section-panel" style="min-height: auto;"><div class="section-title">🎯 Sentimento do Mercado</div>')
         if fg["value"] is not None:
             svg_gauge = render_fear_greed_gauge_svg(fg["value"], fg["classification"], fg["color"])
             st_html(svg_gauge)
@@ -973,7 +1015,7 @@ def render_app_card(app: dict):
 
 
 # ─────────────────────────────────────────
-# Page: Taxas de Juros (Detalhada com Alinhamento Perfeito)
+# Page: Taxas de Juros (Detalhada)
 # ─────────────────────────────────────────
 def page_rates():
     """Página detalhada de taxas de juros nacionais e internacionais."""
