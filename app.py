@@ -12,7 +12,7 @@ import math
 from pathlib import Path as _Path
 
 # ─────────────────────────────────────────
-# Page Config
+# Page Config & Cache Invalidation
 # ─────────────────────────────────────────
 st.set_page_config(
     page_title="Trader Support · Portal de Análise Financeira",
@@ -20,6 +20,14 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# Forçar limpeza do cache do Streamlit Cloud na inicialização da sessão para dados 100% atualizados
+if "cache_cleared_v2" not in st.session_state:
+    try:
+        st.cache_data.clear()
+    except Exception:
+        pass
+    st.session_state["cache_cleared_v2"] = True
 
 # ─────────────────────────────────────────
 # App Registry — Organizado por Categorias
