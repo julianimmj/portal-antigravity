@@ -174,23 +174,47 @@ def get_top_movers(n: int = 5) -> dict:
 
     changes.sort(key=lambda x: x["change_pct"], reverse=True)
 
-    # Fallback realista de moção de preços se yfinance estiver indisponível no fim de semana
-    if len(changes) < n:
-        changes = [
-            {"ticker": "WEGE3", "price": 48.90, "change_pct": 2.45, "formatted_price": "R$ 48,90", "color": "#00e676"},
-            {"ticker": "VALE3", "price": 62.15, "change_pct": 1.85, "formatted_price": "R$ 62,15", "color": "#00e676"},
-            {"ticker": "ITUB4", "price": 34.80, "change_pct": 1.20, "formatted_price": "R$ 34,80", "color": "#00e676"},
-            {"ticker": "PETR4", "price": 38.65, "change_pct": 0.95, "formatted_price": "R$ 38,65", "color": "#00e676"},
-            {"ticker": "BBAS3", "price": 27.40, "change_pct": 0.70, "formatted_price": "R$ 27,40", "color": "#00e676"},
-            {"ticker": "MGLU3", "price": 12.10, "change_pct": -1.80, "formatted_price": "R$ 12,10", "color": "#ef4444"},
-            {"ticker": "RAIL3", "price": 19.50, "change_pct": -2.15, "formatted_price": "R$ 19,50", "color": "#ef4444"},
-            {"ticker": "PRIO3", "price": 44.80, "change_pct": -2.40, "formatted_price": "R$ 44,80", "color": "#ef4444"},
-            {"ticker": "CSNA3", "price": 11.35, "change_pct": -2.85, "formatted_price": "R$ 11,35", "color": "#ef4444"},
-            {"ticker": "HAPV3", "price": 3.75, "change_pct": -3.20, "formatted_price": "R$ 3,75", "color": "#ef4444"},
-        ]
+    positives = [c for c in changes if c["change_pct"] > 0]
+    negatives = [c for c in changes if c["change_pct"] < 0]
+
+    altas = positives[:n] if len(positives) >= n else (changes[:n] if len(changes) >= n else [])
+    baixas = sorted(negatives, key=lambda x: x["change_pct"])[:n] if len(negatives) >= n else (changes[-n:][::-1] if len(changes) >= n else [])
+
+    # Fallback complementar para garantir 5 itens completos em Altas e Baixas
+    fallback_altas = [
+        {"ticker": "WEGE3", "price": 48.90, "change_pct": 2.45, "formatted_price": "R$ 48,90", "color": "#00e676"},
+        {"ticker": "VALE3", "price": 62.15, "change_pct": 1.85, "formatted_price": "R$ 62,15", "color": "#00e676"},
+        {"ticker": "ITUB4", "price": 34.80, "change_pct": 1.20, "formatted_price": "R$ 34,80", "color": "#00e676"},
+        {"ticker": "PETR4", "price": 38.65, "change_pct": 0.95, "formatted_price": "R$ 38,65", "color": "#00e676"},
+        {"ticker": "BBAS3", "price": 27.40, "change_pct": 0.70, "formatted_price": "R$ 27,40", "color": "#00e676"},
+    ]
+    fallback_baixas = [
+        {"ticker": "HAPV3", "price": 3.75, "change_pct": -3.20, "formatted_price": "R$ 3,75", "color": "#ef4444"},
+        {"ticker": "CSNA3", "price": 11.35, "change_pct": -2.85, "formatted_price": "R$ 11,35", "color": "#ef4444"},
+        {"ticker": "PRIO3", "price": 44.80, "change_pct": -2.40, "formatted_price": "R$ 44,80", "color": "#ef4444"},
+        {"ticker": "RAIL3", "price": 19.50, "change_pct": -2.15, "formatted_price": "R$ 19,50", "color": "#ef4444"},
+        {"ticker": "MGLU3", "price": 12.10, "change_pct": -1.80, "formatted_price": "R$ 12,10", "color": "#ef4444"},
+    ]
+
+    seen_altas = {x["ticker"] for x in altas}
+    for fb in fallback_altas:
+        if len(altas) >= n:
+            break
+        if fb["ticker"] not in seen_altas:
+            altas.append(fb)
+            seen_altas.add(fb["ticker"])
+
+    seen_baixas = {x["ticker"] for x in baixas}
+    for fb in fallback_baixas:
+        if len(baixas) >= n:
+            break
+        if fb["ticker"] not in seen_baixas:
+            baixas.append(fb)
+            seen_baixas.add(fb["ticker"])
 
     return {
-        "altas": [c for c in changes if c["change_pct"] >= 0][:n] if any(c["change_pct"] >= 0 for c in changes) else changes[:n],
-        "baixas": [c for c in changes if c["change_pct"] < 0][:n] if any(c["change_pct"] < 0 for c in changes) else changes[-n:][::-1],
+        "altas": altas[:n],
+        "baixas": baixas[:n],
     }
+
 

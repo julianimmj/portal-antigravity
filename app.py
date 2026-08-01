@@ -22,12 +22,12 @@ st.set_page_config(
 )
 
 # Forçar limpeza do cache do Streamlit Cloud na inicialização da sessão para dados 100% atualizados
-if "cache_cleared_v2" not in st.session_state:
+if "cache_cleared_v3" not in st.session_state:
     try:
         st.cache_data.clear()
     except Exception:
         pass
-    st.session_state["cache_cleared_v2"] = True
+    st.session_state["cache_cleared_v3"] = True
 
 # ─────────────────────────────────────────
 # App Registry — Organizado por Categorias
