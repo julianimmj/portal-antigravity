@@ -9,30 +9,37 @@ import pandas as pd
 
 
 TICKERS_CONFIG = {
-    "IBOV":             {"symbol": "^BVSP",     "prefix": "",     "suffix": "",  "decimals": 0, "fallback_price": 176724.0, "fallback_change": -0.46},
-    "STOXX 50":         {"symbol": "^STOXX50E", "prefix": "",     "suffix": "",  "decimals": 2, "fallback_price": 6210.17,  "fallback_change": -1.69},
-    "NIKKEI 225":       {"symbol": "^N225",     "prefix": "",     "suffix": "",  "decimals": 2, "fallback_price": 66422.60, "fallback_change": 0.46},
-    "DÓLAR":            {"symbol": "BRL=X",     "prefix": "R$ ",  "suffix": "",  "decimals": 2, "fallback_price": 5.08,     "fallback_change": -0.43},
-    "VIX":              {"symbol": "^VIX",      "prefix": "",     "suffix": "",  "decimals": 2, "fallback_price": 18.70,    "fallback_change": 12.38},
-    "BTC":              {"symbol": "BTC-USD",   "prefix": "US$ ", "suffix": "",  "decimals": 0, "fallback_price": 64308.0,  "fallback_change": 0.33},
-    "BRENT":            {"symbol": "BZ=F",      "prefix": "US$ ", "suffix": "",  "decimals": 2, "fallback_price": 96.78,    "fallback_change": -3.88},
-    "MINÉRIO (DALIAN)": {"symbol": "TIO=F",     "prefix": "US$ ", "suffix": "",  "decimals": 2, "fallback_price": 98.42,    "fallback_change": -0.05},
-    "S&P 500":          {"symbol": "^GSPC",     "prefix": "",     "suffix": "",  "decimals": 2, "fallback_price": 7408.30,  "fallback_change": -1.21},
-    "DOW JONES":        {"symbol": "^DJI",      "prefix": "",     "suffix": "",  "decimals": 2, "fallback_price": 44850.20, "fallback_change": -0.65},
-    "NASDAQ":           {"symbol": "^IXIC",     "prefix": "",     "suffix": "",  "decimals": 2, "fallback_price": 25137.69, "fallback_change": -2.15},
-    "RUSSELL 2000":     {"symbol": "^RUT",      "prefix": "",     "suffix": "",  "decimals": 2, "fallback_price": 2240.50,  "fallback_change": -0.85},
+    "IBOV":             {"symbol": "^BVSP",     "prefix": "",     "suffix": "",  "decimals": 0, "fallback_price": 127450.0, "fallback_change": 0.46},
+    "STOXX 50":         {"symbol": "^STOXX50E", "prefix": "",     "suffix": "",  "decimals": 2, "fallback_price": 4890.17,  "fallback_change": -0.69},
+    "NIKKEI 225":       {"symbol": "^N225",     "prefix": "",     "suffix": "",  "decimals": 2, "fallback_price": 38422.60, "fallback_change": 0.46},
+    "DÓLAR":            {"symbol": "BRL=X",     "prefix": "R$ ",  "suffix": "",  "decimals": 2, "fallback_price": 5.65,     "fallback_change": -0.43},
+    "VIX":              {"symbol": "^VIX",      "prefix": "",     "suffix": "",  "decimals": 2, "fallback_price": 16.20,    "fallback_change": -2.38},
+    "BTC":              {"symbol": "BTC-USD",   "prefix": "US$ ", "suffix": "",  "decimals": 0, "fallback_price": 64800.0,  "fallback_change": 1.33},
+    "BRENT":            {"symbol": "BZ=F",      "prefix": "US$ ", "suffix": "",  "decimals": 2, "fallback_price": 79.50,    "fallback_change": -0.88},
+    "MINÉRIO (DALIAN)": {"symbol": "TIO=F",     "prefix": "US$ ", "suffix": "",  "decimals": 2, "fallback_price": 102.40,   "fallback_change": 0.35},
+    "S&P 500":          {"symbol": "^GSPC",     "prefix": "",     "suffix": "",  "decimals": 2, "fallback_price": 5480.30,  "fallback_change": 0.21},
+    "DOW JONES":        {"symbol": "^DJI",      "prefix": "",     "suffix": "",  "decimals": 2, "fallback_price": 40850.20, "fallback_change": 0.15},
+    "NASDAQ":           {"symbol": "^IXIC",     "prefix": "",     "suffix": "",  "decimals": 2, "fallback_price": 17650.69, "fallback_change": 0.45},
+    "RUSSELL 2000":     {"symbol": "^RUT",      "prefix": "",     "suffix": "",  "decimals": 2, "fallback_price": 2180.50,  "fallback_change": -0.25},
 }
 
 
 def _extract_price_and_change(df: pd.DataFrame, sym: str):
-    """Extrai último preço e variação percentual de um DataFrame de cotações."""
+    """Extrai último preço e variação percentual de um DataFrame de cotações com tratamento robusto para MultiIndex."""
     try:
         closes = pd.Series(dtype=float)
         if isinstance(df.columns, pd.MultiIndex):
-            if "Close" in df.columns.levels[0] and sym in df["Close"].columns:
-                closes = df["Close"][sym].dropna()
-            elif sym in df.columns.levels[0] and "Close" in df[sym].columns:
-                closes = df[sym]["Close"].dropna()
+            # Tenta encontrar 'Close' nas diferentes dimensões do MultiIndex
+            if "Close" in df.columns.levels[0]:
+                if sym in df["Close"].columns:
+                    closes = df["Close"][sym].dropna()
+            elif "Close" in df.columns.levels[1]:
+                cols = [c for c in df.columns if c[1] == "Close" and c[0] == sym]
+                if cols:
+                    closes = df[cols[0]].dropna()
+            elif sym in df.columns.levels[0]:
+                if "Close" in df[sym].columns:
+                    closes = df[sym]["Close"].dropna()
         else:
             if "Close" in df.columns:
                 closes = df["Close"].dropna()
@@ -43,7 +50,7 @@ def _extract_price_and_change(df: pd.DataFrame, sym: str):
         price = float(closes.iloc[-1])
         if len(closes) >= 2:
             prev = float(closes.iloc[-2])
-            change_pct = ((price - prev) / prev) * 100
+            change_pct = ((price - prev) / prev) * 100 if prev != 0 else 0.0
         else:
             change_pct = 0.0
 
@@ -98,7 +105,7 @@ def get_market_overview() -> dict:
             except Exception:
                 pass
 
-        # Usar fallback estático caso yfinance não retorne dados no fim de semana
+        # Usar fallback realista caso yfinance não retorne dados no fim de semana
         if price is None or change_pct is None:
             price = cfg.get("fallback_price", 0.0)
             change_pct = cfg.get("fallback_change", 0.0)
@@ -167,22 +174,23 @@ def get_top_movers(n: int = 5) -> dict:
 
     changes.sort(key=lambda x: x["change_pct"], reverse=True)
 
-    # Fallback estático de movers se yfinance estiver indisponível no fim de semana
+    # Fallback realista de moção de preços se yfinance estiver indisponível no fim de semana
     if len(changes) < n:
         changes = [
-            {"ticker": "VIVT3", "price": 35.47, "change_pct": 2.2, "formatted_price": "R$ 35,47", "color": "#00e676"},
-            {"ticker": "TOTS3", "price": 27.47, "change_pct": 1.6, "formatted_price": "R$ 27,47", "color": "#00e676"},
-            {"ticker": "CSNA3", "price": 5.36, "change_pct": 1.1, "formatted_price": "R$ 5,36", "color": "#00e676"},
-            {"ticker": "GGBR4", "price": 24.26, "change_pct": 0.8, "formatted_price": "R$ 24,26", "color": "#00e676"},
-            {"ticker": "WEGE3", "price": 45.99, "change_pct": 0.7, "formatted_price": "R$ 45,99", "color": "#00e676"},
-            {"ticker": "RAIL3", "price": 13.57, "change_pct": -2.8, "formatted_price": "R$ 13,57", "color": "#ef4444"},
-            {"ticker": "PRIO3", "price": 58.82, "change_pct": -2.8, "formatted_price": "R$ 58,82", "color": "#ef4444"},
-            {"ticker": "BPAC11", "price": 54.67, "change_pct": -2.9, "formatted_price": "R$ 54,67", "color": "#ef4444"},
-            {"ticker": "ENEV3", "price": 24.98, "change_pct": -3.1, "formatted_price": "R$ 24,98", "color": "#ef4444"},
-            {"ticker": "HAPV3", "price": 9.92, "change_pct": -5.3, "formatted_price": "R$ 9,92", "color": "#ef4444"},
+            {"ticker": "WEGE3", "price": 48.90, "change_pct": 2.45, "formatted_price": "R$ 48,90", "color": "#00e676"},
+            {"ticker": "VALE3", "price": 62.15, "change_pct": 1.85, "formatted_price": "R$ 62,15", "color": "#00e676"},
+            {"ticker": "ITUB4", "price": 34.80, "change_pct": 1.20, "formatted_price": "R$ 34,80", "color": "#00e676"},
+            {"ticker": "PETR4", "price": 38.65, "change_pct": 0.95, "formatted_price": "R$ 38,65", "color": "#00e676"},
+            {"ticker": "BBAS3", "price": 27.40, "change_pct": 0.70, "formatted_price": "R$ 27,40", "color": "#00e676"},
+            {"ticker": "MGLU3", "price": 12.10, "change_pct": -1.80, "formatted_price": "R$ 12,10", "color": "#ef4444"},
+            {"ticker": "RAIL3", "price": 19.50, "change_pct": -2.15, "formatted_price": "R$ 19,50", "color": "#ef4444"},
+            {"ticker": "PRIO3", "price": 44.80, "change_pct": -2.40, "formatted_price": "R$ 44,80", "color": "#ef4444"},
+            {"ticker": "CSNA3", "price": 11.35, "change_pct": -2.85, "formatted_price": "R$ 11,35", "color": "#ef4444"},
+            {"ticker": "HAPV3", "price": 3.75, "change_pct": -3.20, "formatted_price": "R$ 3,75", "color": "#ef4444"},
         ]
 
     return {
-        "altas": changes[:n],
-        "baixas": changes[-n:][::-1] if len(changes) >= n else [],
+        "altas": [c for c in changes if c["change_pct"] >= 0][:n] if any(c["change_pct"] >= 0 for c in changes) else changes[:n],
+        "baixas": [c for c in changes if c["change_pct"] < 0][:n] if any(c["change_pct"] < 0 for c in changes) else changes[-n:][::-1],
     }
+
