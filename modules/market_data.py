@@ -74,7 +74,7 @@ def get_market_overview() -> dict:
             period="5d",
             interval="1d",
             progress=False,
-            threads=True,
+            threads=False,
         )
     except Exception:
         bulk_data = None
@@ -138,7 +138,7 @@ def get_top_movers(n: int = 5) -> dict:
         "PETR4.SA", "VALE3.SA", "ITUB4.SA", "BBDC4.SA", "BBAS3.SA",
         "ABEV3.SA", "WEGE3.SA", "RENT3.SA", "SUZB3.SA", "JBSS3.SA",
         "GGBR4.SA", "CSNA3.SA", "MGLU3.SA", "BPAC11.SA", "RADL3.SA",
-        "ENEV3.SA", "CPLE6.SA", "VIVT3.SA", "HAPV3.SA", "RAIL3.SA",
+        "ENEV3.SA", "CPLE3.SA", "VIVT3.SA", "HAPV3.SA", "RAIL3.SA",
         "B3SA3.SA", "PRIO3.SA", "CSAN3.SA", "TOTS3.SA", "LREN3.SA",
         "EQTL3.SA", "SBSP3.SA", "CMIG4.SA", "BRKM5.SA", "KLBN11.SA",
     ]
@@ -149,7 +149,7 @@ def get_top_movers(n: int = 5) -> dict:
             period="5d",
             interval="1d",
             progress=False,
-            threads=True,
+            threads=False,
         )
     except Exception:
         data = None
