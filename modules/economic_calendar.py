@@ -186,17 +186,62 @@ ECONOMIC_EVENTS = [
 ]
 
 
-def get_economic_calendar() -> list:
-    """Retorna a lista de eventos econômicos ordenados por data de divulgação."""
-    return ECONOMIC_EVENTS
+def _parse_event_datetime(ev: dict, ref_dt: datetime = None) -> datetime:
+    """Converte 'date' (DD/MM) e 'time' (HH:MM) para objeto datetime."""
+    if ref_dt is None:
+        ref_dt = datetime.now()
+
+    parts = ev["date"].split("/")
+    day, month = int(parts[0]), int(parts[1])
+    year = ref_dt.year
+
+    # Se o mês do evento for menor que o mês atual - 2 (ex: Jan em Dez), é para o ano seguinte
+    if month < ref_dt.month - 2:
+        year += 1
+
+    hour, minute = 0, 0
+    if "time" in ev and ":" in ev["time"]:
+        t_parts = ev["time"].split(":")
+        hour, minute = int(t_parts[0]), int(t_parts[1])
+
+    return datetime(year, month, day, hour, minute)
 
 
-def get_events_by_importance(importance: str = "Alta") -> list:
-    """Filtra eventos por importância."""
-    return [e for e in ECONOMIC_EVENTS if e["importance"] == importance]
+def get_economic_calendar(include_past: bool = False) -> list:
+    """
+    Retorna a lista de eventos econômicos ordenados cronologicamente
+    (da data/hora mais próxima à mais distante).
+    Por padrão, oculta eventos cujas datas já ultrapassaram o dia atual.
+    """
+    now = datetime.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    processed_events = []
+    for ev in ECONOMIC_EVENTS:
+        try:
+            dt_obj = _parse_event_datetime(ev, now)
+            ev_copy = dict(ev)
+            ev_copy["dt"] = dt_obj
+            processed_events.append(ev_copy)
+        except Exception:
+            continue
+
+    if not include_past:
+        processed_events = [e for e in processed_events if e["dt"] >= today_start]
+
+    processed_events.sort(key=lambda x: x["dt"])
+    return processed_events
 
 
-def get_events_by_country(country: str) -> list:
-    """Filtra eventos por país/região."""
-    return [e for e in ECONOMIC_EVENTS if e["country"] == country]
+def get_events_by_importance(importance: str = "Alta", include_past: bool = False) -> list:
+    """Filtra eventos por importância, ordenados por data."""
+    events = get_economic_calendar(include_past=include_past)
+    return [e for e in events if e.get("importance") == importance]
+
+
+def get_events_by_country(country: str, include_past: bool = False) -> list:
+    """Filtra eventos por país/região, ordenados por data."""
+    events = get_economic_calendar(include_past=include_past)
+    return [e for e in events if e.get("country") == country]
+
 
