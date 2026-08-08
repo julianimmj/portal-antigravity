@@ -788,6 +788,149 @@ def inject_css():
                 margin-bottom: 1.2rem !important;
             }
         }
+
+        /* ── Full-Width Market Summary & Earnings Panel (Dashboard Footer) ─── */
+        .summary-banner-panel {
+            background: linear-gradient(135deg, rgba(12, 12, 30, 0.92) 0%, rgba(20, 20, 50, 0.75) 100%);
+            border: 1px solid rgba(124, 77, 255, 0.22);
+            border-radius: 14px;
+            padding: 1.1rem 1.3rem;
+            box-sizing: border-box;
+            width: 100%;
+            margin-top: 0.8rem;
+        }
+        .summary-panel-content {
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 0.4rem;
+        }
+        .summary-panel-content::-webkit-scrollbar {
+            width: 5px;
+        }
+        .summary-panel-content::-webkit-scrollbar-thumb {
+            background: rgba(124, 77, 255, 0.35);
+            border-radius: 4px;
+        }
+        .summary-item {
+            padding: 0.6rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+        .summary-item-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 0.2rem;
+        }
+        .summary-item-title a {
+            color: #ffffff !important;
+            text-decoration: none !important;
+        }
+        .summary-item-title a:hover {
+            color: #00c8ff !important;
+        }
+        .summary-item-desc {
+            font-size: 0.76rem;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.4;
+            margin-bottom: 0.2rem;
+        }
+        .summary-item-meta {
+            font-size: 0.68rem;
+            color: rgba(255,255,255,0.4);
+        }
+
+        /* ── Earnings Sentiment Cards ─── */
+        .earnings-item {
+            padding: 0.65rem 0.75rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+        .earnings-item:hover {
+            border-color: rgba(124, 77, 255, 0.3);
+            background: rgba(124, 77, 255, 0.04);
+        }
+        .earnings-company {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: #00c8ff;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+        }
+        .earnings-badge {
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .earnings-title {
+            font-size: 0.83rem;
+            font-weight: 600;
+            line-height: 1.35;
+            margin-top: 0.2rem;
+            margin-bottom: 0.2rem;
+        }
+        .earnings-title a {
+            color: rgba(255,255,255,0.9) !important;
+            text-decoration: none !important;
+        }
+        .earnings-title a:hover {
+            color: #7c4dff !important;
+        }
+        .earnings-desc {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.58);
+            line-height: 1.4;
+            margin-bottom: 0.2rem;
+        }
+        .earnings-meta {
+            font-size: 0.67rem;
+            color: rgba(255,255,255,0.38);
+        }
+
+        /* ── Profile Cards Grid (Aba Resumo & Balanços) ─── */
+        .profile-card {
+            background: linear-gradient(135deg, rgba(15, 15, 35, 0.85) 0%, rgba(22, 22, 52, 0.65) 100%);
+            border: 1px solid rgba(124, 77, 255, 0.16);
+            border-radius: 12px;
+            padding: 0.85rem 1.0rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.25s ease;
+        }
+        .profile-card:hover {
+            border-color: rgba(0, 200, 255, 0.4);
+            transform: translateY(-2px);
+        }
+        .profile-handle {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: #00c8ff;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .profile-name {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.2rem;
+        }
+        .profile-desc {
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.55);
+            line-height: 1.35;
+        }
     </style>
     """)
 
@@ -959,6 +1102,165 @@ def page_dashboard():
             </div>
         </div>
         """)
+
+    # ── Seção Inferior Full-Width: Resumo de Mercado & Análise de Balanços ──
+    from modules.market_summary import get_market_summary, get_earnings_analysis
+
+    st_html('<div style="margin-top: 1.0rem;"></div>')
+
+    summaries = get_market_summary(max_items=5)
+    earnings = get_earnings_analysis(max_items=5)
+
+    col_sum_left, col_sum_right = st.columns([1.1, 1.0])
+
+    with col_sum_left:
+        sum_items_html = ""
+        for s in summaries:
+            sum_items_html += f"""
+            <div class="summary-item">
+                <div class="summary-item-title"><a href="{s["link"]}" target="_blank">{s["title"]}</a></div>
+                <div class="summary-item-desc">{s["summary"]}</div>
+                <div class="summary-item-meta"><span class="news-source">{s["source"]}</span> · {s["time_ago"]}</div>
+            </div>
+            """
+
+        st_html(f"""
+        <div class="summary-banner-panel">
+            <div class="section-title">☀️ Resumo do Dia (Mercado & Fontes)</div>
+            <div class="summary-panel-content">
+                {sum_items_html}
+            </div>
+        </div>
+        """)
+
+    with col_sum_right:
+        earn_items_html = ""
+        for e in earnings:
+            st_info = e["sentiment"]
+            badge_html = f'<span class="earnings-badge" style="background:{st_info["color"]}22; color:{st_info["color"]}; border:1px solid {st_info["color"]}44;">{st_info["emoji"]} Visão {st_info["label"]}</span>'
+            comp_html = f'<span class="earnings-company">{e["company"]}</span>' if e["company"] else ""
+            earn_items_html += f"""
+            <div class="earnings-item">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+                    {comp_html}
+                    {badge_html}
+                </div>
+                <div class="earnings-title"><a href="{e["link"]}" target="_blank">{e["title"]}</a></div>
+                <div class="earnings-desc">{e["summary"]}</div>
+                <div class="earnings-meta"><span class="news-source">{e["source"]}</span> · {e["time_ago"]}</div>
+            </div>
+            """
+
+        st_html(f"""
+        <div class="summary-banner-panel">
+            <div class="section-title">📊 Análise de Balanços Corporativos</div>
+            <div class="summary-panel-content">
+                {earn_items_html}
+            </div>
+        </div>
+        """)
+
+
+# ─────────────────────────────────────────
+# Page: Resumo de Mercado & Análise de Balanços
+# ─────────────────────────────────────────
+def page_market_summary():
+    """Página detalhada de Resumo de Mercado, Avaliação de Balanços e Fontes Acompanhadas."""
+    from modules.market_summary import get_market_summary, get_earnings_analysis, get_followed_profiles
+
+    st_html("""
+    <div style="margin-bottom: 1.2rem;">
+        <h2 style="color: #ffffff; font-weight: 800; margin-bottom: 0.2rem;">📊 Resumo de Mercado & Análise de Balanços</h2>
+        <div style="color: rgba(255,255,255,0.55); font-size: 0.88rem;">
+            Monitoramento de mercado, análises de resultados corporativos com classificação de sentimento e perfis de referência.
+        </div>
+    </div>
+    """)
+
+    tab_sum, tab_earn, tab_prof = st.tabs(["☀️ Resumo do Dia", "📊 Análise de Balanços", "👥 Perfis Acompanhados"])
+
+    with tab_sum:
+        summaries = get_market_summary(max_items=20)
+        if summaries:
+            for s in summaries:
+                st_html(f"""
+                <div class="summary-banner-panel" style="margin-top: 0.5rem; margin-bottom: 0.6rem;">
+                    <div style="font-size: 0.72rem; color: #00c8ff; font-weight: 700; text-transform: uppercase; margin-bottom: 0.2rem;">
+                        {s["icon"]} {s["source"]} · {s["time_ago"]}
+                    </div>
+                    <div class="summary-item-title" style="font-size: 1.05rem; margin-bottom: 0.4rem;">
+                        <a href="{s["link"]}" target="_blank">{s["title"]}</a>
+                    </div>
+                    <div class="summary-item-desc" style="font-size: 0.84rem; color: rgba(255,255,255,0.7); line-height: 1.45;">
+                        {s["summary"]}
+                    </div>
+                </div>
+                """)
+
+    with tab_earn:
+        earnings = get_earnings_analysis(max_items=20)
+
+        filter_sent = st.radio(
+            "Filtrar por Visão:",
+            options=["Todos", "🟢 Positiva", "🟡 Mista", "🔴 Negativa"],
+            horizontal=True,
+        )
+
+        filtered = earnings
+        if "Positiva" in filter_sent:
+            filtered = [e for e in earnings if e["sentiment"]["label"] == "Positivo"]
+        elif "Mista" in filter_sent:
+            filtered = [e for e in earnings if e["sentiment"]["label"] == "Misto"]
+        elif "Negativa" in filter_sent:
+            filtered = [e for e in earnings if e["sentiment"]["label"] == "Negativo"]
+
+        if filtered:
+            cols = st.columns(2)
+            for i, e in enumerate(filtered):
+                with cols[i % 2]:
+                    st_info = e["sentiment"]
+                    badge_html = f'<span class="earnings-badge" style="background:{st_info["color"]}22; color:{st_info["color"]}; border:1px solid {st_info["color"]}44; font-size:0.75rem; padding:3px 10px;">{st_info["emoji"]} Visão {st_info["label"]}</span>'
+                    comp_html = f'<span class="earnings-company" style="font-size:0.95rem;">{e["company"]}</span>' if e["company"] else ""
+                    st_html(f"""
+                    <div class="earnings-item" style="padding: 1.0rem; margin-bottom: 0.8rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                            {comp_html}
+                            {badge_html}
+                        </div>
+                        <div class="earnings-title" style="font-size:0.95rem; margin-bottom:0.4rem;">
+                            <a href="{e["link"]}" target="_blank">{e["title"]}</a>
+                        </div>
+                        <div class="earnings-desc" style="font-size:0.8rem; color:rgba(255,255,255,0.65);">
+                            {e["summary"]}
+                        </div>
+                        <div class="earnings-meta" style="margin-top:0.4rem;">
+                            <span class="news-source">{e["source"]}</span> · {e["time_ago"]}
+                        </div>
+                    </div>
+                    """)
+
+    with tab_prof:
+        st_html("""
+        <div style="margin-bottom: 1.0rem; font-size: 0.85rem; color: rgba(255,255,255,0.6);">
+            Lista de perfis e especialistas no X (Twitter) utilizados como referência para acompanhamento do mercado, análises de ações, FIIs e macroeconomia.
+        </div>
+        """)
+        profiles_by_cat = get_followed_profiles()
+        for cat_name, profs in profiles_by_cat.items():
+            st_html(f'<div class="category-header" style="margin-top:1.2rem; margin-bottom:0.8rem;">{cat_name} ({len(profs)})</div>')
+            p_cols = st.columns(3)
+            for j, p in enumerate(profs):
+                with p_cols[j % 3]:
+                    st_html(f"""
+                    <div class="profile-card" style="margin-bottom: 0.7rem;">
+                        <div>
+                            <div class="profile-handle">{p["handle"]}</div>
+                            <div class="profile-name">{p["name"]}</div>
+                            <div class="profile-desc">{p["desc"]}</div>
+                        </div>
+                    </div>
+                    """)
+
 
 
 # ─────────────────────────────────────────
@@ -1204,6 +1506,7 @@ def render_sidebar():
             "Navegação",
             options=[
                 "📊 Dashboard",
+                "📈 Resumo & Balanços",
                 "🚀 Aplicações",
                 "💰 Taxas de Juros",
                 "📰 Notícias",
@@ -1249,6 +1552,8 @@ def main():
     # Roteamento
     if page == "📊 Dashboard":
         page_dashboard()
+    elif page == "📈 Resumo & Balanços":
+        page_market_summary()
     elif page == "🚀 Aplicações":
         page_apps()
     elif page == "💰 Taxas de Juros":
