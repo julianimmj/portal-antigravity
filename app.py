@@ -1164,8 +1164,9 @@ def page_dashboard():
         for e in earnings:
             st_info = e["sentiment"]
             reg_flag = "🇧🇷" if e.get("region") == "Nacional" else "🌎"
+            comp_title = e.get("company") or "Balanço · Empresa Listada"
             badge_html = f'<span class="earnings-badge" style="background:{st_info["color"]}22; color:{st_info["color"]}; border:1px solid {st_info["color"]}44;">{st_info["emoji"]} Visão {st_info["label"]}</span>'
-            comp_html = f'<span class="earnings-company">{e["company"]}</span>' if e["company"] else ""
+            comp_html = f'<span class="earnings-company">🏢 {comp_title}</span>'
             earn_items_html += f"""
             <div class="earnings-item">
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:0.25rem;">
@@ -1272,8 +1273,9 @@ def page_market_summary():
             for i, e in enumerate(filtered):
                 with cols[i % 2]:
                     st_info = e["sentiment"]
+                    comp_title = e.get("company") or "Balanço · Empresa Listada"
                     badge_html = f'<span class="earnings-badge" style="background:{st_info["color"]}22; color:{st_info["color"]}; border:1px solid {st_info["color"]}44; font-size:0.75rem; padding:3px 10px;">{st_info["emoji"]} Visão {st_info["label"]}</span>'
-                    comp_html = f'<span class="earnings-company" style="font-size:0.95rem;">{e["company"]}</span>' if e["company"] else ""
+                    comp_html = f'<span class="earnings-company" style="font-size:0.95rem;">🏢 {comp_title}</span>'
                     reg_badge = "🇧🇷" if e.get("region") == "Nacional" else "🌎"
                     st_html(f"""
                     <div class="earnings-item" style="padding: 1.0rem; margin-bottom: 0.8rem;">

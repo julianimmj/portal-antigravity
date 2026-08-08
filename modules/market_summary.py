@@ -293,25 +293,149 @@ def _is_earnings_related(title: str, summary: str) -> bool:
     return matches >= 2
 
 
-def _extract_ticker_or_company(title: str) -> str:
-    """Tenta extrair o ticker (ex: PETR4, AAPL) ou nome da empresa do título."""
-    b3_match = re.search(r'\b([A-Z]{4}\d{1,2})\b', title.upper())
-    if b3_match:
-        return b3_match.group(1)
+COMPANY_MAP = {
+    # B3 Ações principais
+    "MAGAZINE LUIZA": "MGLU3 · Magazine Luiza",
+    "MAGALU": "MGLU3 · Magazine Luiza",
+    "PETROBRAS": "PETR4 · Petrobras",
+    "PETR4": "PETR4 · Petrobras",
+    "PETR3": "PETR3 · Petrobras",
+    "VALE": "VALE3 · Vale",
+    "VALE3": "VALE3 · Vale",
+    "BANCO DO BRASIL": "BBAS3 · Banco do Brasil",
+    "BBAS3": "BBAS3 · Banco do Brasil",
+    "ITAU": "ITUB4 · Itaú Unibanco",
+    "ITAÚ": "ITUB4 · Itaú Unibanco",
+    "ITUB4": "ITUB4 · Itaú Unibanco",
+    "BRADESCO": "BBDC4 · Bradesco",
+    "BBDC4": "BBDC4 · Bradesco",
+    "SANTERNDER": "SANB11 · Santander",
+    "SANB11": "SANB11 · Santander",
+    "NUBANK": "ROXO34 · Nubank",
+    "WEG": "WEGE3 · WEG",
+    "WEGE3": "WEGE3 · WEG",
+    "AMBEV": "ABEV3 · Ambev",
+    "ABEV3": "ABEV3 · Ambev",
+    "LOCALIZA": "RENT3 · Localiza",
+    "RENT3": "RENT3 · Localiza",
+    "ELETROBRAS": "ELET3 · Eletrobras",
+    "ELET3": "ELET3 · Eletrobras",
+    "SUZANO": "SUZB3 · Suzano",
+    "SUZB3": "SUZB3 · Suzano",
+    "KLABIN": "KLBN11 · Klabin",
+    "KLBN11": "KLBN11 · Klabin",
+    "SABESP": "SBSP3 · Sabesp",
+    "SBSP3": "SBSP3 · Sabesp",
+    "TAESA": "TAEE11 · Taesa",
+    "TAEE11": "TAEE11 · Taesa",
+    "COPEL": "CPLE6 · Copel",
+    "CPLE6": "CPLE6 · Copel",
+    "COSAN": "CSAN3 · Cosan",
+    "CSAN3": "CSAN3 · Cosan",
+    "RUMO": "RAIL3 · Rumo",
+    "RAIL3": "RAIL3 · Rumo",
+    "ULTRAPAR": "UGPA3 · Ultrapar",
+    "UGPA3": "UGPA3 · Ultrapar",
+    "MERCADO LIVRE": "MELI34 · Mercado Livre",
+    "CASAS BAHIA": "BHIA3 · Casas Bahia",
+    "BTG PACTUAL": "BPAC11 · BTG Pactual",
+    "BPAC11": "BPAC11 · BTG Pactual",
+    "XP": "XPBR31 · XP Inc",
+    "AZUL": "AZUL4 · Azul Linhas Aéreas",
+    "GOL": "GOLL4 · Gol Linhas Aéreas",
+    "CSN": "CSNA3 · CSN",
+    "GERDAU": "GGBR4 · Gerdau",
+    "USIMINAS": "USIM5 · Usiminas",
+    "MARFRIG": "MRFG3 · Marfrig",
+    "JBS": "JBSS3 · JBS",
+    "MINERVA": "BEEF3 · Minerva",
+    "BRF": "BRFS3 · BRF",
+    "HYPERA": "HYPE3 · Hypera",
+    "HAPVIDA": "HAPV3 · Hapvida",
+    "REDE D'OR": "RDOR3 · Rede D'Or",
+    "TOTVS": "TOTS3 · Totvs",
+    "EMBRAER": "EMBR3 · Embraer",
+    "PRIO": "PRIO3 · Prio",
+    "PETRORECONCAVO": "RECV3 · PetroReconcavo",
+    "BRAVA ENERGIA": "BRAV3 · Brava Energia",
 
+    # FIIs conhecidos
+    "KNCR11": "KNCR11 · Kinea Rendimentos",
+    "HGLG11": "HGLG11 · CSHG Logística",
+    "MXRF11": "MXRF11 · Maxi Renda",
+    "BCFF11": "BCFF11 · BTG Fundo de Fundos",
+    "XPML11": "XPML11 · XP Malls",
+    "VISC11": "VISC11 · Vinci Shopping",
+    "TRXF11": "TRXF11 · TRX Real Estate",
+
+    # US Stocks principais
+    "NVIDIA": "NVDA · Nvidia",
+    "NVDA": "NVDA · Nvidia",
+    "APPLE": "AAPL · Apple",
+    "AAPL": "AAPL · Apple",
+    "MICROSOFT": "MSFT · Microsoft",
+    "MSFT": "MSFT · Microsoft",
+    "AMAZON": "AMZN · Amazon",
+    "AMZN": "AMZN · Amazon",
+    "GOOGLE": "GOOGL · Alphabet Google",
+    "GOOGL": "GOOGL · Alphabet Google",
+    "ALPHABET": "GOOGL · Alphabet Google",
+    "META": "META · Meta Platforms",
+    "TESLA": "TSLA · Tesla",
+    "TSLA": "TSLA · Tesla",
+    "NETFLIX": "NFLX · Netflix",
+    "NFLX": "NFLX · Netflix",
+    "DISNEY": "DIS · Walt Disney",
+    "AMD": "AMD · Advanced Micro Devices",
+    "INTEL": "INTC · Intel",
+    "JPMORGAN": "JPM · JPMorgan Chase",
+    "BERKSHIRE": "BRK · Berkshire Hathaway",
+}
+
+
+def _extract_ticker_or_company(title: str) -> str:
+    """
+    Extrai o ticker e o nome completo da empresa/ativo a partir do título da notícia.
+    Prioriza o mapeamento oficial (ex: MGLU3 · Magazine Luiza, PETR4 · Petrobras).
+    Se não houver correspondência exata, extrai o nome composto ou primeiras palavras significativas.
+    """
+    if not title:
+        return "Balanço · Empresa Listada"
+
+    upper_title = title.upper()
+
+    # 1. Mapeamento oficial de tickers e nomes completos
+    for key, mapped_tag in COMPANY_MAP.items():
+        if re.search(r'\b' + re.escape(key) + r'\b', upper_title):
+            return mapped_tag
+
+    # 2. Ticker B3 padrão (ex: BBSE3, ALOS3, VIVA3)
+    b3_match = re.search(r'\b([A-Z]{4}\d{1,2})\b', upper_title)
+    if b3_match:
+        ticker = b3_match.group(1)
+        return f"{ticker} · Ação B3"
+
+    # 3. Ticker US em parênteses (ex: AAPL, AMD)
     us_match = re.search(r'\(([A-Z]{2,5})\)', title)
     if us_match:
-        return us_match.group(1)
+        ticker = us_match.group(1)
+        return f"{ticker} · Wall Street"
 
-    company_match = re.search(r'^([A-ZÀ-ÚÇ][a-zà-úç&\s\.]+?)(?:\s+(?:registr|report|anunci|divulg|luc|prej|tem|apresent|beats|misses))', title)
+    # 4. Nome composto no início do título (ex: "Magazine Luiza", "Banco do Brasil", "Casa dos Ventos")
+    company_match = re.search(r'^([A-ZÀ-ÚÇ][a-zà-úç0-9&\s\.\-]{3,35}?)(?:\s+(?:registr|report|anunci|divulg|luc|prej|tem|apresent|surpreend|supera|bater|bate|sobr|com|em|para))', title, re.IGNORECASE)
     if company_match:
-        return company_match.group(1).strip()
+        extracted = company_match.group(1).strip()
+        if len(extracted) >= 3:
+            return extracted
 
+    # 5. Fallback: primeiras 2 a 3 palavras
     words = title.split()
-    if words and len(words[0]) >= 3 and words[0][0].isupper():
-        return words[0].rstrip(",.:;")
+    if len(words) >= 2 and words[0][0].isupper():
+        first_two = " ".join(words[:2]).rstrip(",.:;")
+        if len(first_two) >= 3:
+            return first_two
 
-    return ""
+    return "Balanço · Empresa Listada"
 
 
 def _fetch_feed_group(feed_list: list) -> list:
