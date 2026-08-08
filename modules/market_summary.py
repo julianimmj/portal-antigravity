@@ -17,19 +17,19 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
 from urllib.parse import quote_plus
 
-# Importação segura de feedparser
+# Importação segura de feedparser (caso não esteja instalado no container Streamlit Cloud)
 try:
     import feedparser
     HAS_FEEDPARSER = True
-except ImportError:
+except Exception:
     feedparser = None
     HAS_FEEDPARSER = False
 
-# Importação segura de yfinance
+# Importação segura de yfinance (pode falhar por dependência interna no container)
 try:
     import yfinance as yf
     HAS_YFINANCE = True
-except ImportError:
+except Exception:
     yf = None
     HAS_YFINANCE = False
 
