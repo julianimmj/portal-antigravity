@@ -386,16 +386,40 @@ def inject_css():
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > div > label:hover p {
             color: #ffffff !important;
         }
-        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > div > label:has(input:checked),
-        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > div > label[aria-checked="true"] {
-            background: linear-gradient(135deg, rgba(124, 77, 255, 0.25) 0%, rgba(0, 200, 255, 0.15) 100%) !important;
-            border: 1px solid rgba(124, 77, 255, 0.55) !important;
-            box-shadow: 0 4px 20px rgba(124, 77, 255, 0.20), inset 0 0 12px rgba(124, 77, 255, 0.06) !important;
-        }
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > div > label:has(input:checked) p,
         div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > div > label[aria-checked="true"] p {
             color: #ffffff !important;
             font-weight: 700 !important;
+        }
+
+        /* ── Mobile Responsiveness (Smartphones <= 768px) ─── */
+        @media (max-width: 768px) {
+            .stMainBlockContainer {
+                padding-left: 0.8rem !important;
+                padding-right: 0.8rem !important;
+                padding-top: 1.0rem !important;
+            }
+            .summary-banner-panel, .earnings-item, .summary-item {
+                padding: 0.75rem !important;
+                margin-bottom: 0.6rem !important;
+            }
+            .earnings-title, .summary-item-title {
+                font-size: 0.92rem !important;
+            }
+            .earnings-desc, .summary-item-desc {
+                font-size: 0.78rem !important;
+                line-height: 1.4 !important;
+            }
+            div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > div > label {
+                padding: 0.45rem 0.8rem !important;
+                font-size: 0.78rem !important;
+                flex: 1 1 auto !important;
+                text-align: center !important;
+            }
+            .earnings-badge {
+                font-size: 0.68rem !important;
+                padding: 2px 7px !important;
+            }
         }
 
         /* ── Quotes Banner ─── */
