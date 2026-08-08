@@ -1189,32 +1189,23 @@ def page_dashboard():
         """)
 
     # ── Seção Inferior Full-Width: Resumo de Mercado & Análise de Balanços ──
-    from modules.market_summary import get_market_summary, get_earnings_analysis, get_update_time_slot, get_market_quotes
+    from modules.market_summary import get_market_summary, get_earnings_analysis, get_update_time_slot
 
     st_html('<div style="margin-top: 1.0rem;"></div>')
 
     slot_info = get_update_time_slot()
-    quotes = get_market_quotes()
 
-    # Cabeçalho da Seção com Edição e Cotações
+    # Cabeçalho da Seção com Edição e Filtros
     col_slot_title, col_slot_filter = st.columns([2.5, 1.0])
     with col_slot_title:
-        quotes_html = ""
-        for q in quotes:
-            bg_change = f"{q['color']}18"
-            quotes_html += f'<div class="quote-chip"><span class="q-name">{q["name"]}</span><span class="q-price">{q["price"]}</span><span class="q-change" style="background:{bg_change}; color:{q["color"]};">{q["arrow"]} {q["change"]}</span></div>'
-
         st_html(f"""
-        <div style="margin-bottom:0.6rem;">
-            <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.4rem;">
-                <span style="font-size:1.1rem;">{slot_info["icon"]}</span>
-                <div>
-                    <span style="font-size:0.95rem; font-weight:800; color:#ffffff;">{slot_info["title"]}</span>
-                    <span style="font-size:0.75rem; color:#00c8ff; font-weight:600; margin-left:0.5rem;">({slot_info["time_str"]} · {slot_info["date_str"]})</span>
-                    <div style="font-size:0.72rem; color:rgba(255,255,255,0.48);">{slot_info["desc"]}</div>
-                </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.6rem;">
+            <span style="font-size:1.1rem;">{slot_info["icon"]}</span>
+            <div>
+                <span style="font-size:0.95rem; font-weight:800; color:#ffffff;">{slot_info["title"]}</span>
+                <span style="font-size:0.75rem; color:#00c8ff; font-weight:600; margin-left:0.5rem;">({slot_info["time_str"]} · {slot_info["date_str"]})</span>
+                <div style="font-size:0.72rem; color:rgba(255,255,255,0.48);">{slot_info["desc"]}</div>
             </div>
-            <div class="quotes-banner">{quotes_html}</div>
         </div>
         """)
 
@@ -1288,19 +1279,13 @@ def page_dashboard():
 # ─────────────────────────────────────────
 def page_market_summary():
     """Página detalhada de Resumo de Mercado, Avaliação de Balanços e Fontes Acompanhadas."""
-    from modules.market_summary import get_market_summary, get_earnings_analysis, get_followed_profiles, get_update_time_slot, get_market_quotes
+    from modules.market_summary import get_market_summary, get_earnings_analysis, get_followed_profiles, get_update_time_slot
 
     slot_info = get_update_time_slot()
-    quotes = get_market_quotes()
 
     col_title, col_actions = st.columns([2.2, 1.0])
 
     with col_title:
-        quotes_html = ""
-        for q in quotes:
-            bg_change = f"{q['color']}18"
-            quotes_html += f'<div class="quote-chip"><span class="q-name">{q["name"]}</span><span class="q-price">{q["price"]}</span><span class="q-change" style="background:{bg_change}; color:{q["color"]};">{q["arrow"]} {q["change"]}</span></div>'
-
         st_html(f"""
         <div style="margin-bottom: 0.8rem;">
             <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.2rem;">
@@ -1309,7 +1294,6 @@ def page_market_summary():
             <div style="color: rgba(255,255,255,0.55); font-size: 0.84rem;">
                 {slot_info["icon"]} <b>{slot_info["title"]}</b> · {slot_info["desc"]} (Atualizado às {slot_info["time_str"]})
             </div>
-            <div class="quotes-banner" style="margin-top:0.5rem;">{quotes_html}</div>
         </div>
         """)
 
