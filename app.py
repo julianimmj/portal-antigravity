@@ -1227,11 +1227,12 @@ def page_dashboard():
         sum_items_html = ""
         for s in summaries:
             reg_flag = "🇧🇷" if s.get("region") == "Nacional" else "🌎"
+            analyst_html = f'<span style="font-size:0.65rem; font-weight:700; color:#a77cff; background:rgba(124,77,255,0.18); border:1px solid rgba(124,77,255,0.35); padding:2px 6px; border-radius:4px; margin-left:6px;">🗣️ {s["analyst_tag"]}</span>' if s.get("analyst_tag") else ""
             sum_items_html += f"""
             <div class="summary-item">
                 <div class="summary-item-title"><a href="{s["link"]}" target="_blank">{s["title"]}</a></div>
                 <div class="summary-item-desc">{s["summary"]}</div>
-                <div class="summary-item-meta"><span style="margin-right:3px">{reg_flag}</span> <span class="news-source">{s["source"]}</span> · {s["time_ago"]}</div>
+                <div class="summary-item-meta"><span style="margin-right:3px">{reg_flag}</span> <span class="news-source">{s["source"]}</span>{analyst_html} · {s["time_ago"]}</div>
             </div>
             """
 
@@ -1252,6 +1253,7 @@ def page_dashboard():
             comp_title = e.get("company") or "Balanço · Empresa Listada"
             badge_html = f'<span class="earnings-badge" style="background:{st_info["color"]}22; color:{st_info["color"]}; border:1px solid {st_info["color"]}44;">{st_info["emoji"]} Visão {st_info["label"]}</span>'
             comp_html = f'<span class="earnings-company">🏢 {comp_title}</span>'
+            analyst_html = f'<span style="font-size:0.65rem; font-weight:700; color:#a77cff; background:rgba(124,77,255,0.18); border:1px solid rgba(124,77,255,0.35); padding:2px 6px; border-radius:4px; margin-left:6px;">🗣️ {e["analyst_tag"]}</span>' if e.get("analyst_tag") else ""
             earn_items_html += f"""
             <div class="earnings-item">
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:0.25rem;">
@@ -1260,7 +1262,7 @@ def page_dashboard():
                 </div>
                 <div class="earnings-title"><a href="{e["link"]}" target="_blank">{e["title"]}</a></div>
                 <div class="earnings-desc">{e["summary"]}</div>
-                <div class="earnings-meta"><span style="margin-right:3px">{reg_flag}</span> <span class="news-source">{e["source"]}</span> · {e["time_ago"]}</div>
+                <div class="earnings-meta"><span style="margin-right:3px">{reg_flag}</span> <span class="news-source">{e["source"]}</span>{analyst_html} · {e["time_ago"]}</div>
             </div>
             """
 
@@ -1317,11 +1319,12 @@ def page_market_summary():
         if summaries:
             for s in summaries:
                 reg_badge = "🇧🇷 Nacional" if s.get("region") == "Nacional" else "🌎 Internacional"
+                analyst_badge = f'<span style="font-size:0.68rem; font-weight:700; color:#a77cff; background:rgba(124,77,255,0.18); border:1px solid rgba(124,77,255,0.4); padding:2px 8px; border-radius:4px; margin-left:6px;">🗣️ {s["analyst_tag"]}</span>' if s.get("analyst_tag") else ""
                 st_html(f"""
                 <div class="summary-banner-panel" style="margin-top: 0.5rem; margin-bottom: 0.6rem;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.3rem;">
                         <div style="font-size: 0.72rem; color: #00c8ff; font-weight: 700; text-transform: uppercase;">
-                            {s["icon"]} {s["source"]} · {s["time_ago"]}
+                            {s["icon"]} {s["source"]} {analyst_badge} · {s["time_ago"]}
                         </div>
                         <span style="font-size:0.65rem; font-weight:700; color:rgba(255,255,255,0.5); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:4px;">{reg_badge}</span>
                     </div>
@@ -1362,6 +1365,7 @@ def page_market_summary():
                     badge_html = f'<span class="earnings-badge" style="background:{st_info["color"]}22; color:{st_info["color"]}; border:1px solid {st_info["color"]}44; font-size:0.75rem; padding:3px 10px;">{st_info["emoji"]} Visão {st_info["label"]}</span>'
                     comp_html = f'<span class="earnings-company" style="font-size:0.95rem;">🏢 {comp_title}</span>'
                     reg_badge = "🇧🇷" if e.get("region") == "Nacional" else "🌎"
+                    analyst_badge = f'<span style="font-size:0.68rem; font-weight:700; color:#a77cff; background:rgba(124,77,255,0.18); border:1px solid rgba(124,77,255,0.4); padding:2px 8px; border-radius:4px; margin-left:6px;">🗣️ {e["analyst_tag"]}</span>' if e.get("analyst_tag") else ""
                     st_html(f"""
                     <div class="earnings-item" style="padding: 1.0rem; margin-bottom: 0.8rem;">
                         <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:0.4rem;">
@@ -1375,7 +1379,7 @@ def page_market_summary():
                             {e["summary"]}
                         </div>
                         <div class="earnings-meta" style="margin-top:0.4rem;">
-                            <span style="margin-right:3px">{reg_badge}</span> <span class="news-source">{e["source"]}</span> · {e["time_ago"]}
+                            <span style="margin-right:3px">{reg_badge}</span> <span class="news-source">{e["source"]}</span>{analyst_badge} · {e["time_ago"]}
                         </div>
                     </div>
                     """)

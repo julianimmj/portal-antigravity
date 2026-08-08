@@ -93,17 +93,19 @@ FOLLOWED_PROFILES = [
 # RSS Feeds — Resumo Geral de Mercado
 # ─────────────────────────────────────────
 SUMMARY_FEEDS_NACIONAL = [
-    {"name": "InfoMoney",        "url": "https://www.infomoney.com.br/feed/",                                                      "icon": "📰", "region": "Nacional"},
-    {"name": "Valor Econômico",  "url": "https://pox.globo.com/rss/valor/",                                                        "icon": "📰", "region": "Nacional"},
-    {"name": "Money Times",      "url": "https://www.moneytimes.com.br/feed/",                                                     "icon": "📰", "region": "Nacional"},
-    {"name": "Exame",            "url": "https://exame.com/feed/",                                                                  "icon": "📰", "region": "Nacional"},
-    {"name": "Investing.com BR", "url": "https://br.investing.com/rss/news_285.rss",                                               "icon": "📈", "region": "Nacional"},
-    {"name": "CNN Economia",     "url": "https://www.cnnbrasil.com.br/economia/feed/",                                             "icon": "📰", "region": "Nacional"},
-    # Google News focados
+    {"name": "InfoMoney",            "url": "https://www.infomoney.com.br/feed/",                                                      "icon": "📰", "region": "Nacional"},
+    {"name": "Valor Econômico",      "url": "https://pox.globo.com/rss/valor/",                                                        "icon": "📰", "region": "Nacional"},
+    {"name": "Money Times",          "url": "https://www.moneytimes.com.br/feed/",                                                     "icon": "📰", "region": "Nacional"},
+    {"name": "Exame",                "url": "https://exame.com/feed/",                                                                 "icon": "📰", "region": "Nacional"},
+    {"name": "Investing.com BR",     "url": "https://br.investing.com/rss/news_285.rss",                                               "icon": "📈", "region": "Nacional"},
+    {"name": "CNN Economia",         "url": "https://www.cnnbrasil.com.br/economia/feed/",                                             "icon": "📰", "region": "Nacional"},
+    # Feeds Focados em Opiniões de Analistas Acompanhados
+    {"name": "Opinião Analistas B3", "url": "https://news.google.com/rss/search?q=%22Suno%22+OR+%22VAROS%22+OR+%22Renato+Reis%22+OR+%22BTG+Pactual%22+OR+%22SmallCaps%22+OR+%22Dica+de+Hoje%22+a%C3%A7%C3%B5es+OR+balan%C3%A7o&hl=pt-BR&gl=BR&ceid=BR:pt-419", "icon": "🗣️", "region": "Nacional"},
+    {"name": "Perfis X & Casas",     "url": "https://news.google.com/rss/search?q=%22renetous%22+OR+%22varosbr%22+OR+%22vowtz%22+OR+%22gerandoalfa%22+OR+%22portalsmallcaps%22+OR+%22dicadehoje7%22+a%C3%A7%C3%B5es&hl=pt-BR&gl=BR&ceid=BR:pt-419", "icon": "👥", "region": "Nacional"},
+    {"name": "Suno Notícias",        "url": "https://www.suno.com.br/noticias/feed/",                                                 "icon": "💡", "region": "Nacional"},
     {"name": "Ibovespa & Dólar",     "url": "https://news.google.com/rss/search?q=Ibovespa+d%C3%B3lar+fechamento+B3+hoje&hl=pt-BR&gl=BR&ceid=BR:pt-419",  "icon": "📊", "region": "Nacional"},
     {"name": "IFIX & FIIs",          "url": "https://news.google.com/rss/search?q=IFIX+fundos+imobili%C3%A1rios+rendimento+dividendo&hl=pt-BR&gl=BR&ceid=BR:pt-419", "icon": "🏢", "region": "Nacional"},
     {"name": "Selic & Juros",        "url": "https://news.google.com/rss/search?q=Selic+juros+Copom+pol%C3%ADtica+monet%C3%A1ria&hl=pt-BR&gl=BR&ceid=BR:pt-419", "icon": "💰", "region": "Nacional"},
-    {"name": "Analistas & Casas",    "url": "https://news.google.com/rss/search?q=%22Suno+Research%22+OR+%22BTG+Pactual%22+OR+%22Renato+Reis%22+OR+%22VAROS%22+OR+SmallCaps+a%C3%A7%C3%B5es&hl=pt-BR&gl=BR&ceid=BR:pt-419", "icon": "👥", "region": "Nacional"},
 ]
 
 SUMMARY_FEEDS_INTERNACIONAL = [
@@ -125,12 +127,48 @@ EARNINGS_FEEDS_NACIONAL = [
     {"name": "Valor Econômico",      "url": "https://pox.globo.com/rss/valor/",                                                     "icon": "📊", "region": "Nacional"},
     {"name": "Money Times",          "url": "https://www.moneytimes.com.br/feed/",                                                  "icon": "📊", "region": "Nacional"},
     {"name": "Investing.com BR",     "url": "https://br.investing.com/rss/news_285.rss",                                            "icon": "📊", "region": "Nacional"},
+    {"name": "Suno Notícias",        "url": "https://www.suno.com.br/noticias/feed/",                                             "icon": "💡", "region": "Nacional"},
     # Google News focados em balanços B3
     {"name": "Balanços B3",          "url": "https://news.google.com/rss/search?q=balan%C3%A7o+resultado+trimestral+lucro+preju%C3%ADzo+B3+2T+3T&hl=pt-BR&gl=BR&ceid=BR:pt-419", "icon": "📊", "region": "Nacional"},
     {"name": "Balanços Varejo",      "url": "https://news.google.com/rss/search?q=%22Magazine+Luiza%22+OR+%22Lojas+Renner%22+OR+%22Casas+Bahia%22+OR+Assai+OR+Carrefour+resultado+balan%C3%A7o&hl=pt-BR&gl=BR&ceid=BR:pt-419", "icon": "🛒", "region": "Nacional"},
     {"name": "Balanços Blue Chips",  "url": "https://news.google.com/rss/search?q=Petrobras+OR+Vale+OR+Itau+OR+Bradesco+OR+%22Banco+do+Brasil%22+resultado+trimestre&hl=pt-BR&gl=BR&ceid=BR:pt-419", "icon": "💎", "region": "Nacional"},
     {"name": "Análises Casas",       "url": "https://news.google.com/rss/search?q=%22Suno+Research%22+OR+%22BTG+Pactual%22+OR+%22Renato+Reis%22+recomenda%C3%A7%C3%A3o+OR+balan%C3%A7o+OR+resultado&hl=pt-BR&gl=BR&ceid=BR:pt-419", "icon": "👥", "region": "Nacional"},
 ]
+
+EARNINGS_FEEDS_INTERNACIONAL = [
+    {"name": "Wall St Earnings", "url": "https://news.google.com/rss/search?q=earnings+quarterly+report+revenue+EPS+beat+miss&hl=en-US&gl=US&ceid=US:en", "icon": "🌎", "region": "Internacional"},
+    {"name": "CNBC Earnings",    "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664",       "icon": "🌎", "region": "Internacional"},
+    {"name": "Tech Earnings",    "url": "https://news.google.com/rss/search?q=Nvidia+OR+Apple+OR+Microsoft+OR+Amazon+OR+Meta+earnings+results&hl=en-US&gl=US&ceid=US:en", "icon": "💻", "region": "Internacional"},
+]
+
+ANALYST_MAP = {
+    "RENATO REIS": "Renato Reis (Blue3)",
+    "RENETOUS": "Renato Reis (Blue3)",
+    "VAROS": "VAROS Research",
+    "LEANDRO SIQUEIRA": "Leandro Siqueira (VAROS)",
+    "VOWTZ": "Leandro Siqueira (VAROS)",
+    "LUCAS SCHNEIDER": "Lucas Schneider (GerandoAlfa)",
+    "GERANDOALFA": "Lucas Schneider (GerandoAlfa)",
+    "SUNO": "Suno Research",
+    "MALEK ZEIN": "Malek Zein (Suno)",
+    "BTG PACTUAL": "BTG Pactual Research",
+    "BTG": "BTG Pactual Research",
+    "SMALLCAPS": "Portal SmallCaps",
+    "DICA DE HOJE": "Dica de Hoje (Nigri)",
+    "DANIEL NIGRI": "Dica de Hoje (Nigri)",
+    "PABLO SPYER": "Pablo Spyer (TC)",
+    "ROBIN BROOKS": "Robin Brooks",
+    "MICHAEL BURRY": "Michael Burry",
+    "LUCAS COSTA": "Lucas Costa, CMT",
+}
+
+def _detect_analyst_opinion(title: str, summary: str = "") -> str:
+    """Detecta se a notícia/post contém análise ou citação de algum dos analistas acompanhados."""
+    full_text = (title + " " + summary).upper()
+    for key, name in ANALYST_MAP.items():
+        if re.search(r'\b' + re.escape(key) + r'\b', full_text):
+            return name
+    return ""
 
 EARNINGS_FEEDS_INTERNACIONAL = [
     {"name": "Wall St Earnings", "url": "https://news.google.com/rss/search?q=earnings+quarterly+report+revenue+EPS+beat+miss&hl=en-US&gl=US&ceid=US:en", "icon": "🌎", "region": "Internacional"},
@@ -732,6 +770,7 @@ def _fetch_feed_group(feed_list: list) -> list:
                 entries = _parse_feed_items(resp.content)
                 bucket = []
                 for entry in entries:
+                    analyst_tag = _detect_analyst_opinion(entry["title"], entry["summary"])
                     bucket.append({
                         "title": entry["title"],
                         "summary": entry["summary"],
@@ -740,6 +779,7 @@ def _fetch_feed_group(feed_list: list) -> list:
                         "time_ago": entry["time_ago"],
                         "icon": feed_info["icon"],
                         "region": feed_info["region"],
+                        "analyst_tag": analyst_tag,
                     })
                 if bucket:
                     feed_buckets.append(bucket)
@@ -832,6 +872,7 @@ def get_earnings_analysis(region: str = "Todos", max_items: int = 12) -> list:
                     if title and _is_earnings_related(title, summary):
                         sentiment = _classify_sentiment(title, summary)
                         company = _extract_ticker_or_company(title, summary)
+                        analyst_tag = _detect_analyst_opinion(title, summary)
 
                         all_earnings.append({
                             "title": title,
@@ -843,6 +884,7 @@ def get_earnings_analysis(region: str = "Todos", max_items: int = 12) -> list:
                             "region": feed_info["region"],
                             "sentiment": sentiment,
                             "company": company,
+                            "analyst_tag": analyst_tag,
                         })
         except Exception:
             continue
