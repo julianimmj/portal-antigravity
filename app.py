@@ -350,6 +350,91 @@ def inject_css():
             font-weight: 700 !important;
         }
 
+        /* ── Premium Horizontal Radio Buttons (Main Content Area) ─── */
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > label:first-child {
+            display: none !important;
+        }
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > div {
+            gap: 0.45rem !important;
+            flex-wrap: wrap !important;
+        }
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > div > label {
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(255, 255, 255, 0.10) !important;
+            border-radius: 10px !important;
+            padding: 0.55rem 1.25rem !important;
+            cursor: pointer !important;
+            transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            backdrop-filter: blur(8px) !important;
+        }
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > div > label > div:first-child {
+            display: none !important;
+        }
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > div > label p {
+            font-size: 0.82rem !important;
+            font-weight: 600 !important;
+            color: rgba(255, 255, 255, 0.6) !important;
+            margin: 0 !important;
+            letter-spacing: 0.3px !important;
+        }
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > div > label:hover {
+            background: rgba(124, 77, 255, 0.12) !important;
+            border-color: rgba(124, 77, 255, 0.40) !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 16px rgba(124, 77, 255, 0.15) !important;
+        }
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > div > label:hover p {
+            color: #ffffff !important;
+        }
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > div > label:has(input:checked),
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > div > label[aria-checked="true"] {
+            background: linear-gradient(135deg, rgba(124, 77, 255, 0.25) 0%, rgba(0, 200, 255, 0.15) 100%) !important;
+            border: 1px solid rgba(124, 77, 255, 0.55) !important;
+            box-shadow: 0 4px 20px rgba(124, 77, 255, 0.20), inset 0 0 12px rgba(124, 77, 255, 0.06) !important;
+        }
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > div > label:has(input:checked) p,
+        div[data-testid="stMainBlockContainer"] div[data-testid="stRadio"] > div > label[aria-checked="true"] p {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+        }
+
+        /* ── Quotes Banner ─── */
+        .quotes-banner {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            padding: 0.65rem 0;
+            margin-bottom: 0.4rem;
+        }
+        .quote-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 0.5rem 1rem;
+            backdrop-filter: blur(6px);
+        }
+        .quote-chip .q-name {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.55);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .quote-chip .q-price {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: #ffffff;
+        }
+        .quote-chip .q-change {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 5px;
+        }
+
         /* ── Ticker Animado Fixed (Fixo no topo de todas as páginas ao rolar) ─── */
         @keyframes tickerMarquee {
             0% { transform: translateX(0); }
@@ -1104,23 +1189,32 @@ def page_dashboard():
         """)
 
     # ── Seção Inferior Full-Width: Resumo de Mercado & Análise de Balanços ──
-    from modules.market_summary import get_market_summary, get_earnings_analysis, get_update_time_slot
+    from modules.market_summary import get_market_summary, get_earnings_analysis, get_update_time_slot, get_market_quotes
 
     st_html('<div style="margin-top: 1.0rem;"></div>')
 
     slot_info = get_update_time_slot()
+    quotes = get_market_quotes()
 
-    # Cabeçalho da Seção com Edição e Filtros
+    # Cabeçalho da Seção com Edição e Cotações
     col_slot_title, col_slot_filter = st.columns([2.5, 1.0])
     with col_slot_title:
+        quotes_html = ""
+        for q in quotes:
+            bg_change = f"{q['color']}18"
+            quotes_html += f'<div class="quote-chip"><span class="q-name">{q["name"]}</span><span class="q-price">{q["price"]}</span><span class="q-change" style="background:{bg_change}; color:{q["color"]};">{q["arrow"]} {q["change"]}</span></div>'
+
         st_html(f"""
-        <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.6rem;">
-            <span style="font-size:1.1rem;">{slot_info["icon"]}</span>
-            <div>
-                <span style="font-size:0.95rem; font-weight:800; color:#ffffff;">{slot_info["title"]}</span>
-                <span style="font-size:0.75rem; color:#00c8ff; font-weight:600; margin-left:0.5rem;">({slot_info["time_str"]} · {slot_info["date_str"]})</span>
-                <div style="font-size:0.72rem; color:rgba(255,255,255,0.48);">{slot_info["desc"]}</div>
+        <div style="margin-bottom:0.6rem;">
+            <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.4rem;">
+                <span style="font-size:1.1rem;">{slot_info["icon"]}</span>
+                <div>
+                    <span style="font-size:0.95rem; font-weight:800; color:#ffffff;">{slot_info["title"]}</span>
+                    <span style="font-size:0.75rem; color:#00c8ff; font-weight:600; margin-left:0.5rem;">({slot_info["time_str"]} · {slot_info["date_str"]})</span>
+                    <div style="font-size:0.72rem; color:rgba(255,255,255,0.48);">{slot_info["desc"]}</div>
+                </div>
             </div>
+            <div class="quotes-banner">{quotes_html}</div>
         </div>
         """)
 
@@ -1194,13 +1288,19 @@ def page_dashboard():
 # ─────────────────────────────────────────
 def page_market_summary():
     """Página detalhada de Resumo de Mercado, Avaliação de Balanços e Fontes Acompanhadas."""
-    from modules.market_summary import get_market_summary, get_earnings_analysis, get_followed_profiles, get_update_time_slot
+    from modules.market_summary import get_market_summary, get_earnings_analysis, get_followed_profiles, get_update_time_slot, get_market_quotes
 
     slot_info = get_update_time_slot()
+    quotes = get_market_quotes()
 
     col_title, col_actions = st.columns([2.2, 1.0])
 
     with col_title:
+        quotes_html = ""
+        for q in quotes:
+            bg_change = f"{q['color']}18"
+            quotes_html += f'<div class="quote-chip"><span class="q-name">{q["name"]}</span><span class="q-price">{q["price"]}</span><span class="q-change" style="background:{bg_change}; color:{q["color"]};">{q["arrow"]} {q["change"]}</span></div>'
+
         st_html(f"""
         <div style="margin-bottom: 0.8rem;">
             <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.2rem;">
@@ -1209,6 +1309,7 @@ def page_market_summary():
             <div style="color: rgba(255,255,255,0.55); font-size: 0.84rem;">
                 {slot_info["icon"]} <b>{slot_info["title"]}</b> · {slot_info["desc"]} (Atualizado às {slot_info["time_str"]})
             </div>
+            <div class="quotes-banner" style="margin-top:0.5rem;">{quotes_html}</div>
         </div>
         """)
 
