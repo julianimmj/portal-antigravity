@@ -213,7 +213,6 @@ def _parse_feed_items(xml_content: bytes) -> list:
                 link = entry.get("link", "#")
                 summary = _clean_summary(entry.get("summary", "") or entry.get("description", ""))
 
-                # Formatar tempo
                 time_ago = "hoje"
                 try:
                     if hasattr(entry, "published_parsed") and entry.published_parsed:
@@ -315,22 +314,10 @@ def _extract_ticker_or_company(title: str) -> str:
     return ""
 
 
-@st.cache_data(ttl=1800, show_spinner=False)
-def get_market_summary(region: str = "Todos", max_items: int = 15) -> list:
-    """
-    Coleta resumo geral do mercado via RSS (nacional e internacional).
-    Suporta filtro por região: 'Todos', 'Nacional', 'Internacional'.
-    """
-    if region == "Nacional":
-        feeds = SUMMARY_FEEDS_NACIONAL
-    elif region == "Internacional":
-        feeds = SUMMARY_FEEDS_INTERNACIONAL
-    else:
-        feeds = SUMMARY_FEEDS_NACIONAL + SUMMARY_FEEDS_INTERNACIONAL
-
+def _fetch_feed_group(feed_list: list) -> list:
+    """Busca e intercala notícias de um grupo de feeds."""
     feed_buckets = []
-
-    for feed_info in feeds:
+    for feed_info in feed_list:
         try:
             resp = requests.get(feed_info["url"], headers=HEADERS, timeout=6)
             if resp.status_code == 200:
@@ -351,7 +338,6 @@ def get_market_summary(region: str = "Todos", max_items: int = 15) -> list:
         except Exception:
             continue
 
-    # Intercalar (Round-Robin) para diversidade de fontes
     all_entries = []
     max_len = max((len(b) for b in feed_buckets), default=0)
     for i in range(max_len):
@@ -359,7 +345,6 @@ def get_market_summary(region: str = "Todos", max_items: int = 15) -> list:
             if i < len(bucket):
                 all_entries.append(bucket[i])
 
-    # Deduplicar
     seen = set()
     unique = []
     for item in all_entries:
@@ -368,7 +353,42 @@ def get_market_summary(region: str = "Todos", max_items: int = 15) -> list:
             seen.add(key)
             unique.append(item)
 
-    return unique[:max_items]
+    return unique
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def get_market_summary(region: str = "Todos", max_items: int = 15) -> list:
+    """
+    Coleta resumo geral do mercado via RSS.
+    Se region == "Todos", intercala estritamente 1 item Nacional (🇧🇷) e 1 item Internacional (🌎)
+    para garantir que ambas as esferas estejam sempre presentes de forma equilibrada.
+    """
+    if region == "Nacional":
+        return _fetch_feed_group(SUMMARY_FEEDS_NACIONAL)[:max_items]
+    elif region == "Internacional":
+        return _fetch_feed_group(SUMMARY_FEEDS_INTERNACIONAL)[:max_items]
+
+    # region == "Todos": Intercalar 1-a-1 Nacional e Internacional
+    nac_items = _fetch_feed_group(SUMMARY_FEEDS_NACIONAL)
+    int_items = _fetch_feed_group(SUMMARY_FEEDS_INTERNACIONAL)
+
+    combined = []
+    max_idx = max(len(nac_items), len(int_items))
+    seen = set()
+
+    for i in range(max_idx):
+        if i < len(nac_items):
+            key = nac_items[i]["title"][:45].lower()
+            if key not in seen:
+                seen.add(key)
+                combined.append(nac_items[i])
+        if i < len(int_items):
+            key = int_items[i]["title"][:45].lower()
+            if key not in seen:
+                seen.add(key)
+                combined.append(int_items[i])
+
+    return combined[:max_items]
 
 
 @st.cache_data(ttl=1800, show_spinner=False)

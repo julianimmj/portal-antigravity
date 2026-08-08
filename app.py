@@ -1168,9 +1168,9 @@ def page_dashboard():
             comp_html = f'<span class="earnings-company">{e["company"]}</span>' if e["company"] else ""
             earn_items_html += f"""
             <div class="earnings-item">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
-                    {comp_html}
-                    {badge_html}
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:0.25rem;">
+                    <div>{comp_html}</div>
+                    <div style="margin-left:auto;">{badge_html}</div>
                 </div>
                 <div class="earnings-title"><a href="{e["link"]}" target="_blank">{e["title"]}</a></div>
                 <div class="earnings-desc">{e["summary"]}</div>
@@ -1277,9 +1277,9 @@ def page_market_summary():
                     reg_badge = "🇧🇷" if e.get("region") == "Nacional" else "🌎"
                     st_html(f"""
                     <div class="earnings-item" style="padding: 1.0rem; margin-bottom: 0.8rem;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-                            {comp_html}
-                            {badge_html}
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:0.4rem;">
+                            <div>{comp_html}</div>
+                            <div style="margin-left:auto;">{badge_html}</div>
                         </div>
                         <div class="earnings-title" style="font-size:0.95rem; margin-bottom:0.4rem;">
                             <a href="{e["link"]}" target="_blank">{e["title"]}</a>
