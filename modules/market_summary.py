@@ -759,6 +759,68 @@ def _extract_ticker_or_company(title: str, summary: str = "") -> str:
 
     return "Balanço Corporativo"
 
+ANALYST_MAP = {
+    # Perfis de Ações & Valuation
+    "RENATO REIS": "Renato Reis (Blue3)",
+    "RENETOUS": "Renato Reis (Blue3)",
+    "VAROS": "VAROS Research",
+    "LEANDRO SIQUEIRA": "Leandro Siqueira (VAROS)",
+    "VOWTZ": "Leandro Siqueira (VAROS)",
+    "LUCAS SCHNEIDER": "Lucas Schneider (GerandoAlfa)",
+    "GERANDOALFA": "Lucas Schneider (GerandoAlfa)",
+    "KAIO SILVA": "Kaio Silva (GAInvest)",
+    "GAINVEST": "Kaio Silva (GAInvest)",
+    "SUNO": "Suno Research",
+    "MALEK ZEIN": "Malek Zein (Suno)",
+    "BTG PACTUAL": "BTG Pactual Research",
+    "BTG": "BTG Pactual Research",
+    "SMALLCAPS": "Portal SmallCaps",
+    "VALOR ADICIONADO": "Valor Adicionado",
+    "ANÁLISE DE AÇÕES": "Análise de Ações",
+    "CALIXTO CAPITAL": "Calixto Capital",
+    "MZ INVESTIMENTOS": "MZ Investimentos",
+    "THE INVESTOR": "The Investor",
+    "MARCELOHARS": "Concordia Gestão",
+
+    # Macroeconomia & Notícias
+    "MERCADOS BRASIL": "Mercados Brasil",
+    "NOTÍCIAS DA BOLSA": "Notícias da Bolsa",
+    "FATOS DA BOLSA": "Fatos da Bolsa",
+    "ROBIN BROOKS": "Robin Brooks",
+    "INSIDER REPORT": "Insider Report BR",
+    "MANO CALL": "Mano Call",
+    "MICHAEL BURRY": "Michael Burry",
+    "BURRY": "Michael Burry",
+    "DANIEL SCOTT": "Daniel Scott",
+    "ECONOMATICA": "Economatica",
+    "PABLO SPYER": "Pablo Spyer (TC)",
+    "SPYER": "Pablo Spyer (TC)",
+
+    # FIIs
+    "DICA DE HOJE": "Dica de Hoje (Nigri)",
+    "DANIEL NIGRI": "Dica de Hoje (Nigri)",
+    "FIIS": "Fundos Imobiliários",
+
+    # Análise Técnica & Cripto
+    "LUCAS COSTA": "Lucas Costa, CMT",
+    "GRAFISTA": "O Grafista",
+    "TOPGRAFX": "TopGrafx",
+    "FERNANDO MARX": "Fernando Marx Katz",
+    "CESAR FRADE": "Cesar Frade",
+    "CASTANEDA": "Castaneda (Oxus)",
+    "CASTACRYPTO": "Castaneda (Oxus)",
+    "CRYPTO INSIGHTS": "Crypto Insights",
+}
+
+
+def _detect_analyst_opinion(title: str, summary: str = "") -> str:
+    """Detecta se a notícia/post contém análise ou citação de algum dos analistas acompanhados."""
+    full_text = (title + " " + summary).upper()
+    for key, name in ANALYST_MAP.items():
+        if re.search(r'\b' + re.escape(key) + r'\b', full_text):
+            return name
+    return ""
+
 
 def _fetch_feed_group(feed_list: list) -> list:
     """Busca e intercala notícias de um grupo de feeds."""
@@ -809,45 +871,46 @@ def _fetch_feed_group(feed_list: list) -> list:
 # ─────────────────────────────────────────
 # Funções públicas
 # ─────────────────────────────────────────
-@st.cache_data(ttl=1800, show_spinner=False)
+@st.cache_data(ttl=600, show_spinner=False)
 def get_market_summary(region: str = "Todos", max_items: int = 15) -> list:
     """
     Coleta resumo geral do mercado via RSS.
-    Se region == "Todos", intercala estritamente 1 Nacional + 1 Internacional.
+    Matérias contendo opiniões dos analistas acompanhados são PRIORIZADAS NO TOPO.
     """
     if region == "Nacional":
-        return _fetch_feed_group(SUMMARY_FEEDS_NACIONAL)[:max_items]
+        items = _fetch_feed_group(SUMMARY_FEEDS_NACIONAL)
     elif region == "Internacional":
-        return _fetch_feed_group(SUMMARY_FEEDS_INTERNACIONAL)[:max_items]
+        items = _fetch_feed_group(SUMMARY_FEEDS_INTERNACIONAL)
+    else:
+        nac_items = _fetch_feed_group(SUMMARY_FEEDS_NACIONAL)
+        int_items = _fetch_feed_group(SUMMARY_FEEDS_INTERNACIONAL)
 
-    # Todos: intercalar 1-a-1
-    nac_items = _fetch_feed_group(SUMMARY_FEEDS_NACIONAL)
-    int_items = _fetch_feed_group(SUMMARY_FEEDS_INTERNACIONAL)
+        items = []
+        max_idx = max(len(nac_items), len(int_items))
+        seen = set()
 
-    combined = []
-    max_idx = max(len(nac_items), len(int_items))
-    seen = set()
+        for i in range(max_idx):
+            if i < len(nac_items):
+                key = nac_items[i]["title"][:50].lower()
+                if key not in seen:
+                    seen.add(key)
+                    items.append(nac_items[i])
+            if i < len(int_items):
+                key = int_items[i]["title"][:50].lower()
+                if key not in seen:
+                    seen.add(key)
+                    items.append(int_items[i])
 
-    for i in range(max_idx):
-        if i < len(nac_items):
-            key = nac_items[i]["title"][:50].lower()
-            if key not in seen:
-                seen.add(key)
-                combined.append(nac_items[i])
-        if i < len(int_items):
-            key = int_items[i]["title"][:50].lower()
-            if key not in seen:
-                seen.add(key)
-                combined.append(int_items[i])
-
-    return combined[:max_items]
+    # Reordenar para colocar opiniões de analistas (analyst_tag) no TOPO da lista
+    items.sort(key=lambda x: 0 if x.get("analyst_tag") else 1)
+    return items[:max_items]
 
 
-@st.cache_data(ttl=1800, show_spinner=False)
+@st.cache_data(ttl=600, show_spinner=False)
 def get_earnings_analysis(region: str = "Todos", max_items: int = 12) -> list:
     """
     Coleta análises de balanços corporativos com classificação de sentimento.
-    Usa feeds dedicados com queries Google News focadas em empresas e balanços.
+    Prioriza análises que contêm pareceres dos analistas acompanhados.
     """
     if region == "Nacional":
         earnings_feeds = EARNINGS_FEEDS_NACIONAL
@@ -898,9 +961,9 @@ def get_earnings_analysis(region: str = "Todos", max_items: int = 12) -> list:
             seen.add(key)
             unique.append(item)
 
-    # Ordenar: negativos primeiro, mistos, positivos
+    # Ordenar: 1º prioridade para pareceres de analistas acompanhados, 2º por sentimento
     sentiment_order = {"Negativo": 0, "Misto": 1, "Positivo": 2, "Neutro": 3}
-    unique.sort(key=lambda x: sentiment_order.get(x["sentiment"]["label"], 4))
+    unique.sort(key=lambda x: (0 if x.get("analyst_tag") else 1, sentiment_order.get(x["sentiment"]["label"], 4)))
 
     return unique[:max_items]
 
