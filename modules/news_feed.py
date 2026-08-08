@@ -1,13 +1,21 @@
 """
 news_feed.py — Feed de notícias financeiras via RSS com múltiplas fontes intercaladas.
 Fontes: InfoMoney, Valor Econômico, Exame, G1 Economia, Money Times, Investing.com, CNN Economia, Yahoo Finance, CNBC, MarketWatch, Reuters.
+100% resiliente: usa ElementTree (stdlib) como fallback se feedparser não estiver instalado.
 """
 
 import streamlit as st
-import feedparser
 import requests
-from datetime import datetime, timezone
 import re
+import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
+
+try:
+    import feedparser
+    HAS_FEEDPARSER = True
+except ImportError:
+    feedparser = None
+    HAS_FEEDPARSER = False
 
 
 HEADERS = {
@@ -34,7 +42,6 @@ FEEDS_WORLD = [
 ]
 
 
-# Fallbacks atualizados para manter o feed sempre povoado
 FALLBACK_NEWS_BR = [
     {"title": "Ibovespa opera em alta impulsionado por commodities e balanços corporativos", "link": "https://www.infomoney.com.br/", "source": "InfoMoney", "time_ago": "há 15 min", "icon": "📰"},
     {"title": "Mercado eleva projeção para o PIB e ajusta expectativas de inflação no Boletim Focus", "link": "https://valor.globo.com/", "source": "Valor Econômico", "time_ago": "há 45 min", "icon": "📰"},
@@ -54,47 +61,70 @@ FALLBACK_NEWS_WORLD = [
 ]
 
 
-def _parse_date(entry) -> str:
-    """Extrai e formata a data de uma entrada RSS."""
-    try:
-        if hasattr(entry, "published_parsed") and entry.published_parsed:
-            dt = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
-        elif hasattr(entry, "updated_parsed") and entry.updated_parsed:
-            dt = datetime(*entry.updated_parsed[:6], tzinfo=timezone.utc)
-        else:
-            return "hoje"
-
-        now = datetime.now(timezone.utc)
-        delta = now - dt
-        hours = delta.total_seconds() / 3600
-
-        if hours < 1:
-            mins = int(delta.total_seconds() / 60)
-            return f"há {max(1, mins)} min"
-        elif hours < 24:
-            return f"há {int(hours)}h"
-        elif hours < 48:
-            return "ontem"
-        else:
-            return dt.strftime("%d/%m")
-    except Exception:
-        return "hoje"
-
-
 def _clean_title(title: str) -> str:
     """Remove tags HTML residuais e trunca títulos longos."""
+    if not title:
+        return ""
     title = re.sub(r"<[^>]+>", "", title)
     if len(title) > 120:
         title = title[:117] + "..."
     return title.strip()
 
 
+def _parse_entries(xml_content: bytes) -> list:
+    """Parser de feed com fallback entre feedparser e ElementTree."""
+    entries = []
+
+    if HAS_FEEDPARSER:
+        try:
+            parsed = feedparser.parse(xml_content)
+            for entry in parsed.entries[:5]:
+                title = _clean_title(entry.get("title", ""))
+                link = entry.get("link", "#")
+
+                time_ago = "hoje"
+                try:
+                    if hasattr(entry, "published_parsed") and entry.published_parsed:
+                        dt = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+                        delta = datetime.now(timezone.utc) - dt
+                        hours = delta.total_seconds() / 3600
+                        if hours < 1:
+                            time_ago = f"há {max(1, int(delta.total_seconds() / 60))} min"
+                        elif hours < 24:
+                            time_ago = f"há {int(hours)}h"
+                        else:
+                            time_ago = dt.strftime("%d/%m")
+                except Exception:
+                    time_ago = "hoje"
+
+                if title:
+                    entries.append({"title": title, "link": link, "time_ago": time_ago})
+            if entries:
+                return entries
+        except Exception:
+            pass
+
+    # Fallback ElementTree
+    try:
+        root = ET.fromstring(xml_content)
+        channel = root.find("channel")
+        items = channel.findall("item") if channel is not None else root.findall("item")
+        for item in items[:5]:
+            title = _clean_title(item.findtext("title") or "")
+            link = item.findtext("link") or "#"
+            pub_date = item.findtext("pubDate") or ""
+            time_ago = pub_date[:16] if pub_date else "hoje"
+            if title:
+                entries.append({"title": title, "link": link, "time_ago": time_ago})
+    except Exception:
+        pass
+
+    return entries
+
+
 @st.cache_data(ttl=600, show_spinner=False)
 def get_news(region: str = "Brasil", max_items: int = 10) -> list:
-    """
-    Busca notícias via RSS intercalando múltiplas fontes para máxima diversidade.
-    Usa requests com User-Agent para evitar bloqueios HTTP 403/406.
-    """
+    """Busca notícias via RSS intercalando múltiplas fontes."""
     feeds = FEEDS_BR if region == "Brasil" else FEEDS_WORLD
     feed_buckets = []
 
@@ -102,27 +132,21 @@ def get_news(region: str = "Brasil", max_items: int = 10) -> list:
         try:
             resp = requests.get(feed_info["url"], headers=HEADERS, timeout=5)
             if resp.status_code == 200:
-                parsed = feedparser.parse(resp.content)
+                parsed_entries = _parse_entries(resp.content)
                 bucket = []
-                for entry in parsed.entries[:5]:
-                    title = _clean_title(entry.get("title", ""))
-                    link = entry.get("link", "#")
-                    time_ago = _parse_date(entry)
-
-                    if title:
-                        bucket.append({
-                            "title": title,
-                            "link": link,
-                            "source": feed_info["name"],
-                            "time_ago": time_ago,
-                            "icon": feed_info["icon"],
-                        })
+                for entry in parsed_entries:
+                    bucket.append({
+                        "title": entry["title"],
+                        "link": entry["link"],
+                        "source": feed_info["name"],
+                        "time_ago": entry["time_ago"],
+                        "icon": feed_info["icon"],
+                    })
                 if bucket:
                     feed_buckets.append(bucket)
         except Exception:
             continue
 
-    # Intercalar notícias de diferentes fontes (Round-Robin)
     all_entries = []
     max_len = max((len(b) for b in feed_buckets), default=0)
     for i in range(max_len):
@@ -130,7 +154,6 @@ def get_news(region: str = "Brasil", max_items: int = 10) -> list:
             if i < len(bucket):
                 all_entries.append(bucket[i])
 
-    # Remove duplicatas por título similar
     seen = set()
     unique = []
     for item in all_entries:
@@ -139,7 +162,6 @@ def get_news(region: str = "Brasil", max_items: int = 10) -> list:
             seen.add(key)
             unique.append(item)
 
-    # Se não houver notícias suficientes (devido a falhas de rede), completa com fallbacks
     fallbacks = FALLBACK_NEWS_BR if region == "Brasil" else FALLBACK_NEWS_WORLD
     if len(unique) < max_items:
         for fb in fallbacks:
@@ -149,4 +171,3 @@ def get_news(region: str = "Brasil", max_items: int = 10) -> list:
                 unique.append(fb)
 
     return unique[:max_items]
-

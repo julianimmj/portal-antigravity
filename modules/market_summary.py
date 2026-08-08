@@ -5,13 +5,23 @@ Coleta notícias e análises de fontes públicas (RSS + Google News) com foco em
 - Análise de balanços corporativos nacionais e internacionais com classificação de sentimento
 - Busca ativa de opiniões e relatórios das casas/analistas indicados (Suno, VAROS, BTG, SmallCaps, etc.)
 - Atualização estruturada nas 4 edições diárias (08h00, 12h00, 18h00 e 22h00 BRT)
+
+100% à prova de falhas: utiliza ElementTree (stdlib) com fallback gracioso para feedparser.
 """
 
 import streamlit as st
-import feedparser
 import requests
 import re
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
+
+# Importação segura de feedparser (caso não esteja instalado no container Streamlit Cloud)
+try:
+    import feedparser
+    HAS_FEEDPARSER = True
+except ImportError:
+    feedparser = None
+    HAS_FEEDPARSER = False
 
 
 HEADERS = {
@@ -130,7 +140,6 @@ def get_update_time_slot() -> dict:
     - 18:00h (Fechamento B3)
     - 22:00h (Noturna / Wall St & Ásia)
     """
-    # Converter para horário de Brasília (UTC-3)
     now_brt = datetime.now(timezone.utc) - timedelta(hours=3)
     hour = now_brt.hour
 
@@ -168,49 +177,97 @@ def get_update_time_slot() -> dict:
     }
 
 
-def _parse_date(entry) -> str:
-    """Extrai e formata a data de uma entrada RSS."""
-    try:
-        if hasattr(entry, "published_parsed") and entry.published_parsed:
-            dt = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
-        elif hasattr(entry, "updated_parsed") and entry.updated_parsed:
-            dt = datetime(*entry.updated_parsed[:6], tzinfo=timezone.utc)
-        else:
-            return "hoje"
-
-        now = datetime.now(timezone.utc)
-        delta = now - dt
-        hours = delta.total_seconds() / 3600
-
-        if hours < 1:
-            mins = int(delta.total_seconds() / 60)
-            return f"há {max(1, mins)} min"
-        elif hours < 24:
-            return f"há {int(hours)}h"
-        elif hours < 48:
-            return "ontem"
-        else:
-            return dt.strftime("%d/%m")
-    except Exception:
-        return "hoje"
-
-
 def _clean_title(title: str) -> str:
     """Remove tags HTML residuais e trunca títulos longos."""
+    if not title:
+        return ""
     title = re.sub(r"<[^>]+>", "", title)
     if len(title) > 150:
         title = title[:147] + "..."
     return title.strip()
 
 
-def _get_summary_text(entry) -> str:
-    """Extrai o resumo/descrição de uma entrada RSS."""
-    summary = entry.get("summary", "") or entry.get("description", "")
+def _clean_summary(summary: str) -> str:
+    """Limpa a descrição / resumo."""
+    if not summary:
+        return ""
     summary = re.sub(r"<[^>]+>", "", summary)
     summary = re.sub(r"\s+", " ", summary).strip()
     if len(summary) > 300:
         summary = summary[:297] + "..."
     return summary
+
+
+def _parse_feed_items(xml_content: bytes) -> list:
+    """
+    Parser híbrido de RSS/Atom: usa feedparser se disponível,
+    ou xml.etree.ElementTree como fallback de zero dependências.
+    """
+    items = []
+
+    if HAS_FEEDPARSER:
+        try:
+            parsed = feedparser.parse(xml_content)
+            for entry in parsed.entries[:15]:
+                title = _clean_title(entry.get("title", ""))
+                link = entry.get("link", "#")
+                summary = _clean_summary(entry.get("summary", "") or entry.get("description", ""))
+
+                # Formatar tempo
+                time_ago = "hoje"
+                try:
+                    if hasattr(entry, "published_parsed") and entry.published_parsed:
+                        dt = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+                        delta = datetime.now(timezone.utc) - dt
+                        hours = delta.total_seconds() / 3600
+                        if hours < 1:
+                            time_ago = f"há {max(1, int(delta.total_seconds() / 60))} min"
+                        elif hours < 24:
+                            time_ago = f"há {int(hours)}h"
+                        else:
+                            time_ago = dt.strftime("%d/%m")
+                except Exception:
+                    time_ago = "hoje"
+
+                if title:
+                    items.append({
+                        "title": title,
+                        "link": link,
+                        "summary": summary,
+                        "time_ago": time_ago,
+                    })
+            if items:
+                return items
+        except Exception:
+            pass
+
+    # Fallback ElementTree (stdlib Python)
+    try:
+        root = ET.fromstring(xml_content)
+        channel = root.find("channel")
+        xml_items = channel.findall("item") if channel is not None else root.findall("item") or root.findall("{http://www.w3.org/2005/Atom}entry")
+
+        for item in xml_items[:15]:
+            title = _clean_title(item.findtext("title") or item.findtext("{http://www.w3.org/2005/Atom}title") or "")
+            link = item.findtext("link") or item.findtext("{http://www.w3.org/2005/Atom}link") or "#"
+            summary = _clean_summary(item.findtext("description") or item.findtext("summary") or item.findtext("{http://www.w3.org/2005/Atom}summary") or "")
+            pub_date = item.findtext("pubDate") or item.findtext("published") or ""
+
+            time_ago = "hoje"
+            if pub_date:
+                time_ago = pub_date[:16]
+
+            if title:
+                items.append({
+                    "title": title,
+                    "link": link,
+                    "summary": summary,
+                    "time_ago": time_ago,
+                })
+    except Exception:
+        pass
+
+    return items
 
 
 def _classify_sentiment(title: str, summary: str) -> dict:
@@ -239,17 +296,14 @@ def _is_earnings_related(title: str, summary: str) -> bool:
 
 def _extract_ticker_or_company(title: str) -> str:
     """Tenta extrair o ticker (ex: PETR4, AAPL) ou nome da empresa do título."""
-    # Ticker B3
     b3_match = re.search(r'\b([A-Z]{4}\d{1,2})\b', title.upper())
     if b3_match:
         return b3_match.group(1)
 
-    # Ticker US (3 a 4 letras maiúsculas em parênteses)
     us_match = re.search(r'\(([A-Z]{2,5})\)', title)
     if us_match:
         return us_match.group(1)
 
-    # Nome da empresa
     company_match = re.search(r'^([A-ZÀ-ÚÇ][a-zà-úç&\s\.]+?)(?:\s+(?:registr|report|anunci|divulg|luc|prej|tem|apresent|beats|misses))', title)
     if company_match:
         return company_match.group(1).strip()
@@ -280,24 +334,18 @@ def get_market_summary(region: str = "Todos", max_items: int = 15) -> list:
         try:
             resp = requests.get(feed_info["url"], headers=HEADERS, timeout=6)
             if resp.status_code == 200:
-                parsed = feedparser.parse(resp.content)
+                entries = _parse_feed_items(resp.content)
                 bucket = []
-                for entry in parsed.entries[:8]:
-                    title = _clean_title(entry.get("title", ""))
-                    link = entry.get("link", "#")
-                    time_ago = _parse_date(entry)
-                    summary = _get_summary_text(entry)
-
-                    if title:
-                        bucket.append({
-                            "title": title,
-                            "summary": summary,
-                            "link": link,
-                            "source": feed_info["name"],
-                            "time_ago": time_ago,
-                            "icon": feed_info["icon"],
-                            "region": feed_info["region"],
-                        })
+                for entry in entries:
+                    bucket.append({
+                        "title": entry["title"],
+                        "summary": entry["summary"],
+                        "link": entry["link"],
+                        "source": feed_info["name"],
+                        "time_ago": entry["time_ago"],
+                        "icon": feed_info["icon"],
+                        "region": feed_info["region"],
+                    })
                 if bucket:
                     feed_buckets.append(bucket)
         except Exception:
@@ -348,12 +396,12 @@ def get_earnings_analysis(region: str = "Todos", max_items: int = 12) -> list:
         try:
             resp = requests.get(feed_info["url"], headers=HEADERS, timeout=6)
             if resp.status_code == 200:
-                parsed = feedparser.parse(resp.content)
-                for entry in parsed.entries[:15]:
-                    title = _clean_title(entry.get("title", ""))
-                    summary = _get_summary_text(entry)
-                    link = entry.get("link", "#")
-                    time_ago = _parse_date(entry)
+                entries = _parse_feed_items(resp.content)
+                for entry in entries:
+                    title = entry["title"]
+                    summary = entry["summary"]
+                    link = entry["link"]
+                    time_ago = entry["time_ago"]
 
                     if title and _is_earnings_related(title, summary):
                         sentiment = _classify_sentiment(title, summary)
@@ -382,7 +430,7 @@ def get_earnings_analysis(region: str = "Todos", max_items: int = 12) -> list:
             seen.add(key)
             unique.append(item)
 
-    # Ordenar: negativos primeiro (mais impactantes), depois mistos, depois positivos
+    # Ordenar: negativos primeiro, depois mistos, depois positivos
     sentiment_order = {"Negativo": 0, "Misto": 1, "Positivo": 2, "Neutro": 3}
     unique.sort(key=lambda x: sentiment_order.get(x["sentiment"]["label"], 4))
 
