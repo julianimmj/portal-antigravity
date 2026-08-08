@@ -1104,31 +1104,57 @@ def page_dashboard():
         """)
 
     # ── Seção Inferior Full-Width: Resumo de Mercado & Análise de Balanços ──
-    from modules.market_summary import get_market_summary, get_earnings_analysis
+    from modules.market_summary import get_market_summary, get_earnings_analysis, get_update_time_slot
 
     st_html('<div style="margin-top: 1.0rem;"></div>')
 
-    summaries = get_market_summary(max_items=5)
-    earnings = get_earnings_analysis(max_items=5)
+    slot_info = get_update_time_slot()
+
+    # Cabeçalho da Seção com Edição e Filtros
+    col_slot_title, col_slot_filter = st.columns([2.5, 1.0])
+    with col_slot_title:
+        st_html(f"""
+        <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.6rem;">
+            <span style="font-size:1.1rem;">{slot_info["icon"]}</span>
+            <div>
+                <span style="font-size:0.95rem; font-weight:800; color:#ffffff;">{slot_info["title"]}</span>
+                <span style="font-size:0.75rem; color:#00c8ff; font-weight:600; margin-left:0.5rem;">({slot_info["time_str"]} · {slot_info["date_str"]})</span>
+                <div style="font-size:0.72rem; color:rgba(255,255,255,0.48);">{slot_info["desc"]}</div>
+            </div>
+        </div>
+        """)
+
+    with col_slot_filter:
+        dash_region = st.selectbox(
+            "Região:",
+            options=["Todos", "Nacional", "Internacional"],
+            index=0,
+            key="dash_region_select",
+            label_visibility="collapsed"
+        )
+
+    summaries = get_market_summary(region=dash_region, max_items=5)
+    earnings = get_earnings_analysis(region=dash_region, max_items=5)
 
     col_sum_left, col_sum_right = st.columns([1.1, 1.0])
 
     with col_sum_left:
         sum_items_html = ""
         for s in summaries:
+            reg_flag = "🇧🇷" if s.get("region") == "Nacional" else "🌎"
             sum_items_html += f"""
             <div class="summary-item">
                 <div class="summary-item-title"><a href="{s["link"]}" target="_blank">{s["title"]}</a></div>
                 <div class="summary-item-desc">{s["summary"]}</div>
-                <div class="summary-item-meta"><span class="news-source">{s["source"]}</span> · {s["time_ago"]}</div>
+                <div class="summary-item-meta"><span style="margin-right:3px">{reg_flag}</span> <span class="news-source">{s["source"]}</span> · {s["time_ago"]}</div>
             </div>
             """
 
         st_html(f"""
         <div class="summary-banner-panel">
-            <div class="section-title">☀️ Resumo do Dia (Mercado & Fontes)</div>
+            <div class="section-title">☀️ Resumo do Dia ({dash_region})</div>
             <div class="summary-panel-content">
-                {sum_items_html}
+                {sum_items_html if sum_items_html else '<div style="color:rgba(255,255,255,0.5); font-size:0.8rem; padding:0.5rem 0;">Nenhum resumo encontrado nesta região no momento.</div>'}
             </div>
         </div>
         """)
@@ -1137,6 +1163,7 @@ def page_dashboard():
         earn_items_html = ""
         for e in earnings:
             st_info = e["sentiment"]
+            reg_flag = "🇧🇷" if e.get("region") == "Nacional" else "🌎"
             badge_html = f'<span class="earnings-badge" style="background:{st_info["color"]}22; color:{st_info["color"]}; border:1px solid {st_info["color"]}44;">{st_info["emoji"]} Visão {st_info["label"]}</span>'
             comp_html = f'<span class="earnings-company">{e["company"]}</span>' if e["company"] else ""
             earn_items_html += f"""
@@ -1147,15 +1174,15 @@ def page_dashboard():
                 </div>
                 <div class="earnings-title"><a href="{e["link"]}" target="_blank">{e["title"]}</a></div>
                 <div class="earnings-desc">{e["summary"]}</div>
-                <div class="earnings-meta"><span class="news-source">{e["source"]}</span> · {e["time_ago"]}</div>
+                <div class="earnings-meta"><span style="margin-right:3px">{reg_flag}</span> <span class="news-source">{e["source"]}</span> · {e["time_ago"]}</div>
             </div>
             """
 
         st_html(f"""
         <div class="summary-banner-panel">
-            <div class="section-title">📊 Análise de Balanços Corporativos</div>
+            <div class="section-title">📊 Análise de Balanços ({dash_region})</div>
             <div class="summary-panel-content">
-                {earn_items_html}
+                {earn_items_html if earn_items_html else '<div style="color:rgba(255,255,255,0.5); font-size:0.8rem; padding:0.5rem 0;">Nenhuma análise de balanço encontrada nesta região no momento.</div>'}
             </div>
         </div>
         """)
@@ -1166,39 +1193,65 @@ def page_dashboard():
 # ─────────────────────────────────────────
 def page_market_summary():
     """Página detalhada de Resumo de Mercado, Avaliação de Balanços e Fontes Acompanhadas."""
-    from modules.market_summary import get_market_summary, get_earnings_analysis, get_followed_profiles
+    from modules.market_summary import get_market_summary, get_earnings_analysis, get_followed_profiles, get_update_time_slot
 
-    st_html("""
-    <div style="margin-bottom: 1.2rem;">
-        <h2 style="color: #ffffff; font-weight: 800; margin-bottom: 0.2rem;">📊 Resumo de Mercado & Análise de Balanços</h2>
-        <div style="color: rgba(255,255,255,0.55); font-size: 0.88rem;">
-            Monitoramento de mercado, análises de resultados corporativos com classificação de sentimento e perfis de referência.
+    slot_info = get_update_time_slot()
+
+    col_title, col_actions = st.columns([2.2, 1.0])
+
+    with col_title:
+        st_html(f"""
+        <div style="margin-bottom: 0.8rem;">
+            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.2rem;">
+                <h2 style="color: #ffffff; font-weight: 800; margin:0;">📊 Resumo de Mercado & Análise de Balanços</h2>
+            </div>
+            <div style="color: rgba(255,255,255,0.55); font-size: 0.84rem;">
+                {slot_info["icon"]} <b>{slot_info["title"]}</b> · {slot_info["desc"]} (Atualizado às {slot_info["time_str"]})
+            </div>
         </div>
-    </div>
-    """)
+        """)
+
+    with col_actions:
+        if st.button("🔄 Atualizar Dados Agora", use_container_width=True):
+            st.cache_data.clear()
+            st.rerun()
+
+    # Seleção de Região (Nacional vs Internacional)
+    region_choice = st.radio(
+        "Mercado:",
+        options=["Todos", "Nacional", "Internacional"],
+        format_func=lambda x: "🌐 Todos os Mercados" if x == "Todos" else ("🇧🇷 Mercado Nacional (B3 / FIIs)" if x == "Nacional" else "🌎 Mercado Internacional (EUA / Global)"),
+        horizontal=True,
+    )
 
     tab_sum, tab_earn, tab_prof = st.tabs(["☀️ Resumo do Dia", "📊 Análise de Balanços", "👥 Perfis Acompanhados"])
 
     with tab_sum:
-        summaries = get_market_summary(max_items=20)
+        summaries = get_market_summary(region=region_choice, max_items=25)
         if summaries:
             for s in summaries:
+                reg_badge = "🇧🇷 Nacional" if s.get("region") == "Nacional" else "🌎 Internacional"
                 st_html(f"""
                 <div class="summary-banner-panel" style="margin-top: 0.5rem; margin-bottom: 0.6rem;">
-                    <div style="font-size: 0.72rem; color: #00c8ff; font-weight: 700; text-transform: uppercase; margin-bottom: 0.2rem;">
-                        {s["icon"]} {s["source"]} · {s["time_ago"]}
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.3rem;">
+                        <div style="font-size: 0.72rem; color: #00c8ff; font-weight: 700; text-transform: uppercase;">
+                            {s["icon"]} {s["source"]} · {s["time_ago"]}
+                        </div>
+                        <span style="font-size:0.65rem; font-weight:700; color:rgba(255,255,255,0.5); background:rgba(255,255,255,0.06); padding:2px 8px; border-radius:4px;">{reg_badge}</span>
                     </div>
-                    <div class="summary-item-title" style="font-size: 1.05rem; margin-bottom: 0.4rem;">
+                    <div class="summary-item-title" style="font-size: 1.02rem; margin-bottom: 0.35rem;">
                         <a href="{s["link"]}" target="_blank">{s["title"]}</a>
                     </div>
-                    <div class="summary-item-desc" style="font-size: 0.84rem; color: rgba(255,255,255,0.7); line-height: 1.45;">
+                    <div class="summary-item-desc" style="font-size: 0.83rem; color: rgba(255,255,255,0.7); line-height: 1.45;">
                         {s["summary"]}
                     </div>
                 </div>
                 """)
+        else:
+            st.info("Nenhum resumo disponível para a região selecionada no momento.")
 
     with tab_earn:
-        earnings = get_earnings_analysis(max_items=20)
+        earnings = get_earnings_analysis(region=region_choice, max_items=25)
 
         filter_sent = st.radio(
             "Filtrar por Visão:",
@@ -1221,6 +1274,7 @@ def page_market_summary():
                     st_info = e["sentiment"]
                     badge_html = f'<span class="earnings-badge" style="background:{st_info["color"]}22; color:{st_info["color"]}; border:1px solid {st_info["color"]}44; font-size:0.75rem; padding:3px 10px;">{st_info["emoji"]} Visão {st_info["label"]}</span>'
                     comp_html = f'<span class="earnings-company" style="font-size:0.95rem;">{e["company"]}</span>' if e["company"] else ""
+                    reg_badge = "🇧🇷" if e.get("region") == "Nacional" else "🌎"
                     st_html(f"""
                     <div class="earnings-item" style="padding: 1.0rem; margin-bottom: 0.8rem;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
@@ -1234,27 +1288,33 @@ def page_market_summary():
                             {e["summary"]}
                         </div>
                         <div class="earnings-meta" style="margin-top:0.4rem;">
-                            <span class="news-source">{e["source"]}</span> · {e["time_ago"]}
+                            <span style="margin-right:3px">{reg_badge}</span> <span class="news-source">{e["source"]}</span> · {e["time_ago"]}
                         </div>
                     </div>
                     """)
+        else:
+            st.info("Nenhuma análise de balanço encontrada para os filtros selecionados.")
 
     with tab_prof:
         st_html("""
         <div style="margin-bottom: 1.0rem; font-size: 0.85rem; color: rgba(255,255,255,0.6);">
-            Lista de perfis e especialistas no X (Twitter) utilizados como referência para acompanhamento do mercado, análises de ações, FIIs e macroeconomia.
+            Lista de perfis e especialistas no X (Twitter) utilizados como referência para acompanhamento de notícias, análises de ações, FIIs e macroeconomia.
         </div>
         """)
-        profiles_by_cat = get_followed_profiles()
+        profiles_by_cat = get_followed_profiles(region=region_choice)
         for cat_name, profs in profiles_by_cat.items():
             st_html(f'<div class="category-header" style="margin-top:1.2rem; margin-bottom:0.8rem;">{cat_name} ({len(profs)})</div>')
             p_cols = st.columns(3)
             for j, p in enumerate(profs):
                 with p_cols[j % 3]:
+                    reg_flag = "🇧🇷" if p.get("region") == "Nacional" else "🌎"
                     st_html(f"""
                     <div class="profile-card" style="margin-bottom: 0.7rem;">
                         <div>
-                            <div class="profile-handle">{p["handle"]}</div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span class="profile-handle">{p["handle"]}</span>
+                                <span style="font-size:0.7rem;">{reg_flag}</span>
+                            </div>
                             <div class="profile-name">{p["name"]}</div>
                             <div class="profile-desc">{p["desc"]}</div>
                         </div>
