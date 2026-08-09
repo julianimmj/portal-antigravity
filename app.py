@@ -521,48 +521,57 @@ def inject_css():
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* ── Metric Cards (Segunda Linha: Indicadores Macroeconômicos) ─── */
+        /* ── Metric Cards (Segunda Linha: 6 Indicadores Macroeconômicos em 1 linha) ─── */
         .metric-card {
             background: linear-gradient(135deg, rgba(15, 15, 35, 0.85) 0%, rgba(20, 20, 50, 0.65) 100%);
             border: 1px solid rgba(124, 77, 255, 0.18);
-            border-radius: 14px;
-            padding: 0.85rem 0.8rem;
+            border-radius: 12px;
+            padding: 0.75rem 0.4rem;
             text-align: center;
             transition: all 0.3s ease;
             height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            min-height: 108px;
         }
         .metric-card:hover {
             border-color: rgba(124, 77, 255, 0.4);
             transform: translateY(-2px);
         }
         .metric-label {
-            font-size: 0.85rem;
+            font-size: 0.74rem;
             font-weight: 800;
             color: #7c4dff;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 0.15rem;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .metric-subtitle {
-            font-size: 0.68rem;
-            color: rgba(255, 255, 255, 0.45);
-            margin-bottom: 0.3rem;
+            font-size: 0.62rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 0.25rem;
             font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .metric-value {
-            font-size: 1.35rem;
+            font-size: 1.12rem;
             font-weight: 800;
             color: #ffffff;
             font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
         }
         .metric-change {
-            font-size: 0.72rem;
+            font-size: 0.66rem;
             font-weight: 600;
             font-family: 'JetBrains Mono', monospace;
             margin-top: 0.15rem;
+            white-space: nowrap;
         }
 
         /* ── Section Panel Flexbox (Perfect Equal-Height Grid) ─── */
@@ -1098,7 +1107,7 @@ def page_dashboard():
 
     # ── Metric Cards (Segunda Linha: 4 Indicadores Macroeconômicos) ──
     macros = get_macro_indicators()
-    macro_keys = ["caged", "ibcbr", "payems", "cpi"]
+    macro_keys = ["caged", "ibcbr", "ipca", "m2", "payems", "cpi"]
     cols = st.columns(len(macro_keys))
     for i, key in enumerate(macro_keys):
         with cols[i]:
