@@ -141,40 +141,7 @@ EARNINGS_FEEDS_INTERNACIONAL = [
     {"name": "Tech Earnings",    "url": "https://news.google.com/rss/search?q=Nvidia+OR+Apple+OR+Microsoft+OR+Amazon+OR+Meta+earnings+results&hl=en-US&gl=US&ceid=US:en", "icon": "💻", "region": "Internacional"},
 ]
 
-ANALYST_MAP = {
-    "RENATO REIS": "Renato Reis (Blue3)",
-    "RENETOUS": "Renato Reis (Blue3)",
-    "VAROS": "VAROS Research",
-    "LEANDRO SIQUEIRA": "Leandro Siqueira (VAROS)",
-    "VOWTZ": "Leandro Siqueira (VAROS)",
-    "LUCAS SCHNEIDER": "Lucas Schneider (GerandoAlfa)",
-    "GERANDOALFA": "Lucas Schneider (GerandoAlfa)",
-    "SUNO": "Suno Research",
-    "MALEK ZEIN": "Malek Zein (Suno)",
-    "BTG PACTUAL": "BTG Pactual Research",
-    "BTG": "BTG Pactual Research",
-    "SMALLCAPS": "Portal SmallCaps",
-    "DICA DE HOJE": "Dica de Hoje (Nigri)",
-    "DANIEL NIGRI": "Dica de Hoje (Nigri)",
-    "PABLO SPYER": "Pablo Spyer (TC)",
-    "ROBIN BROOKS": "Robin Brooks",
-    "MICHAEL BURRY": "Michael Burry",
-    "LUCAS COSTA": "Lucas Costa, CMT",
-}
 
-def _detect_analyst_opinion(title: str, summary: str = "") -> str:
-    """Detecta se a notícia/post contém análise ou citação de algum dos analistas acompanhados."""
-    full_text = (title + " " + summary).upper()
-    for key, name in ANALYST_MAP.items():
-        if re.search(r'\b' + re.escape(key) + r'\b', full_text):
-            return name
-    return ""
-
-EARNINGS_FEEDS_INTERNACIONAL = [
-    {"name": "Wall St Earnings", "url": "https://news.google.com/rss/search?q=earnings+quarterly+report+revenue+EPS+beat+miss&hl=en-US&gl=US&ceid=US:en", "icon": "🌎", "region": "Internacional"},
-    {"name": "CNBC Earnings",    "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664",       "icon": "🌎", "region": "Internacional"},
-    {"name": "Tech Earnings",    "url": "https://news.google.com/rss/search?q=Nvidia+OR+Apple+OR+Microsoft+OR+Amazon+OR+Meta+earnings+results&hl=en-US&gl=US&ceid=US:en", "icon": "💻", "region": "Internacional"},
-]
 
 
 # ─────────────────────────────────────────
