@@ -37,13 +37,14 @@ def get_macro_indicators() -> dict:
                 diff = v_curr - v_prev
                 pct_diff = ((v_curr - v_prev) / abs(v_prev)) * 100 if v_prev != 0 else 0.0
 
+                # Em vez de mostrar o estoque total (48M), mostra o saldo líquido do mês (diff)
                 caged_data = {
                     "name": "Novo CAGED",
                     "subtitle": "Brasil · Saldo de Empregos",
-                    "current_val": v_curr,
-                    "formatted_val": f"+{v_curr:,.0f}".replace(",", "."),
+                    "current_val": diff,
+                    "formatted_val": f"{'+' if diff >= 0 else ''}{diff:,.0f}".replace(",", "."),
                     "prev_val": v_prev,
-                    "formatted_prev": f"+{v_prev:,.0f}".replace(",", "."),
+                    "formatted_prev": f"{v_prev:,.0f}".replace(",", "."),
                     "change": diff,
                     "formatted_change": f"{'▲' if diff >= 0 else '▼'} {diff:+,.0f} ({pct_diff:+.1f}%)".replace(",", "X").replace(".", ",").replace("X", "."),
                     "color": "#00e676" if diff >= 0 else "#ef4444",
