@@ -1098,7 +1098,7 @@ def page_dashboard():
 
     # ── Metric Cards (Segunda Linha: 4 Indicadores Macroeconômicos) ──
     macros = get_macro_indicators()
-    macro_keys = ["caged", "ibcbr", "adp", "cass"]
+    macro_keys = ["caged", "ibcbr", "payems", "cpi"]
     cols = st.columns(len(macro_keys))
     for i, key in enumerate(macro_keys):
         with cols[i]:

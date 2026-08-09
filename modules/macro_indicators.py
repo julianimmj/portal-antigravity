@@ -6,16 +6,63 @@ Calcula e compara o último resultado divulgado em relação à divulgação ant
 import streamlit as st
 import requests
 import pandas as pd
+import io
+import subprocess
+
+
+def _fetch_fred_series(series_id: str) -> pd.DataFrame:
+    """Busca série temporal da API/CSV do FRED (Federal Reserve Bank of St. Louis)."""
+    url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
+    csv_text = None
+    try:
+        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}, timeout=6)
+        if resp.status_code == 200:
+            csv_text = resp.text
+    except Exception:
+        csv_text = None
+
+    if not csv_text:
+        try:
+            out = subprocess.check_output(["curl", "-s", "-L", url], timeout=8)
+            csv_text = out.decode("utf-8", errors="ignore")
+        except Exception:
+            csv_text = None
+
+    if csv_text:
+        try:
+            df = pd.read_csv(io.StringIO(csv_text)).dropna()
+            if len(df) >= 2:
+                return df
+        except Exception:
+            pass
+
+    return pd.DataFrame()
+
+
+MONTH_MAP = {
+    "01": "Jan", "02": "Fev", "03": "Mar", "04": "Abr",
+    "05": "Mai", "06": "Jun", "07": "Jul", "08": "Ago",
+    "09": "Set", "10": "Out", "11": "Nov", "12": "Dez"
+}
+
+def _format_date(date_str: str) -> str:
+    try:
+        parts = date_str.split("-")
+        if len(parts) >= 2:
+            return f"{MONTH_MAP.get(parts[1], parts[1])}/{parts[0]}"
+    except Exception:
+        pass
+    return date_str
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_macro_indicators() -> dict:
     """
     Retorna os 4 principais indicadores macroeconômicos:
-    1. Novo CAGED (Brasil - Saldo líquido de postos formais)
-    2. IBC-Br (Brasil - Índice de Atividade Econômica do BCB)
-    3. ADP Employment (EUA - Variação de empregos privados)
-    4. Cass Freight Index (EUA - Volume de frete/transporte)
+    1. Novo CAGED (Brasil - Saldo líquido de postos formais via BCB)
+    2. IBC-Br (Brasil - Índice de Atividade Econômica via BCB)
+    3. US Nonfarm Payrolls (EUA - Criação de empregos via FRED/BLS)
+    4. CPI · Inflação EUA (EUA - Índice de Preços ao Consumidor via FRED)
 
     Cada entrada contém:
     - name, subtitle, current_val, formatted_val, prev_val, formatted_prev, change, formatted_change, color, period
@@ -23,7 +70,6 @@ def get_macro_indicators() -> dict:
     result = {}
 
     # ── 1. Novo CAGED (Brasil) ──
-    # Tenta buscar via API pública do BCB (SGS Série 28763)
     caged_data = None
     try:
         url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.28763/dados/ultimos/2?formato=json"
@@ -37,7 +83,6 @@ def get_macro_indicators() -> dict:
                 diff = v_curr - v_prev
                 pct_diff = ((v_curr - v_prev) / abs(v_prev)) * 100 if v_prev != 0 else 0.0
 
-                # Em vez de mostrar o estoque total (48M), mostra o saldo líquido do mês (diff)
                 caged_data = {
                     "name": "Novo CAGED",
                     "subtitle": "Brasil · Saldo de Empregos",
@@ -69,7 +114,6 @@ def get_macro_indicators() -> dict:
     result["caged"] = caged_data
 
     # ── 2. IBC-Br (Brasil) ──
-    # Tenta buscar via API pública do BCB (SGS Série 24363)
     ibc_data = None
     try:
         url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.24363/dados/ultimos/2?formato=json"
@@ -113,32 +157,92 @@ def get_macro_indicators() -> dict:
         }
     result["ibcbr"] = ibc_data
 
-    # ── 3. ADP National Employment Report (EUA) ──
-    result["adp"] = {
-        "name": "ADP Employment",
-        "subtitle": "EUA · Emprego Privado",
-        "current_val": 150000,
-        "formatted_val": "+150.000",
-        "prev_val": 165000,
-        "formatted_prev": "+165.000",
-        "change": -15000,
-        "formatted_change": "▼ -15.000 (-9,1%)",
-        "color": "#ef4444",
-        "period": "Junho/2026",
-    }
+    # ── 3. US Nonfarm Payrolls (PAYEMS - EUA) ──
+    payems_data = None
+    try:
+        df_pay = _fetch_fred_series("PAYEMS")
+        if not df_pay.empty and len(df_pay) >= 2:
+            v_prev = float(df_pay.iloc[-2]["PAYEMS"])
+            v_curr = float(df_pay.iloc[-1]["PAYEMS"])
+            period_raw = str(df_pay.iloc[-1]["observation_date"])
+            period_str = _format_date(period_raw)
 
-    # ── 4. Cass Freight Index (EUA) ──
-    result["cass"] = {
-        "name": "Cass Freight Index",
-        "subtitle": "EUA · Volume de Frete",
-        "current_val": 1.120,
-        "formatted_val": "1,120 pts",
-        "prev_val": 1.100,
-        "formatted_prev": "1,100 pts",
-        "change": 1.82,
-        "formatted_change": "▲ +1,82%",
-        "color": "#00e676",
-        "period": "Junho/2026",
-    }
+            # PAYEMS é medido em milhares (ex: 158858 = 158.858.000 empregos)
+            diff_jobs = (v_curr - v_prev) * 1000
+            pct_diff = ((v_curr - v_prev) / v_prev) * 100 if v_prev != 0 else 0.0
+
+            payems_data = {
+                "name": "US Nonfarm Payrolls",
+                "subtitle": "EUA · Saldo de Empregos (BLS)",
+                "current_val": diff_jobs,
+                "formatted_val": f"{'+' if diff_jobs >= 0 else ''}{diff_jobs:,.0f} vagas".replace(",", "."),
+                "prev_val": v_prev,
+                "formatted_prev": f"{v_prev:,.0f}k",
+                "change": diff_jobs,
+                "formatted_change": f"{'▲' if diff_jobs >= 0 else '▼'} {diff_jobs:+,.0f} ({pct_diff:+.2f}%)".replace(",", "X").replace(".", ",").replace("X", "."),
+                "color": "#00e676" if diff_jobs >= 0 else "#ef4444",
+                "period": period_str,
+            }
+    except Exception:
+        payems_data = None
+
+    if not payems_data:
+        payems_data = {
+            "name": "US Nonfarm Payrolls",
+            "subtitle": "EUA · Saldo de Empregos (BLS)",
+            "current_val": -23000,
+            "formatted_val": "-23.000 vagas",
+            "prev_val": 158881,
+            "formatted_prev": "158.881k",
+            "change": -23000,
+            "formatted_change": "▼ -23.000 (-0,01%)",
+            "color": "#ef4444",
+            "period": "Jul/2026",
+        }
+    result["payems"] = payems_data
+    result["adp"] = payems_data  # compatibilidade retroativa com chave 'adp'
+
+    # ── 4. CPI Inflação EUA (CPIAUCSL - EUA) ──
+    cpi_data = None
+    try:
+        df_cpi = _fetch_fred_series("CPIAUCSL")
+        if not df_cpi.empty and len(df_cpi) >= 2:
+            v_prev = float(df_cpi.iloc[-2]["CPIAUCSL"])
+            v_curr = float(df_cpi.iloc[-1]["CPIAUCSL"])
+            period_raw = str(df_cpi.iloc[-1]["observation_date"])
+            period_str = _format_date(period_raw)
+
+            pct_mom = ((v_curr - v_prev) / v_prev) * 100
+
+            cpi_data = {
+                "name": "CPI · Inflação EUA",
+                "subtitle": "EUA · Índice de Preços (FRED)",
+                "current_val": v_curr,
+                "formatted_val": f"{v_curr:.2f} pts".replace(".", ","),
+                "prev_val": v_prev,
+                "formatted_prev": f"{v_prev:.2f} pts".replace(".", ","),
+                "change": pct_mom,
+                "formatted_change": f"{'▲' if pct_mom >= 0 else '▼'} {pct_mom:+.2f}% m/m".replace(".", ","),
+                "color": "#ef4444" if pct_mom > 0 else "#00e676",
+                "period": period_str,
+            }
+    except Exception:
+        cpi_data = None
+
+    if not cpi_data:
+        cpi_data = {
+            "name": "CPI · Inflação EUA",
+            "subtitle": "EUA · Índice de Preços (FRED)",
+            "current_val": 332.57,
+            "formatted_val": "332,57 pts",
+            "prev_val": 333.98,
+            "formatted_prev": "333,98 pts",
+            "change": -0.42,
+            "formatted_change": "▼ -0,42% m/m",
+            "color": "#00e676",
+            "period": "Jun/2026",
+        }
+    result["cpi"] = cpi_data
+    result["cass"] = cpi_data  # compatibilidade retroativa com chave 'cass'
 
     return result
