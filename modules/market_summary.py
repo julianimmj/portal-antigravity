@@ -966,7 +966,11 @@ def get_market_closure_report(region: str = "Todos") -> dict:
     meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
     data_str = f"{dias_semana[d_now.weekday()]}, {d_now.day} de {meses[d_now.month - 1]} de {d_now.year}"
 
-    quotes_list = get_market_quotes()
+    try:
+        quotes_list = get_market_quotes()
+    except Exception:
+        quotes_list = []
+
     quotes = {q.get("symbol"): q for q in quotes_list if isinstance(q, dict)}
 
     ibov = quotes.get("^BVSP", {})
@@ -974,27 +978,30 @@ def get_market_closure_report(region: str = "Todos") -> dict:
     sp500 = quotes.get("^GSPC", {})
     nasdaq = quotes.get("^IXIC", {})
 
-    ibov_price = ibov.get("price", "167.101 pts")
-    ibov_pct = ibov.get("change_pct", -0.23)
+    ibov_price = str(ibov.get("price") or "167.101 pts")
+    ibov_pct = _safe_float(ibov.get("change_pct"), -0.23)
     ibov_signal = "▲" if ibov_pct >= 0 else "▼"
 
-    dolar_price = dolar.get("price", "R$ 5,180")
-    dolar_pct = dolar.get("change_pct", 0.12)
+    dolar_price = str(dolar.get("price") or "R$ 5,180")
+    dolar_pct = _safe_float(dolar.get("change_pct"), 0.12)
     dolar_signal = "▲" if dolar_pct >= 0 else "▼"
 
-    sp500_price = sp500.get("price", "7.799 pts")
-    sp500_pct = sp500.get("change_pct", 0.65)
+    sp500_price = str(sp500.get("price") or "7.799 pts")
+    sp500_pct = _safe_float(sp500.get("change_pct"), 0.65)
     sp500_signal = "▲" if sp500_pct >= 0 else "▼"
 
-    nasdaq_price = nasdaq.get("price", "26.803 pts")
-    nasdaq_pct = nasdaq.get("change_pct", 0.81)
+    nasdaq_price = str(nasdaq.get("price") or "26.803 pts")
+    nasdaq_pct = _safe_float(nasdaq.get("change_pct"), 0.81)
     nasdaq_signal = "▲" if nasdaq_pct >= 0 else "▼"
 
-    earnings = get_earnings_analysis(region=region, max_items=25)
+    try:
+        earnings = get_earnings_analysis(region=region, max_items=25)
+    except Exception:
+        earnings = []
 
-    positivos = [e for e in earnings if e["sentiment"]["label"] == "Positivo"]
-    mistos = [e for e in earnings if e["sentiment"]["label"] in ["Misto", "Neutro"]]
-    negativos = [e for e in earnings if e["sentiment"]["label"] == "Negativo"]
+    positivos = [e for e in earnings if isinstance(e, dict) and e.get("sentiment", {}).get("label") == "Positivo"]
+    mistos = [e for e in earnings if isinstance(e, dict) and e.get("sentiment", {}).get("label") in ["Misto", "Neutro"]]
+    negativos = [e for e in earnings if isinstance(e, dict) and e.get("sentiment", {}).get("label") == "Negativo"]
 
     return {
         "title": f"Resumo do Fechamento do Mercado — {data_str}",
@@ -1020,20 +1027,44 @@ def render_market_closure_report_html(region: str = "Todos") -> str:
     2. 📊 Vereditos dos Balanços e Análises dos Especialistas (🟢 Positiva, 🟡 Mista, 🔴 Negativa)
     3. 🏢 Fundos Imobiliários (FIIs e IFIX)
     """
-    report = get_market_closure_report(region=region)
-    from modules.market_data import get_top_movers
+    try:
+        report = get_market_closure_report(region=region)
+    except Exception:
+        report = {}
 
-    ibov = report["ibov"]
-    dolar = report["dolar"]
-    sp500 = report["sp500"]
-    nasdaq = report["nasdaq"]
+    try:
+        from modules.market_data import get_top_movers
+        movers = get_top_movers(n=5)
+    except Exception:
+        movers = {}
 
-    movers = get_top_movers(n=5)
-    altas = movers.get("altas", [])
-    baixas = movers.get("baixas", [])
+    ibov = report.get("ibov", {}) if isinstance(report, dict) else {}
+    dolar = report.get("dolar", {}) if isinstance(report, dict) else {}
+    sp500 = report.get("sp500", {}) if isinstance(report, dict) else {}
+    nasdaq = report.get("nasdaq", {}) if isinstance(report, dict) else {}
 
-    date_str = report["date_str"]
-    has_earnings = report["has_earnings"]
+    ibov_price = ibov.get("price", "167.101 pts")
+    ibov_pct = _safe_float(ibov.get("pct"), -0.23)
+    ibov_signal = "▲" if ibov_pct >= 0 else "▼"
+
+    dolar_price = dolar.get("price", "R$ 5,180")
+    dolar_pct = _safe_float(dolar.get("pct"), 0.12)
+    dolar_signal = "▲" if dolar_pct >= 0 else "▼"
+
+    sp500_price = sp500.get("price", "7.799 pts")
+    sp500_pct = _safe_float(sp500.get("pct"), 0.65)
+    sp500_signal = "▲" if sp500_pct >= 0 else "▼"
+
+    nasdaq_price = nasdaq.get("price", "26.803 pts")
+    nasdaq_pct = _safe_float(nasdaq.get("pct"), 0.81)
+    nasdaq_signal = "▲" if nasdaq_pct >= 0 else "▼"
+
+    altas = movers.get("altas", []) if isinstance(movers, dict) else []
+    baixas = movers.get("baixas", []) if isinstance(movers, dict) else []
+
+    date_str = report.get("date_str", "")
+    has_earnings = bool(report.get("has_earnings", False))
+    earnings_dict = report.get("earnings", {}) if isinstance(report.get("earnings"), dict) else {}
 
     html = f"""
     <div style="background: linear-gradient(135deg, rgba(12, 12, 30, 0.95) 0%, rgba(18, 18, 45, 0.85) 100%); border: 1px solid rgba(124, 77, 255, 0.25); border-radius: 14px; padding: 1.2rem; margin-bottom: 1.2rem; box-shadow: 0 8px 24px rgba(0,0,0,0.4);">
@@ -1054,28 +1085,28 @@ def render_market_closure_report_html(region: str = "Todos") -> str:
                 🌐 Ibovespa, Dólar, Juros e Macroeconomia
             </div>
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.6rem; margin-bottom: 0.8rem;">
-                <div style="background:rgba(0,0,0,0.3); padding:0.6rem 0.8rem; border-radius:8px; border-left:3px solid {'#00e676' if ibov['pct']>=0 else '#ef4444'};">
+                <div style="background:rgba(0,0,0,0.3); padding:0.6rem 0.8rem; border-radius:8px; border-left:3px solid {'#00e676' if ibov_pct>=0 else '#ef4444'};">
                     <span style="font-size:0.75rem; color:rgba(255,255,255,0.6);">Ibovespa</span><br>
-                    <b style="font-size:0.95rem; color:#fff;">{ibov['price']}</b> <span style="font-size:0.78rem; color:{'#00e676' if ibov['pct']>=0 else '#ef4444'}; font-weight:700;">{ibov['signal']} {ibov['pct']:+.2f}%</span>
+                    <b style="font-size:0.95rem; color:#fff;">{ibov_price}</b> <span style="font-size:0.78rem; color:{'#00e676' if ibov_pct>=0 else '#ef4444'}; font-weight:700;">{ibov_signal} {ibov_pct:+.2f}%</span>
                 </div>
-                <div style="background:rgba(0,0,0,0.3); padding:0.6rem 0.8rem; border-radius:8px; border-left:3px solid {'#00e676' if dolar['pct']>=0 else '#ef4444'};">
+                <div style="background:rgba(0,0,0,0.3); padding:0.6rem 0.8rem; border-radius:8px; border-left:3px solid {'#00e676' if dolar_pct>=0 else '#ef4444'};">
                     <span style="font-size:0.75rem; color:rgba(255,255,255,0.6);">Dólar Comercial</span><br>
-                    <b style="font-size:0.95rem; color:#fff;">{dolar['price']}</b> <span style="font-size:0.78rem; color:{'#00e676' if dolar['pct']>=0 else '#ef4444'}; font-weight:700;">{dolar['signal']} {dolar['pct']:+.2f}%</span>
+                    <b style="font-size:0.95rem; color:#fff;">{dolar_price}</b> <span style="font-size:0.78rem; color:{'#00e676' if dolar_pct>=0 else '#ef4444'}; font-weight:700;">{dolar_signal} {dolar_pct:+.2f}%</span>
                 </div>
                 <div style="background:rgba(0,0,0,0.3); padding:0.6rem 0.8rem; border-radius:8px; border-left:3px solid #7c4dff;">
                     <span style="font-size:0.75rem; color:rgba(255,255,255,0.6);">S&P 500 (EUA)</span><br>
-                    <b style="font-size:0.95rem; color:#fff;">{sp500['price']}</b> <span style="font-size:0.78rem; color:{'#00e676' if sp500['pct']>=0 else '#ef4444'}; font-weight:700;">{sp500['signal']} {sp500['pct']:+.2f}%</span>
+                    <b style="font-size:0.95rem; color:#fff;">{sp500_price}</b> <span style="font-size:0.78rem; color:{'#00e676' if sp500_pct>=0 else '#ef4444'}; font-weight:700;">{sp500_signal} {sp500_pct:+.2f}%</span>
                 </div>
                 <div style="background:rgba(0,0,0,0.3); padding:0.6rem 0.8rem; border-radius:8px; border-left:3px solid #00c8ff;">
                     <span style="font-size:0.75rem; color:rgba(255,255,255,0.6);">Nasdaq (EUA)</span><br>
-                    <b style="font-size:0.95rem; color:#fff;">{nasdaq['price']}</b> <span style="font-size:0.78rem; color:{'#00e676' if nasdaq['pct']>=0 else '#ef4444'}; font-weight:700;">{nasdaq['signal']} {nasdaq['pct']:+.2f}%</span>
+                    <b style="font-size:0.95rem; color:#fff;">{nasdaq_price}</b> <span style="font-size:0.78rem; color:{'#00e676' if nasdaq_pct>=0 else '#ef4444'}; font-weight:700;">{nasdaq_signal} {nasdaq_pct:+.2f}%</span>
                 </div>
             </div>
             <div style="font-size:0.82rem; color:rgba(255,255,255,0.8); line-height:1.55;">
-                • <b>Ibovespa ({ibov['price']} | {ibov['signal']} {ibov['pct']:+.2f}%):</b> Movimento do mercado sob fluxo corporativo e dados de inflação/juros.<br>
-                • <b>Dólar Comercial ({dolar['price']} | {dolar['signal']} {dolar['pct']:+.2f}%):</b> Oscilação conforme o sentimento global e dados macro nos EUA.<br>
+                • <b>Ibovespa ({ibov_price} | {ibov_signal} {ibov_pct:+.2f}%):</b> Movimento do mercado sob fluxo corporativo e dados de inflação/juros.<br>
+                • <b>Dólar Comercial ({dolar_price} | {dolar_signal} {dolar_pct:+.2f}%):</b> Oscilação conforme o sentimento global e dados macro nos EUA.<br>
                 • <b>Juros Futuros (DI):</b> Expectativas do mercado para as próximas decisões de política monetária.<br>
-                • <b>Cenário Internacional:</b> S&P 500 ({sp500['price']}) e Nasdaq ({nasdaq['price']}) alinhados às projeções do Federal Reserve.
+                • <b>Cenário Internacional:</b> S&P 500 ({sp500_price}) e Nasdaq ({nasdaq_price}) alinhados às projeções do Federal Reserve.
             </div>
         </div>
     """
@@ -1091,11 +1122,11 @@ def render_market_closure_report_html(region: str = "Todos") -> str:
             </div>
     """
 
-    if has_earnings:
-        pos = report["earnings"]["positivos"]
-        mis = report["earnings"]["mistos"]
-        neg = report["earnings"]["negativos"]
+    pos = earnings_dict.get("positivos", [])
+    mis = earnings_dict.get("mistos", [])
+    neg = earnings_dict.get("negativos", [])
 
+    if has_earnings and (pos or mis or neg):
         if pos:
             html += '<div style="font-weight:700; color:#00e676; font-size:0.86rem; margin:0.6rem 0 0.4rem;">🟢 Visão Positiva (Balanço Bom / Destaque Operacional)</div>'
             for item in pos[:4]:
@@ -1103,8 +1134,8 @@ def render_market_closure_report_html(region: str = "Todos") -> str:
                 html += f'''
                 <div style="background:rgba(0,230,118,0.06); border:1px solid rgba(0,230,118,0.25); border-radius:8px; padding:0.65rem 0.85rem; margin-bottom:0.45rem;">
                     <b style="color:#00e676; font-size:0.85rem;">{item.get("company", "Empresa")}</b>{analyst}<br>
-                    <a href="{item["link"]}" target="_blank" style="color:#ffffff; text-decoration:none; font-weight:600; font-size:0.83rem;">{item["title"]}</a><br>
-                    <span style="font-size:0.78rem; color:rgba(255,255,255,0.7);">{item["summary"]}</span>
+                    <a href="{item.get("link", "#")}" target="_blank" style="color:#ffffff; text-decoration:none; font-weight:600; font-size:0.83rem;">{item.get("title", "")}</a><br>
+                    <span style="font-size:0.78rem; color:rgba(255,255,255,0.7);">{item.get("summary", "")}</span>
                 </div>
                 '''
 
@@ -1115,8 +1146,8 @@ def render_market_closure_report_html(region: str = "Todos") -> str:
                 html += f'''
                 <div style="background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.25); border-radius:8px; padding:0.65rem 0.85rem; margin-bottom:0.45rem;">
                     <b style="color:#f59e0b; font-size:0.85rem;">{item.get("company", "Empresa")}</b>{analyst}<br>
-                    <a href="{item["link"]}" target="_blank" style="color:#ffffff; text-decoration:none; font-weight:600; font-size:0.83rem;">{item["title"]}</a><br>
-                    <span style="font-size:0.78rem; color:rgba(255,255,255,0.7);">{item["summary"]}</span>
+                    <a href="{item.get("link", "#")}" target="_blank" style="color:#ffffff; text-decoration:none; font-weight:600; font-size:0.83rem;">{item.get("title", "")}</a><br>
+                    <span style="font-size:0.78rem; color:rgba(255,255,255,0.7);">{item.get("summary", "")}</span>
                 </div>
                 '''
 
@@ -1127,8 +1158,8 @@ def render_market_closure_report_html(region: str = "Todos") -> str:
                 html += f'''
                 <div style="background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.25); border-radius:8px; padding:0.65rem 0.85rem; margin-bottom:0.45rem;">
                     <b style="color:#ef4444; font-size:0.85rem;">{item.get("company", "Empresa")}</b>{analyst}<br>
-                    <a href="{item["link"]}" target="_blank" style="color:#ffffff; text-decoration:none; font-weight:600; font-size:0.83rem;">{item["title"]}</a><br>
-                    <span style="font-size:0.78rem; color:rgba(255,255,255,0.7);">{item["summary"]}</span>
+                    <a href="{item.get("link", "#")}" target="_blank" style="color:#ffffff; text-decoration:none; font-weight:600; font-size:0.83rem;">{item.get("title", "")}</a><br>
+                    <span style="font-size:0.78rem; color:rgba(255,255,255,0.7);">{item.get("summary", "")}</span>
                 </div>
                 '''
     else:

@@ -11,6 +11,16 @@ import base64 as _b64
 import math
 from pathlib import Path as _Path
 
+from modules.market_data import get_top_movers
+from modules.macro_indicators import get_macro_indicators
+from modules.market_summary import (
+    get_market_summary,
+    get_earnings_analysis,
+    get_followed_profiles,
+    get_update_time_slot,
+    render_market_closure_report_html,
+)
+
 # ─────────────────────────────────────────
 # Page Config & Cache Invalidation
 # ─────────────────────────────────────────
@@ -1222,7 +1232,6 @@ def page_dashboard():
         """)
 
     # ── Seção Inferior Full-Width: Resumo de Mercado & Análise de Balanços ──
-    from modules.market_summary import get_market_summary, get_earnings_analysis, get_update_time_slot, render_market_closure_report_html
 
     st_html('<div style="margin-top: 1.0rem;"></div>')
 
@@ -1318,7 +1327,6 @@ def page_dashboard():
 # ─────────────────────────────────────────
 def page_market_summary():
     """Página detalhada de Resumo de Mercado, Avaliação de Balanços e Fontes Acompanhadas."""
-    from modules.market_summary import get_market_summary, get_earnings_analysis, get_followed_profiles, get_update_time_slot
 
     slot_info = get_update_time_slot()
 
@@ -1377,7 +1385,6 @@ def page_market_summary():
             st.info("Nenhum resumo disponível para a região selecionada no momento.")
 
     with tab_earn:
-        from modules.market_summary import render_market_closure_report_html
 
         view_mode = st.radio(
             "Visualização:",
