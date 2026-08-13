@@ -1222,7 +1222,7 @@ def page_dashboard():
         """)
 
     # ── Seção Inferior Full-Width: Resumo de Mercado & Análise de Balanços ──
-    from modules.market_summary import get_market_summary, get_earnings_analysis, get_update_time_slot
+    from modules.market_summary import get_market_summary, get_earnings_analysis, get_update_time_slot, render_market_closure_report_html
 
     st_html('<div style="margin-top: 1.0rem;"></div>')
 
@@ -1279,34 +1279,38 @@ def page_dashboard():
         """)
 
     with col_sum_right:
-        earn_items_html = ""
-        for e in earnings:
-            st_info = e["sentiment"]
-            reg_flag = "🇧🇷" if e.get("region") == "Nacional" else "🌎"
-            comp_title = e.get("company") or "Balanço · Empresa Listada"
-            badge_html = f'<span class="earnings-badge" style="background:{st_info["color"]}22; color:{st_info["color"]}; border:1px solid {st_info["color"]}44;">{st_info["emoji"]} Visão {st_info["label"]}</span>'
-            comp_html = f'<span class="earnings-company">🏢 {comp_title}</span>'
-            analyst_html = f'<span style="font-size:0.65rem; font-weight:700; color:#a77cff; background:rgba(124,77,255,0.18); border:1px solid rgba(124,77,255,0.35); padding:2px 6px; border-radius:4px; margin-left:6px;">🗣️ {e["analyst_tag"]}</span>' if e.get("analyst_tag") else ""
-            earn_items_html += f"""
-            <div class="earnings-item">
-                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:0.25rem;">
-                    <div>{comp_html}</div>
-                    <div style="margin-left:auto;">{badge_html}</div>
+        if earnings:
+            earn_items_html = ""
+            for e in earnings:
+                st_info = e["sentiment"]
+                reg_flag = "🇧🇷" if e.get("region") == "Nacional" else "🌎"
+                comp_title = e.get("company") or "Balanço · Empresa Listada"
+                badge_html = f'<span class="earnings-badge" style="background:{st_info["color"]}22; color:{st_info["color"]}; border:1px solid {st_info["color"]}44;">{st_info["emoji"]} Visão {st_info["label"]}</span>'
+                comp_html = f'<span class="earnings-company">🏢 {comp_title}</span>'
+                analyst_html = f'<span style="font-size:0.65rem; font-weight:700; color:#a77cff; background:rgba(124,77,255,0.18); border:1px solid rgba(124,77,255,0.35); padding:2px 6px; border-radius:4px; margin-left:6px;">🗣️ {e["analyst_tag"]}</span>' if e.get("analyst_tag") else ""
+                earn_items_html += f"""
+                <div class="earnings-item">
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:0.25rem;">
+                        <div>{comp_html}</div>
+                        <div style="margin-left:auto;">{badge_html}</div>
+                    </div>
+                    <div class="earnings-title"><a href="{e["link"]}" target="_blank">{e["title"]}</a></div>
+                    <div class="earnings-desc">{e["summary"]}</div>
+                    <div class="earnings-meta"><span style="margin-right:3px">{reg_flag}</span> <span class="news-source">{e["source"]}</span>{analyst_html} · {e["time_ago"]}</div>
                 </div>
-                <div class="earnings-title"><a href="{e["link"]}" target="_blank">{e["title"]}</a></div>
-                <div class="earnings-desc">{e["summary"]}</div>
-                <div class="earnings-meta"><span style="margin-right:3px">{reg_flag}</span> <span class="news-source">{e["source"]}</span>{analyst_html} · {e["time_ago"]}</div>
-            </div>
-            """
+                """
 
-        st_html(f"""
-        <div class="summary-banner-panel">
-            <div class="section-title">📊 Análise de Balanços ({dash_region})</div>
-            <div class="summary-panel-content">
-                {earn_items_html if earn_items_html else '<div style="color:rgba(255,255,255,0.5); font-size:0.8rem; padding:0.5rem 0;">Nenhuma análise de balanço encontrada nesta região no momento.</div>'}
+            st_html(f"""
+            <div class="summary-banner-panel">
+                <div class="section-title">📊 Análise de Balanços ({dash_region})</div>
+                <div class="summary-panel-content">
+                    {earn_items_html}
+                </div>
             </div>
-        </div>
-        """)
+            """)
+        else:
+            closure_html = render_market_closure_report_html(region=dash_region)
+            st_html(closure_html)
 
 
 # ─────────────────────────────────────────
@@ -1373,51 +1377,67 @@ def page_market_summary():
             st.info("Nenhum resumo disponível para a região selecionada no momento.")
 
     with tab_earn:
-        earnings = get_earnings_analysis(region=region_choice, max_items=25)
+        from modules.market_summary import render_market_closure_report_html
 
-        filter_sent = st.radio(
-            "Filtrar por Visão:",
-            options=["Todos", "🟢 Positiva", "🟡 Mista", "🔴 Negativa"],
+        view_mode = st.radio(
+            "Visualização:",
+            options=["🌐 Resumo Estruturado do Mercado", "📊 Balanços & Vereditos por Empresa"],
             horizontal=True,
+            key="earnings_tab_view_mode_radio"
         )
 
-        filtered = earnings
-        if "Positiva" in filter_sent:
-            filtered = [e for e in earnings if e["sentiment"]["label"] == "Positivo"]
-        elif "Mista" in filter_sent:
-            filtered = [e for e in earnings if e["sentiment"]["label"] == "Misto"]
-        elif "Negativa" in filter_sent:
-            filtered = [e for e in earnings if e["sentiment"]["label"] == "Negativo"]
-
-        if filtered:
-            cols = st.columns(2)
-            for i, e in enumerate(filtered):
-                with cols[i % 2]:
-                    st_info = e["sentiment"]
-                    comp_title = e.get("company") or "Balanço · Empresa Listada"
-                    badge_html = f'<span class="earnings-badge" style="background:{st_info["color"]}22; color:{st_info["color"]}; border:1px solid {st_info["color"]}44; font-size:0.75rem; padding:3px 10px;">{st_info["emoji"]} Visão {st_info["label"]}</span>'
-                    comp_html = f'<span class="earnings-company" style="font-size:0.95rem;">🏢 {comp_title}</span>'
-                    reg_badge = "🇧🇷" if e.get("region") == "Nacional" else "🌎"
-                    analyst_badge = f'<span style="font-size:0.68rem; font-weight:700; color:#a77cff; background:rgba(124,77,255,0.18); border:1px solid rgba(124,77,255,0.4); padding:2px 8px; border-radius:4px; margin-left:6px;">🗣️ {e["analyst_tag"]}</span>' if e.get("analyst_tag") else ""
-                    st_html(f"""
-                    <div class="earnings-item" style="padding: 1.0rem; margin-bottom: 0.8rem;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:0.4rem;">
-                            <div>{comp_html}</div>
-                            <div style="margin-left:auto;">{badge_html}</div>
-                        </div>
-                        <div class="earnings-title" style="font-size:0.95rem; margin-bottom:0.4rem;">
-                            <a href="{e["link"]}" target="_blank">{e["title"]}</a>
-                        </div>
-                        <div class="earnings-desc" style="font-size:0.8rem; color:rgba(255,255,255,0.65);">
-                            {e["summary"]}
-                        </div>
-                        <div class="earnings-meta" style="margin-top:0.4rem;">
-                            <span style="margin-right:3px">{reg_badge}</span> <span class="news-source">{e["source"]}</span>{analyst_badge} · {e["time_ago"]}
-                        </div>
-                    </div>
-                    """)
+        if view_mode == "🌐 Resumo Estruturado do Mercado":
+            closure_html = render_market_closure_report_html(region=region_choice)
+            st_html(closure_html)
         else:
-            st.info("Nenhuma análise de balanço encontrada para os filtros selecionados.")
+            earnings = get_earnings_analysis(region=region_choice, max_items=25)
+
+            filter_sent = st.radio(
+                "Filtrar por Visão:",
+                options=["Todos", "🟢 Positiva", "🟡 Mista", "🔴 Negativa"],
+                horizontal=True,
+                key="earnings_sentiment_filter_radio"
+            )
+
+            filtered = earnings
+            if "Positiva" in filter_sent:
+                filtered = [e for e in earnings if e["sentiment"]["label"] == "Positivo"]
+            elif "Mista" in filter_sent:
+                filtered = [e for e in earnings if e["sentiment"]["label"] == "Misto"]
+            elif "Negativa" in filter_sent:
+                filtered = [e for e in earnings if e["sentiment"]["label"] == "Negativo"]
+
+            if filtered:
+                cols = st.columns(2)
+                for i, e in enumerate(filtered):
+                    with cols[i % 2]:
+                        st_info = e["sentiment"]
+                        comp_title = e.get("company") or "Balanço · Empresa Listada"
+                        badge_html = f'<span class="earnings-badge" style="background:{st_info["color"]}22; color:{st_info["color"]}; border:1px solid {st_info["color"]}44; font-size:0.75rem; padding:3px 10px;">{st_info["emoji"]} Visão {st_info["label"]}</span>'
+                        comp_html = f'<span class="earnings-company" style="font-size:0.95rem;">🏢 {comp_title}</span>'
+                        reg_badge = "🇧🇷" if e.get("region") == "Nacional" else "🌎"
+                        analyst_badge = f'<span style="font-size:0.68rem; font-weight:700; color:#a77cff; background:rgba(124,77,255,0.18); border:1px solid rgba(124,77,255,0.4); padding:2px 8px; border-radius:4px; margin-left:6px;">🗣️ {e["analyst_tag"]}</span>' if e.get("analyst_tag") else ""
+                        st_html(f"""
+                        <div class="earnings-item" style="padding: 1.0rem; margin-bottom: 0.8rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:0.4rem;">
+                                <div>{comp_html}</div>
+                                <div style="margin-left:auto;">{badge_html}</div>
+                            </div>
+                            <div class="earnings-title" style="font-size:0.95rem; margin-bottom:0.4rem;">
+                                <a href="{e["link"]}" target="_blank">{e["title"]}</a>
+                            </div>
+                            <div class="earnings-desc" style="font-size:0.8rem; color:rgba(255,255,255,0.65);">
+                                {e["summary"]}
+                            </div>
+                            <div class="earnings-meta" style="margin-top:0.4rem;">
+                                <span style="margin-right:3px">{reg_badge}</span> <span class="news-source">{e["source"]}</span>{analyst_badge} · {e["time_ago"]}
+                            </div>
+                        </div>
+                        """)
+            else:
+                st.info("Nenhuma análise de balanço individual encontrada para o filtro selecionado. Exibindo Resumo de Fechamento do Mercado:")
+                closure_html = render_market_closure_report_html(region=region_choice)
+                st_html(closure_html)
 
     with tab_prof:
         st_html("""
