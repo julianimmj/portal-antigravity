@@ -928,7 +928,7 @@ def inject_css():
             margin-top: 0.8rem;
         }
         .summary-panel-content {
-            max-height: 380px;
+            max-height: 550px;
             overflow-y: auto;
             padding-right: 0.4rem;
         }
@@ -1260,8 +1260,8 @@ def page_dashboard():
             label_visibility="collapsed"
         )
 
-    summaries = get_market_summary(region=dash_region, max_items=5)
-    earnings = get_earnings_analysis(region=dash_region, max_items=5)
+    summaries = get_market_summary(region=dash_region, max_items=15)
+    earnings = get_earnings_analysis(region=dash_region, max_items=25)
 
     col_sum_left, col_sum_right = st.columns([1.1, 1.0])
 
