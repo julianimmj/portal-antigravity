@@ -952,6 +952,16 @@ def get_followed_profiles(region: str = "Todos") -> dict:
     return categories
 
 
+def _safe_float(val, default: float = 0.0) -> float:
+    """Converte valor para float de forma 100% segura contra None, NaN e erros de tipo."""
+    if val is None:
+        return default
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return default
+
+
 @st.cache_data(ttl=600, show_spinner=False)
 def get_market_closure_report(region: str = "Todos") -> dict:
     """
