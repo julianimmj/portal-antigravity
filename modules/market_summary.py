@@ -128,11 +128,16 @@ EARNINGS_FEEDS_NACIONAL = [
     {"name": "Money Times",          "url": "https://www.moneytimes.com.br/feed/",                                                  "icon": "📊", "region": "Nacional"},
     {"name": "Investing.com BR",     "url": "https://br.investing.com/rss/news_285.rss",                                            "icon": "📊", "region": "Nacional"},
     {"name": "Suno Notícias",        "url": "https://www.suno.com.br/noticias/feed/",                                             "icon": "💡", "region": "Nacional"},
-    # Google News focados em balanços B3
+    # Google News focados em balanços B3 — queries diversificadas para cobrir toda a temporada
     {"name": "Balanços B3",          "url": "https://news.google.com/rss/search?q=balan%C3%A7o+resultado+trimestral+lucro+preju%C3%ADzo+B3+2T+3T&hl=pt-BR&gl=BR&ceid=BR:pt-419", "icon": "📊", "region": "Nacional"},
     {"name": "Balanços Varejo",      "url": "https://news.google.com/rss/search?q=%22Magazine+Luiza%22+OR+%22Lojas+Renner%22+OR+%22Casas+Bahia%22+OR+Assai+OR+Carrefour+resultado+balan%C3%A7o&hl=pt-BR&gl=BR&ceid=BR:pt-419", "icon": "🛒", "region": "Nacional"},
     {"name": "Balanços Blue Chips",  "url": "https://news.google.com/rss/search?q=Petrobras+OR+Vale+OR+Itau+OR+Bradesco+OR+%22Banco+do+Brasil%22+resultado+trimestre&hl=pt-BR&gl=BR&ceid=BR:pt-419", "icon": "💎", "region": "Nacional"},
-    {"name": "Análises Casas",       "url": "https://news.google.com/rss/search?q=%22Suno+Research%22+OR+%22BTG+Pactual%22+OR+%22Renato+Reis%22+recomenda%C3%A7%C3%A3o+OR+balan%C3%A7o+OR+resultado&hl=pt-BR&gl=BR&ceid=BR:pt-419", "icon": "👥", "region": "Nacional"},
+    # Balanços Saúde, Commodities e Mid-caps — empresas que frequentemente reportam juntas
+    {"name": "Balanços Saúde/Mid",   "url": "https://news.google.com/rss/search?q=Hapvida+OR+Cogna+OR+Ultrapar+OR+CSN+OR+CVC+OR+Dasa+OR+Yduqs+balan%C3%A7o+OR+resultado+OR+lucro+OR+preju%C3%ADzo&hl=pt-BR&gl=BR&ceid=BR:pt-419", "icon": "🏥", "region": "Nacional"},
+    # Análises de casas — diversificado para incluir XP, Safra, Genial, NÃO só BTG
+    {"name": "Análises Casas",       "url": "https://news.google.com/rss/search?q=%22XP+Investimentos%22+OR+%22Banco+Safra%22+OR+%22Genial%22+OR+%22Suno%22+OR+%22BTG%22+balan%C3%A7o+OR+resultado+OR+recomenda%C3%A7%C3%A3o&hl=pt-BR&gl=BR&ceid=BR:pt-419", "icon": "👥", "region": "Nacional"},
+    # Resultado trimestral hoje — query genérica para balanços publicados hoje/ontem
+    {"name": "Resultados Hoje",      "url": "https://news.google.com/rss/search?q=resultado+trimestral+lucro+OR+preju%C3%ADzo+2T+OR+3T+2026+when:1d&hl=pt-BR&gl=BR&ceid=BR:pt-419", "icon": "🔥", "region": "Nacional"},
 ]
 
 EARNINGS_FEEDS_INTERNACIONAL = [
@@ -359,6 +364,37 @@ COMPANY_MAP = {
     "FLRY3": "FLRY3 · Fleury",
     "QUALICORP": "QUAL3 · Qualicorp",
     "QUAL3": "QUAL3 · Qualicorp",
+    "DASA": "DASA3 · Dasa",
+    "DASA3": "DASA3 · Dasa",
+    "COGNA": "COGN3 · Cogna",
+    "COGN3": "COGN3 · Cogna",
+    "YDUQS": "YDUQ3 · Yduqs",
+    "YDUQ3": "YDUQ3 · Yduqs",
+    "CVC": "CVCB3 · CVC",
+    "CVCB3": "CVCB3 · CVC",
+    "CPFL": "CPFE3 · CPFL Energia",
+    "CPFL ENERGIA": "CPFE3 · CPFL Energia",
+    "CPFE3": "CPFE3 · CPFL Energia",
+    "MRV": "MRVE3 · MRV",
+    "MRVE3": "MRVE3 · MRV",
+    "SIMPAR": "SIMH3 · Simpar",
+    "SIMH3": "SIMH3 · Simpar",
+    "JHSF": "JHSF3 · JHSF",
+    "JHSF3": "JHSF3 · JHSF",
+    "GRUPO MATEUS": "GMAT3 · Grupo Mateus",
+    "GMAT3": "GMAT3 · Grupo Mateus",
+    "STONE": "STNE · Stone",
+    "STONECO": "STNE · Stone",
+    "M DIAS BRANCO": "MDIA3 · M. Dias Branco",
+    "MDIA3": "MDIA3 · M. Dias Branco",
+    "ALLOS": "ALOS3 · Allos",
+    "ALOS3": "ALOS3 · Allos",
+    "EVEN": "EVEN3 · Even",
+    "EVEN3": "EVEN3 · Even",
+    "TECNISA": "TCSA3 · Tecnisa",
+    "TCSA3": "TCSA3 · Tecnisa",
+    "AMERICANAS": "AMER3 · Americanas",
+    "AMER3": "AMER3 · Americanas",
 
     # ── B3 Tech / Telecom ──
     "TOTVS": "TOTS3 · Totvs",
@@ -562,22 +598,27 @@ def _clean_summary(summary: str) -> str:
 
 
 def _parse_feed_items(xml_content: bytes) -> list:
-    """Parser híbrido de RSS/Atom com feedparser + ElementTree fallback."""
+    """Parser híbrido de RSS/Atom com feedparser + ElementTree fallback.
+    Retorna lista de dicts com: title, link, summary, time_ago, published_dt (datetime UTC).
+    """
     items = []
+    _now_utc = datetime.now(timezone.utc)
 
     if HAS_FEEDPARSER:
         try:
             parsed = feedparser.parse(xml_content)
-            for entry in parsed.entries[:20]:
+            for entry in parsed.entries[:25]:
                 title = _clean_title(entry.get("title", ""))
                 link = entry.get("link", "#")
                 summary = _clean_summary(entry.get("summary", "") or entry.get("description", ""))
 
                 time_ago = "hoje"
+                published_dt = _now_utc  # default: agora (assume mais recente se não houver data)
                 try:
                     if hasattr(entry, "published_parsed") and entry.published_parsed:
                         dt = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
-                        delta = datetime.now(timezone.utc) - dt
+                        published_dt = dt
+                        delta = _now_utc - dt
                         hours = delta.total_seconds() / 3600
                         if hours < 1:
                             time_ago = f"há {max(1, int(delta.total_seconds() / 60))} min"
@@ -589,7 +630,7 @@ def _parse_feed_items(xml_content: bytes) -> list:
                     pass
 
                 if title:
-                    items.append({"title": title, "link": link, "summary": summary, "time_ago": time_ago})
+                    items.append({"title": title, "link": link, "summary": summary, "time_ago": time_ago, "published_dt": published_dt})
             if items:
                 return items
         except Exception:
@@ -597,22 +638,47 @@ def _parse_feed_items(xml_content: bytes) -> list:
 
     # Fallback ElementTree
     try:
+        from email.utils import parsedate_to_datetime
+    except ImportError:
+        parsedate_to_datetime = None
+
+    try:
         root = ET.fromstring(xml_content)
         channel = root.find("channel")
         xml_items = (channel.findall("item") if channel is not None
                      else root.findall("item") or root.findall("{http://www.w3.org/2005/Atom}entry"))
 
-        for item in xml_items[:20]:
+        for item in xml_items[:25]:
             title = _clean_title(item.findtext("title") or item.findtext("{http://www.w3.org/2005/Atom}title") or "")
             link_el = item.find("link")
             link = (link_el.text if link_el is not None and link_el.text
                     else link_el.get("href", "#") if link_el is not None else "#")
             summary = _clean_summary(item.findtext("description") or item.findtext("{http://www.w3.org/2005/Atom}summary") or "")
             pub_date = item.findtext("pubDate") or item.findtext("published") or ""
-            time_ago = pub_date[:16] if pub_date else "hoje"
+
+            published_dt = _now_utc
+            time_ago = "hoje"
+            if pub_date and parsedate_to_datetime:
+                try:
+                    dt = parsedate_to_datetime(pub_date)
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                    published_dt = dt
+                    delta = _now_utc - dt
+                    hours = delta.total_seconds() / 3600
+                    if hours < 1:
+                        time_ago = f"há {max(1, int(delta.total_seconds() / 60))} min"
+                    elif hours < 24:
+                        time_ago = f"há {int(hours)}h"
+                    else:
+                        time_ago = dt.strftime("%d/%m")
+                except Exception:
+                    time_ago = pub_date[:16] if pub_date else "hoje"
+            elif pub_date:
+                time_ago = pub_date[:16] if pub_date else "hoje"
 
             if title:
-                items.append({"title": title, "link": link, "summary": summary, "time_ago": time_ago})
+                items.append({"title": title, "link": link, "summary": summary, "time_ago": time_ago, "published_dt": published_dt})
     except Exception:
         pass
 
@@ -878,10 +944,11 @@ def get_market_summary(region: str = "Todos", max_items: int = 15) -> list:
 
 
 @st.cache_data(ttl=600, show_spinner=False)
-def get_earnings_analysis(region: str = "Todos", max_items: int = 12) -> list:
+def get_earnings_analysis(region: str = "Todos", max_items: int = 25) -> list:
     """
     Coleta análises de balanços corporativos com classificação de sentimento.
-    Prioriza análises que contêm pareceres dos analistas acompanhados.
+    Prioriza recência (hoje > ontem > semana passada) e diversidade de empresas.
+    Máximo de 2 artigos por empresa para garantir variedade.
     """
     if region == "Nacional":
         earnings_feeds = EARNINGS_FEEDS_NACIONAL
@@ -891,6 +958,7 @@ def get_earnings_analysis(region: str = "Todos", max_items: int = 12) -> list:
         earnings_feeds = EARNINGS_FEEDS_NACIONAL + EARNINGS_FEEDS_INTERNACIONAL
 
     all_earnings = []
+    _now_utc = datetime.now(timezone.utc)
 
     for feed_info in earnings_feeds:
         try:
@@ -902,6 +970,7 @@ def get_earnings_analysis(region: str = "Todos", max_items: int = 12) -> list:
                     summary = entry["summary"]
                     link = entry["link"]
                     time_ago = entry["time_ago"]
+                    published_dt = entry.get("published_dt", _now_utc)
 
                     if title and _is_earnings_related(title, summary):
                         sentiment = _classify_sentiment(title, summary)
@@ -919,24 +988,54 @@ def get_earnings_analysis(region: str = "Todos", max_items: int = 12) -> list:
                             "sentiment": sentiment,
                             "company": company,
                             "analyst_tag": analyst_tag,
+                            "published_dt": published_dt,
                         })
         except Exception:
             continue
 
-    # Deduplicar
-    seen = set()
-    unique = []
+    # ── Deduplicar por título (evita artigos repetidos com titulos quase iguais) ──
+    seen_titles = set()
+    title_unique = []
     for item in all_earnings:
         key = item["title"][:50].lower()
-        if key not in seen:
-            seen.add(key)
-            unique.append(item)
+        if key not in seen_titles:
+            seen_titles.add(key)
+            title_unique.append(item)
 
-    # Ordenar: 1º prioridade para pareceres de analistas acompanhados, 2º por sentimento
-    sentiment_order = {"Negativo": 0, "Misto": 1, "Positivo": 2, "Neutro": 3}
-    unique.sort(key=lambda x: (0 if x.get("analyst_tag") else 1, sentiment_order.get(x["sentiment"]["label"], 4)))
+    # ── Calcular score de recência (0-100) ──
+    for item in title_unique:
+        pub = item.get("published_dt", _now_utc)
+        try:
+            age_hours = max(0, (_now_utc - pub).total_seconds() / 3600)
+        except Exception:
+            age_hours = 48  # fallback: considerar antigo
+        # Score: 100 para agora, decai ~2 pontos por hora (artigos de 12h atrás ainda têm score 76)
+        item["_recency_score"] = max(0, 100 - (age_hours * 2))
 
-    return unique[:max_items]
+    # ── Ordenar por: recência (mais recente primeiro), depois analyst_tag como bônus ──
+    title_unique.sort(
+        key=lambda x: (
+            -(x.get("_recency_score", 0) + (10 if x.get("analyst_tag") else 0)),  # recência + bônus analista
+        )
+    )
+
+    # ── Deduplicar por empresa (max MAX_PER_COMPANY artigos por empresa) ──
+    MAX_PER_COMPANY = 2
+    company_count = {}
+    diverse = []
+    for item in title_unique:
+        comp_key = (item.get("company") or "unknown").split("·")[0].strip().upper()
+        count = company_count.get(comp_key, 0)
+        if count < MAX_PER_COMPANY:
+            company_count[comp_key] = count + 1
+            diverse.append(item)
+
+    # ── Limpar campos internos antes de retornar ──
+    for item in diverse:
+        item.pop("_recency_score", None)
+        item.pop("published_dt", None)
+
+    return diverse[:max_items]
 
 
 def get_followed_profiles(region: str = "Todos") -> dict:
@@ -1005,7 +1104,7 @@ def get_market_closure_report(region: str = "Todos") -> dict:
     nasdaq_signal = "▲" if nasdaq_pct >= 0 else "▼"
 
     try:
-        earnings = get_earnings_analysis(region=region, max_items=25)
+        earnings = get_earnings_analysis(region=region, max_items=40)
     except Exception:
         earnings = []
 
