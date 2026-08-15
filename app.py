@@ -44,6 +44,18 @@ if "cache_cleared_v3" not in st.session_state:
 # ─────────────────────────────────────────
 APPS = [
     {
+        "id": "quant-topdown",
+        "title": "Quant Top-Down Screener",
+        "subtitle": "Pipeline Quant-Mental • B3",
+        "description": "Screener institucional em 4 camadas: Regime Macro (Breadth SMA50/200), Força Relativa Setorial vs. IBOV, Trend Quality Engine (ADX, ER, Vol-Adj ROC) e Trigger Anti-Exaustão com cálculo de TQS (0-100).",
+        "url": "https://quant-topdown-screener.streamlit.app/",
+        "icon": "📊",
+        "accent": "#00d4aa",
+        "tags": ["Top-Down", "Quant TQS", "Breadth", "Força Relativa"],
+        "category": "Screening & Análise Técnica",
+        "status": "online",
+    },
+    {
         "id": "smc",
         "title": "SMC Screener v3.0",
         "subtitle": "Smart Money Concepts",
