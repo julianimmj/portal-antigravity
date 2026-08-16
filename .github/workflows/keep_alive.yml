@@ -31,6 +31,7 @@ jobs:
           # ──────────────────────────────────────────────────────────
           APPS = [
               'https://tradersupport.streamlit.app/',
+              'https://quant-topdown-screener.streamlit.app/',
           ]
 
           # Tempo em segundos que o navegador permanece na pagina
