@@ -22,44 +22,48 @@ BCB_SERIES = {
 }
 
 
+def _fetch_single_bcb_rate(item: tuple) -> tuple:
+    name, cfg = item
+    serie_id = cfg["id"]
+    fallback_val = cfg["fallback"]
+    try:
+        url = f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.{serie_id}/dados/ultimos/1?formato=json"
+        resp = requests.get(url, headers=HEADERS, timeout=4.0)
+        if resp.status_code == 200:
+            data = resp.json()
+            if data:
+                entry = data[0]
+                valor = float(entry["valor"].replace(",", "."))
+                date_str = entry["data"]
+                return name, {
+                    "valor": valor,
+                    "formatted": f"{valor:.2f}%".replace(".", ","),
+                    "data": date_str,
+                    "status": "Vigente",
+                }
+    except Exception:
+        pass
+
+    return name, {
+        "valor": fallback_val,
+        "formatted": f"{fallback_val:.2f}%".replace(".", ","),
+        "data": "Julho/2026",
+        "status": "Vigente (Estimativa)",
+    }
+
+
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_brazilian_rates() -> dict:
     """
-    Busca as taxas de juros brasileiras na API pública do BCB.
+    Busca as taxas de juros brasileiras na API pública do BCB em paralelo.
     Retorna dict com nome -> {valor, formatted, data, status}
     """
-    result = {}
-    for name, cfg in BCB_SERIES.items():
-        serie_id = cfg["id"]
-        fallback_val = cfg["fallback"]
-        try:
-            url = f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.{serie_id}/dados/ultimos/1?formato=json"
-            resp = requests.get(url, headers=HEADERS, timeout=6)
-            if resp.status_code == 200:
-                data = resp.json()
-                if data:
-                    entry = data[0]
-                    valor = float(entry["valor"].replace(",", "."))
-                    date_str = entry["data"]
-                    result[name] = {
-                        "valor": valor,
-                        "formatted": f"{valor:.2f}%".replace(".", ","),
-                        "data": date_str,
-                        "status": "Vigente",
-                    }
-                    continue
-        except Exception:
-            pass
+    from concurrent.futures import ThreadPoolExecutor
 
-        # Fallback confiável se API do BCB não responder
-        result[name] = {
-            "valor": fallback_val,
-            "formatted": f"{fallback_val:.2f}%".replace(".", ","),
-            "data": "Julho/2026",
-            "status": "Vigente (Estimativa)",
-        }
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        results = list(executor.map(_fetch_single_bcb_rate, BCB_SERIES.items()))
 
-    return result
+    return dict(results)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)

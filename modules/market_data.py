@@ -74,7 +74,7 @@ def get_market_overview() -> dict:
             period="5d",
             interval="1d",
             progress=False,
-            threads=False,
+            threads=True,
         )
     except Exception:
         bulk_data = None
@@ -149,7 +149,7 @@ def get_top_movers(n: int = 5) -> dict:
             period="5d",
             interval="1d",
             progress=False,
-            threads=False,
+            threads=True,
         )
     except Exception:
         data = None

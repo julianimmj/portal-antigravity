@@ -58,24 +58,10 @@ def _format_date(date_str: str) -> str:
     return date_str
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
-def get_macro_indicators() -> dict:
-    """
-    Retorna os 6 principais indicadores macroeconômicos (Brasil e EUA):
-    1. Novo CAGED (Brasil - Saldo líquido de empregos formais via BCB)
-    2. IBC-Br (Brasil - Prévia do PIB via BCB)
-    3. IPCA (Brasil - Inflação IBGE/BCB)
-    4. M2 Money Supply (Brasil - Oferta Monetária M2 via BCB)
-    5. US Nonfarm Payrolls (EUA - Empregos via FRED/BLS)
-    6. CPI · Inflação EUA (EUA - Inflação ao consumidor via FRED)
-    """
-    result = {}
-
-    # ── 1. Novo CAGED (Brasil) ──
-    caged_data = None
+def _fetch_caged() -> dict:
     try:
         url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.28763/dados/ultimos/2?formato=json"
-        resp = requests.get(url, timeout=8)
+        resp = requests.get(url, timeout=4.5)
         if resp.status_code == 200:
             json_data = resp.json()
             if len(json_data) >= 2:
@@ -84,8 +70,7 @@ def get_macro_indicators() -> dict:
                 period_str = _format_date(json_data[1]["data"])
                 diff = v_curr - v_prev
                 pct_diff = ((v_curr - v_prev) / abs(v_prev)) * 100 if v_prev != 0 else 0.0
-
-                caged_data = {
+                return {
                     "name": "Novo CAGED",
                     "subtitle": "Brasil · Empregos",
                     "current_val": diff,
@@ -98,28 +83,25 @@ def get_macro_indicators() -> dict:
                     "period": period_str,
                 }
     except Exception:
-        caged_data = None
+        pass
+    return {
+        "name": "Novo CAGED",
+        "subtitle": "Brasil · Empregos",
+        "current_val": 145161,
+        "formatted_val": "+145.161",
+        "prev_val": 47887147,
+        "formatted_prev": "47.887.147",
+        "change": 145161,
+        "formatted_change": "▲ +145.161 (+0,3%)",
+        "color": "#00e676",
+        "period": "Jun/2026",
+    }
 
-    if not caged_data:
-        caged_data = {
-            "name": "Novo CAGED",
-            "subtitle": "Brasil · Empregos",
-            "current_val": 145161,
-            "formatted_val": "+145.161",
-            "prev_val": 47887147,
-            "formatted_prev": "47.887.147",
-            "change": 145161,
-            "formatted_change": "▲ +145.161 (+0,3%)",
-            "color": "#00e676",
-            "period": "Jun/2026",
-        }
-    result["caged"] = caged_data
 
-    # ── 2. IBC-Br (Brasil) ──
-    ibc_data = None
+def _fetch_ibc() -> dict:
     try:
         url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.24363/dados/ultimos/2?formato=json"
-        resp = requests.get(url, timeout=8)
+        resp = requests.get(url, timeout=4.5)
         if resp.status_code == 200:
             json_data = resp.json()
             if len(json_data) >= 2:
@@ -128,8 +110,7 @@ def get_macro_indicators() -> dict:
                 period_str = _format_date(json_data[1]["data"])
                 diff = v_curr - v_prev
                 pct_diff = ((v_curr - v_prev) / v_prev) * 100
-
-                ibc_data = {
+                return {
                     "name": "IBC-Br",
                     "subtitle": "Brasil · Prévia PIB",
                     "current_val": v_curr,
@@ -142,40 +123,34 @@ def get_macro_indicators() -> dict:
                     "period": period_str,
                 }
     except Exception:
-        ibc_data = None
+        pass
+    return {
+        "name": "IBC-Br",
+        "subtitle": "Brasil · Prévia PIB",
+        "current_val": 109.53,
+        "formatted_val": "109,53 pts",
+        "prev_val": 113.99,
+        "formatted_prev": "113,99 pts",
+        "change": -3.91,
+        "formatted_change": "▼ -3,91%",
+        "color": "#ef4444",
+        "period": "Mai/2026",
+    }
 
-    if not ibc_data:
-        ibc_data = {
-            "name": "IBC-Br",
-            "subtitle": "Brasil · Prévia PIB",
-            "current_val": 109.53,
-            "formatted_val": "109,53 pts",
-            "prev_val": 113.99,
-            "formatted_prev": "113,99 pts",
-            "change": -3.91,
-            "formatted_change": "▼ -3,91%",
-            "color": "#ef4444",
-            "period": "Mai/2026",
-        }
-    result["ibcbr"] = ibc_data
 
-    # ── 3. IPCA · Inflação Brasil (IBGE / BCB SGS 433) ──
-    ipca_data = None
+def _fetch_ipca() -> dict:
     try:
         url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/13?formato=json"
-        resp = requests.get(url, timeout=8)
+        resp = requests.get(url, timeout=4.5)
         if resp.status_code == 200:
             json_data = resp.json()
             if len(json_data) >= 2:
                 v_prev = float(json_data[-2]["valor"].replace(",", "."))
                 v_curr = float(json_data[-1]["valor"].replace(",", "."))
                 period_str = _format_date(json_data[-1]["data"])
-                
-                # Acumulado 12 meses
                 tot_12m = sum(float(x["valor"].replace(",", ".")) for x in json_data[-12:]) if len(json_data) >= 12 else v_curr
                 diff_mom = v_curr - v_prev
-
-                ipca_data = {
+                return {
                     "name": "IPCA · Inflação BR",
                     "subtitle": "Brasil · IBGE / BCB",
                     "current_val": v_curr,
@@ -184,44 +159,39 @@ def get_macro_indicators() -> dict:
                     "formatted_prev": f"{v_prev:.2f}% m/m".replace(".", ","),
                     "change": diff_mom,
                     "formatted_change": f"{'+' if v_curr >= 0 else ''}{v_curr:.2f}% m/m ({'▲' if diff_mom >= 0 else '▼'} {diff_mom:+.2f}%)".replace(".", ","),
-                    "color": "#00e676" if diff_mom <= 0 else "#ef4444", # Inflação desacelerando é positivo
+                    "color": "#00e676" if diff_mom <= 0 else "#ef4444",
                     "period": period_str,
                 }
     except Exception:
-        ipca_data = None
+        pass
+    return {
+        "name": "IPCA · Inflação BR",
+        "subtitle": "Brasil · IBGE / BCB",
+        "current_val": 0.16,
+        "formatted_val": "+4,55% 12M",
+        "prev_val": 0.58,
+        "formatted_prev": "+0,58%",
+        "change": -0.42,
+        "formatted_change": "+0,16% m/m (▼ -0,42%)",
+        "color": "#00e676",
+        "period": "Jun/2026",
+    }
 
-    if not ipca_data:
-        ipca_data = {
-            "name": "IPCA · Inflação BR",
-            "subtitle": "Brasil · IBGE / BCB",
-            "current_val": 0.16,
-            "formatted_val": "+4,55% 12M",
-            "prev_val": 0.58,
-            "formatted_prev": "+0,58%",
-            "change": -0.42,
-            "formatted_change": "+0,16% m/m (▼ -0,42%)",
-            "color": "#00e676",
-            "period": "Jun/2026",
-        }
-    result["ipca"] = ipca_data
 
-    # ── 4. M2 Money Supply Brasil (BCB SGS 27810) ──
-    m2_data = None
+def _fetch_m2() -> dict:
     try:
         url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.27810/dados/ultimos/2?formato=json"
-        resp = requests.get(url, timeout=8)
+        resp = requests.get(url, timeout=4.5)
         if resp.status_code == 200:
             json_data = resp.json()
             if len(json_data) >= 2:
-                v_prev = float(json_data[0]["valor"].replace(",", ".")) # em R$ mil
-                v_curr = float(json_data[1]["valor"].replace(",", ".")) # em R$ mil
+                v_prev = float(json_data[0]["valor"].replace(",", "."))
+                v_curr = float(json_data[1]["valor"].replace(",", "."))
                 period_str = _format_date(json_data[1]["data"])
-                
                 val_tri = v_curr / 1e9
                 diff_bi = (v_curr - v_prev) / 1e6
                 pct_diff = ((v_curr - v_prev) / v_prev) * 100
-
-                m2_data = {
+                return {
                     "name": "M2 Money Supply",
                     "subtitle": "Brasil · Meios Pagamento",
                     "current_val": val_tri,
@@ -234,25 +204,22 @@ def get_macro_indicators() -> dict:
                     "period": period_str,
                 }
     except Exception:
-        m2_data = None
+        pass
+    return {
+        "name": "M2 Money Supply",
+        "subtitle": "Brasil · Meios Pagamento",
+        "current_val": 7.65,
+        "formatted_val": "R$ 7,65 Tri",
+        "prev_val": 7.61,
+        "formatted_prev": "R$ 7,61 Tri",
+        "change": 40.2,
+        "formatted_change": "▲ +40,2 Bi (+0,5%)",
+        "color": "#00e676",
+        "period": "Jun/2026",
+    }
 
-    if not m2_data:
-        m2_data = {
-            "name": "M2 Money Supply",
-            "subtitle": "Brasil · Meios Pagamento",
-            "current_val": 7.65,
-            "formatted_val": "R$ 7,65 Tri",
-            "prev_val": 7.61,
-            "formatted_prev": "R$ 7,61 Tri",
-            "change": 40.2,
-            "formatted_change": "▲ +40,2 Bi (+0,5%)",
-            "color": "#00e676",
-            "period": "Jun/2026",
-        }
-    result["m2"] = m2_data
 
-    # ── 5. US Nonfarm Payrolls (PAYEMS - EUA) ──
-    payems_data = None
+def _fetch_payems() -> dict:
     try:
         df_pay = _fetch_fred_series("PAYEMS")
         if not df_pay.empty and len(df_pay) >= 2:
@@ -260,12 +227,9 @@ def get_macro_indicators() -> dict:
             v_curr = float(df_pay.iloc[-1]["PAYEMS"])
             period_raw = str(df_pay.iloc[-1]["observation_date"])
             period_str = _format_date(period_raw)
-
-            # PAYEMS é medido em milhares (ex: 158858 = 158.858.000 empregos)
             diff_jobs = (v_curr - v_prev) * 1000
             pct_diff = ((v_curr - v_prev) / v_prev) * 100 if v_prev != 0 else 0.0
-
-            payems_data = {
+            return {
                 "name": "US Payrolls",
                 "subtitle": "EUA · Empregos (BLS)",
                 "current_val": diff_jobs,
@@ -278,26 +242,22 @@ def get_macro_indicators() -> dict:
                 "period": period_str,
             }
     except Exception:
-        payems_data = None
+        pass
+    return {
+        "name": "US Payrolls",
+        "subtitle": "EUA · Empregos (BLS)",
+        "current_val": -23000,
+        "formatted_val": "-23.000 vagas",
+        "prev_val": 158881,
+        "formatted_prev": "158.881k",
+        "change": -23000,
+        "formatted_change": "▼ -23.000 (-0,01%)",
+        "color": "#ef4444",
+        "period": "Jul/2026",
+    }
 
-    if not payems_data:
-        payems_data = {
-            "name": "US Payrolls",
-            "subtitle": "EUA · Empregos (BLS)",
-            "current_val": -23000,
-            "formatted_val": "-23.000 vagas",
-            "prev_val": 158881,
-            "formatted_prev": "158.881k",
-            "change": -23000,
-            "formatted_change": "▼ -23.000 (-0,01%)",
-            "color": "#ef4444",
-            "period": "Jul/2026",
-        }
-    result["payems"] = payems_data
-    result["adp"] = payems_data  # compatibilidade retroativa
 
-    # ── 6. CPI Inflação EUA (CPIAUCSL - EUA) ──
-    cpi_data = None
+def _fetch_cpi() -> dict:
     try:
         df_cpi = _fetch_fred_series("CPIAUCSL")
         if not df_cpi.empty and len(df_cpi) >= 2:
@@ -305,10 +265,8 @@ def get_macro_indicators() -> dict:
             v_curr = float(df_cpi.iloc[-1]["CPIAUCSL"])
             period_raw = str(df_cpi.iloc[-1]["observation_date"])
             period_str = _format_date(period_raw)
-
             pct_mom = ((v_curr - v_prev) / v_prev) * 100
-
-            cpi_data = {
+            return {
                 "name": "CPI · Inflação EUA",
                 "subtitle": "EUA · Preços (FRED)",
                 "current_val": v_curr,
@@ -321,22 +279,56 @@ def get_macro_indicators() -> dict:
                 "period": period_str,
             }
     except Exception:
-        cpi_data = None
+        pass
+    return {
+        "name": "CPI · Inflação EUA",
+        "subtitle": "EUA · Preços (FRED)",
+        "current_val": 332.57,
+        "formatted_val": "332,57 pts",
+        "prev_val": 333.98,
+        "formatted_prev": "333,98 pts",
+        "change": -0.42,
+        "formatted_change": "▼ -0,42% m/m",
+        "color": "#00e676",
+        "period": "Jun/2026",
+    }
 
-    if not cpi_data:
-        cpi_data = {
-            "name": "CPI · Inflação EUA",
-            "subtitle": "EUA · Preços (FRED)",
-            "current_val": 332.57,
-            "formatted_val": "332,57 pts",
-            "prev_val": 333.98,
-            "formatted_prev": "333,98 pts",
-            "change": -0.42,
-            "formatted_change": "▼ -0,42% m/m",
-            "color": "#00e676",
-            "period": "Jun/2026",
-        }
-    result["cpi"] = cpi_data
-    result["cass"] = cpi_data  # compatibilidade retroativa
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_macro_indicators() -> dict:
+    """
+    Retorna os 6 principais indicadores macroeconômicos (Brasil e EUA)
+    buscados em paralelo com ThreadPoolExecutor para máxima velocidade:
+    1. Novo CAGED (Brasil)
+    2. IBC-Br (Brasil)
+    3. IPCA (Brasil)
+    4. M2 Money Supply (Brasil)
+    5. US Nonfarm Payrolls (EUA)
+    6. CPI · Inflação EUA (EUA)
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    fetchers = {
+        "caged": _fetch_caged,
+        "ibcbr": _fetch_ibc,
+        "ipca": _fetch_ipca,
+        "m2": _fetch_m2,
+        "payems": _fetch_payems,
+        "cpi": _fetch_cpi,
+    }
+
+    result = {}
+    with ThreadPoolExecutor(max_workers=6) as executor:
+        future_to_key = {executor.submit(fn): key for key, fn in fetchers.items()}
+        for future in future_to_key:
+            key = future_to_key[future]
+            try:
+                result[key] = future.result()
+            except Exception:
+                pass
+
+    # Compatibilidade retroativa
+    result["adp"] = result.get("payems")
+    result["cass"] = result.get("cpi")
 
     return result

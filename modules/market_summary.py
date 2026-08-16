@@ -859,31 +859,39 @@ def _detect_analyst_opinion(title: str, summary: str = "") -> str:
     return ""
 
 
+def _fetch_single_feed(feed_info: dict) -> list:
+    """Busca individualmente um feed com timeout otimizado."""
+    try:
+        resp = requests.get(feed_info["url"], headers=HEADERS, timeout=4.0)
+        if resp.status_code == 200:
+            entries = _parse_feed_items(resp.content)
+            bucket = []
+            for entry in entries:
+                analyst_tag = _detect_analyst_opinion(entry["title"], entry["summary"])
+                bucket.append({
+                    "title": entry["title"],
+                    "summary": entry["summary"],
+                    "link": entry["link"],
+                    "source": feed_info["name"],
+                    "time_ago": entry["time_ago"],
+                    "icon": feed_info["icon"],
+                    "region": feed_info["region"],
+                    "analyst_tag": analyst_tag,
+                })
+            return bucket
+    except Exception:
+        pass
+    return []
+
+
 def _fetch_feed_group(feed_list: list) -> list:
-    """Busca e intercala notícias de um grupo de feeds."""
-    feed_buckets = []
-    for feed_info in feed_list:
-        try:
-            resp = requests.get(feed_info["url"], headers=HEADERS, timeout=8)
-            if resp.status_code == 200:
-                entries = _parse_feed_items(resp.content)
-                bucket = []
-                for entry in entries:
-                    analyst_tag = _detect_analyst_opinion(entry["title"], entry["summary"])
-                    bucket.append({
-                        "title": entry["title"],
-                        "summary": entry["summary"],
-                        "link": entry["link"],
-                        "source": feed_info["name"],
-                        "time_ago": entry["time_ago"],
-                        "icon": feed_info["icon"],
-                        "region": feed_info["region"],
-                        "analyst_tag": analyst_tag,
-                    })
-                if bucket:
-                    feed_buckets.append(bucket)
-        except Exception:
-            continue
+    """Busca e intercala notícias de um grupo de feeds em paralelo com ThreadPoolExecutor."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    with ThreadPoolExecutor(max_workers=min(12, len(feed_list) or 1)) as executor:
+        results = list(executor.map(_fetch_single_feed, feed_list))
+
+    feed_buckets = [b for b in results if b]
 
     # Round-robin interleaving
     all_entries = []

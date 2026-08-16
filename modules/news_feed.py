@@ -122,30 +122,37 @@ def _parse_entries(xml_content: bytes) -> list:
     return entries
 
 
+def _fetch_single_news_feed(feed_info: dict) -> list:
+    try:
+        resp = requests.get(feed_info["url"], headers=HEADERS, timeout=3.5)
+        if resp.status_code == 200:
+            parsed_entries = _parse_entries(resp.content)
+            bucket = []
+            for entry in parsed_entries:
+                bucket.append({
+                    "title": entry["title"],
+                    "link": entry["link"],
+                    "source": feed_info["name"],
+                    "time_ago": entry["time_ago"],
+                    "icon": feed_info["icon"],
+                })
+            return bucket
+    except Exception:
+        pass
+    return []
+
+
 @st.cache_data(ttl=600, show_spinner=False)
 def get_news(region: str = "Brasil", max_items: int = 10) -> list:
-    """Busca notícias via RSS intercalando múltiplas fontes."""
-    feeds = FEEDS_BR if region == "Brasil" else FEEDS_WORLD
-    feed_buckets = []
+    """Busca notícias via RSS intercalando múltiplas fontes em paralelo."""
+    from concurrent.futures import ThreadPoolExecutor
 
-    for feed_info in feeds:
-        try:
-            resp = requests.get(feed_info["url"], headers=HEADERS, timeout=5)
-            if resp.status_code == 200:
-                parsed_entries = _parse_entries(resp.content)
-                bucket = []
-                for entry in parsed_entries:
-                    bucket.append({
-                        "title": entry["title"],
-                        "link": entry["link"],
-                        "source": feed_info["name"],
-                        "time_ago": entry["time_ago"],
-                        "icon": feed_info["icon"],
-                    })
-                if bucket:
-                    feed_buckets.append(bucket)
-        except Exception:
-            continue
+    feeds = FEEDS_BR if region == "Brasil" else FEEDS_WORLD
+    
+    with ThreadPoolExecutor(max_workers=min(8, len(feeds) or 1)) as executor:
+        results = list(executor.map(_fetch_single_news_feed, feeds))
+
+    feed_buckets = [b for b in results if b]
 
     all_entries = []
     max_len = max((len(b) for b in feed_buckets), default=0)
