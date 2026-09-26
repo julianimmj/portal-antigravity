@@ -1,7 +1,8 @@
 """
 economic_calendar.py — Agenda econômica com dados ao vivo via API pública (ForexFactory/FairEconomy).
 Busca eventos atualizados automaticamente, sem necessidade de atualização manual.
-Mantém fallback com eventos estáticos do Brasil caso a API esteja indisponível.
+Inclui eventos estáticos recorrentes como fallback para garantir que a agenda
+nunca fique vazia (ex: final de semana quando a API não tem dados futuros).
 """
 
 import streamlit as st
@@ -41,65 +42,139 @@ API_URLS = [
 ]
 
 
-# ─── Eventos complementares brasileiros (não cobertos pela API) ───
-# Esses são adicionados para garantir cobertura de indicadores BR relevantes.
-# As datas são genéricas (dia/mês) e são resolvidas para o mês/ano corrente.
-BRAZILIAN_EVENTS_TEMPLATE = [
+# ─── Eventos estáticos recorrentes (fallback / complemento) ───
+# Usados quando a API não retorna dados futuros suficientes.
+# As datas são genéricas (dia do mês) e resolvidas para o mês/ano corrente+próximo.
+RECURRING_EVENTS_TEMPLATE = [
+    # ── Brasil ──
     {
         "name": "IPCA (Inflação Oficial IBGE)",
-        "importance": "Alta",
-        "frequency": "Mensal",
-        "day_of_month": 10,
-        "time_str": "09:00",
+        "country": "Brasil", "flag": "🇧🇷",
+        "importance": "Alta", "frequency": "Mensal",
+        "day_of_month": 10, "time_str": "09:00",
     },
     {
         "name": "Ata do Copom (BCB)",
-        "importance": "Alta",
-        "frequency": "~45 dias",
-        "day_of_month": 5,
-        "time_str": "08:00",
+        "country": "Brasil", "flag": "🇧🇷",
+        "importance": "Alta", "frequency": "~45 dias",
+        "day_of_month": 5, "time_str": "08:00",
     },
     {
         "name": "IBC-Br (Prévia do PIB BCB)",
-        "importance": "Alta",
-        "frequency": "Mensal",
-        "day_of_month": 14,
-        "time_str": "09:00",
+        "country": "Brasil", "flag": "🇧🇷",
+        "importance": "Alta", "frequency": "Mensal",
+        "day_of_month": 14, "time_str": "09:00",
     },
     {
         "name": "Novo CAGED (Emprego)",
-        "importance": "Média",
-        "frequency": "Mensal",
-        "day_of_month": 27,
-        "time_str": "14:30",
+        "country": "Brasil", "flag": "🇧🇷",
+        "importance": "Média", "frequency": "Mensal",
+        "day_of_month": 27, "time_str": "14:30",
     },
     {
         "name": "Balança Comercial (Mensal)",
-        "importance": "Média",
-        "frequency": "Mensal",
-        "day_of_month": 3,
-        "time_str": "15:00",
+        "country": "Brasil", "flag": "🇧🇷",
+        "importance": "Média", "frequency": "Mensal",
+        "day_of_month": 3, "time_str": "15:00",
     },
     {
         "name": "Copom - Decisão de Juros",
-        "importance": "Alta",
-        "frequency": "~45 dias",
-        "day_of_month": 16,
-        "time_str": "18:30",
+        "country": "Brasil", "flag": "🇧🇷",
+        "importance": "Alta", "frequency": "~45 dias",
+        "day_of_month": 16, "time_str": "18:30",
     },
     {
         "name": "PIB Trimestral Brasil",
-        "importance": "Alta",
-        "frequency": "Trimestral",
-        "day_of_month": 1,
-        "time_str": "09:00",
+        "country": "Brasil", "flag": "🇧🇷",
+        "importance": "Alta", "frequency": "Trimestral",
+        "day_of_month": 1, "time_str": "09:00",
+    },
+
+    # ── Estados Unidos ──
+    {
+        "name": "Payroll (Relatório de Emprego EUA)",
+        "country": "EUA", "flag": "🇺🇸",
+        "importance": "Alta", "frequency": "Mensal",
+        "day_of_month": 4, "time_str": "09:30",
+    },
+    {
+        "name": "CPI (Inflação ao Consumidor EUA)",
+        "country": "EUA", "flag": "🇺🇸",
+        "importance": "Alta", "frequency": "Mensal",
+        "day_of_month": 12, "time_str": "09:30",
+    },
+    {
+        "name": "Vendas no Varejo (EUA)",
+        "country": "EUA", "flag": "🇺🇸",
+        "importance": "Média", "frequency": "Mensal",
+        "day_of_month": 15, "time_str": "09:30",
+    },
+    {
+        "name": "Ata do FOMC (Federal Reserve)",
+        "country": "EUA", "flag": "🇺🇸",
+        "importance": "Alta", "frequency": "~45 dias",
+        "day_of_month": 19, "time_str": "15:00",
+    },
+    {
+        "name": "PIB Trimestral EUA",
+        "country": "EUA", "flag": "🇺🇸",
+        "importance": "Alta", "frequency": "Trimestral",
+        "day_of_month": 27, "time_str": "09:30",
+    },
+    {
+        "name": "PCE (Inflação Preferida do Fed)",
+        "country": "EUA", "flag": "🇺🇸",
+        "importance": "Alta", "frequency": "Mensal",
+        "day_of_month": 28, "time_str": "09:30",
+    },
+    {
+        "name": "FOMC - Decisão de Juros EUA",
+        "country": "EUA", "flag": "🇺🇸",
+        "importance": "Alta", "frequency": "~45 dias",
+        "day_of_month": 16, "time_str": "15:00",
+    },
+
+    # ── Europa ──
+    {
+        "name": "PIB Zona do Euro",
+        "country": "Europa", "flag": "🇪🇺",
+        "importance": "Média", "frequency": "Trimestral",
+        "day_of_month": 14, "time_str": "06:00",
+    },
+    {
+        "name": "BCE - Decisão de Juros Europa",
+        "country": "Europa", "flag": "🇪🇺",
+        "importance": "Alta", "frequency": "~45 dias",
+        "day_of_month": 10, "time_str": "09:15",
+    },
+    {
+        "name": "CPI Zona do Euro",
+        "country": "Europa", "flag": "🇪🇺",
+        "importance": "Alta", "frequency": "Mensal",
+        "day_of_month": 17, "time_str": "06:00",
+    },
+
+    # ── Japão ──
+    {
+        "name": "BoJ - Decisão de Juros Japão",
+        "country": "Japão", "flag": "🇯🇵",
+        "importance": "Alta", "frequency": "~45 dias",
+        "day_of_month": 18, "time_str": "00:00",
+    },
+
+    # ── Reino Unido ──
+    {
+        "name": "BoE - Decisão de Juros UK",
+        "country": "Reino Unido", "flag": "🇬🇧",
+        "importance": "Alta", "frequency": "~45 dias",
+        "day_of_month": 5, "time_str": "08:00",
     },
 ]
 
 
-def _generate_brazilian_events(now: datetime) -> list:
+def _generate_recurring_events(now: datetime) -> list:
     """
-    Gera eventos brasileiros aproximados para o mês corrente e o próximo.
+    Gera eventos recorrentes para o mês corrente e o próximo.
     Retorna lista de eventos no formato padrão do app.
     """
     events = []
@@ -110,7 +185,7 @@ def _generate_brazilian_events(now: datetime) -> list:
             target_month -= 12
             target_year += 1
 
-        for tmpl in BRAZILIAN_EVENTS_TEMPLATE:
+        for tmpl in RECURRING_EVENTS_TEMPLATE:
             try:
                 day = tmpl["day_of_month"]
                 h, m = [int(x) for x in tmpl["time_str"].split(":")]
@@ -122,8 +197,8 @@ def _generate_brazilian_events(now: datetime) -> list:
 
                 events.append({
                     "name": tmpl["name"],
-                    "country": "Brasil",
-                    "flag": "🇧🇷",
+                    "country": tmpl["country"],
+                    "flag": tmpl["flag"],
                     "importance": tmpl["importance"],
                     "frequency": tmpl["frequency"],
                     "date": date_str,
@@ -223,37 +298,38 @@ def get_economic_calendar(include_past: bool = False) -> list:
     (da data/hora mais próxima à mais distante).
     Por padrão, oculta eventos cujas datas já ultrapassaram o dia atual.
 
-    Combina dados da API ao vivo com eventos brasileiros complementares.
+    Combina dados da API ao vivo com eventos recorrentes de fallback.
+    Quando a API tem dados futuros, eles são priorizados sobre os estáticos.
     """
     now = datetime.now(BRT)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # 1. Busca eventos da API
+    # 1. Busca eventos da API (ao vivo)
     raw_api = _fetch_api_events()
     api_events = _parse_api_events(raw_api, now)
 
-    # 2. Gera eventos brasileiros como complemento
-    br_events = _generate_brazilian_events(now)
+    # 2. Gera eventos recorrentes (fallback) para todos os países
+    recurring_events = _generate_recurring_events(now)
 
-    # Combina todos os eventos
-    all_events = api_events + br_events
+    # 3. Combina: API primeiro, depois recorrentes
+    all_events = api_events + recurring_events
 
-    # Remove duplicatas (BR estáticos vs possíveis BRL da API)
-    # Prioriza eventos da API quando existirem
+    # 4. Remove duplicatas — prioriza API sobre estáticos
+    # Chave: (país, data DD/MM, prefixo do nome) para detectar duplicatas
     seen_keys = set()
     unique_events = []
+    # Ordena por fonte (api primeiro) e depois por data
     for ev in sorted(all_events, key=lambda x: (x.get("source", "") != "api", x["dt"])):
-        # Chave: país + data (dia/mês) — evita duplicatas do mesmo evento
         key = (ev["country"], ev["date"], ev["name"][:15].lower())
         if key not in seen_keys:
             seen_keys.add(key)
             unique_events.append(ev)
 
-    # Filtra eventos passados (se solicitado)
+    # 5. Filtra eventos passados (se solicitado)
     if not include_past:
         unique_events = [e for e in unique_events if e["dt"] >= today_start]
 
-    # Ordena cronologicamente
+    # 6. Ordena cronologicamente
     unique_events.sort(key=lambda x: x["dt"])
 
     return unique_events
