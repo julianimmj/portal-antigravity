@@ -1191,7 +1191,8 @@ def page_dashboard():
         events_html = ""
         for ev in events[:10]:
             imp_class = "alta" if ev["importance"] == "Alta" else "media"
-            events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><div style="flex:1;min-width:0"><div class="cal-name">{ev["name"]}</div><div style="font-size:0.68rem;color:#00c8ff">📅 Divulgação: {ev["date_formatted"]}</div></div><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
+            est_badge = '<span style="font-size:0.55rem;color:#ffab40;background:rgba(255,171,64,0.15);border:1px solid rgba(255,171,64,0.3);padding:1px 4px;border-radius:3px;margin-left:4px;">Estimado</span>' if ev.get("source") == "estimated" else ""
+            events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><div style="flex:1;min-width:0"><div class="cal-name">{ev["name"]}{est_badge}</div><div style="font-size:0.68rem;color:#00c8ff">📅 Divulgação: {ev["date_formatted"]}</div></div><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
 
         if not events_html:
             events_html = '<div style="color:rgba(255,255,255,0.5); font-size:0.78rem; padding:0.5rem 0;">Nenhum evento agendado para os próximos dias. Atualizando em breve…</div>'
@@ -1634,7 +1635,8 @@ def page_calendar():
         for ev in events:
             imp_class = "alta" if ev["importance"] == "Alta" else "media"
             freq_text = f' ({ev["frequency"]})' if ev.get("frequency") else ""
-            st_html(f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><div style="flex:1;min-width:0"><div class="cal-name" style="font-size:0.88rem;font-weight:600;color:#fff">{ev["name"]}</div><div style="font-size:0.75rem;color:#00c8ff">📅 Divulgação: {ev["date_formatted"]}{freq_text}</div></div><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>')
+            est_badge = ' <span style="font-size:0.6rem;color:#ffab40;background:rgba(255,171,64,0.15);border:1px solid rgba(255,171,64,0.3);padding:1px 5px;border-radius:3px;margin-left:5px;">Estimado</span>' if ev.get("source") == "estimated" else ""
+            st_html(f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><div style="flex:1;min-width:0"><div class="cal-name" style="font-size:0.88rem;font-weight:600;color:#fff">{ev["name"]}{est_badge}</div><div style="font-size:0.75rem;color:#00c8ff">📅 Divulgação: {ev["date_formatted"]}{freq_text}</div></div><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>')
 
     with tab_all:
         render_events(get_economic_calendar())

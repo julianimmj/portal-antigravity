@@ -1,8 +1,14 @@
 """
-economic_calendar.py — Agenda econômica com dados ao vivo via API pública (ForexFactory/FairEconomy).
-Busca eventos atualizados automaticamente, sem necessidade de atualização manual.
-Inclui eventos estáticos recorrentes como fallback para garantir que a agenda
-nunca fique vazia (ex: final de semana quando a API não tem dados futuros).
+economic_calendar.py — Agenda econômica com dados ao vivo e fallback inteligente.
+
+Estratégia de dados em 3 camadas:
+  1. API ao vivo (ForexFactory/FairEconomy) — dados precisos e atualizados
+  2. Cache persistente (st.cache_resource) — última resposta válida da API,
+     sobrevive ao refresh da página (só perde no reboot do app)
+  3. Eventos recorrentes estimados — gerados dinamicamente para mês atual/próximo
+     com indicação visual "(Estimado)" para transparência
+
+Os eventos brasileiros SEMPRE são complementados (a API não cobre BRL).
 """
 
 import streamlit as st
@@ -42,55 +48,53 @@ API_URLS = [
 ]
 
 
-# ─── Eventos estáticos recorrentes (fallback / complemento) ───
-# Usados quando a API não retorna dados futuros suficientes.
-# As datas são genéricas (dia do mês) e resolvidas para o mês/ano corrente+próximo.
-RECURRING_EVENTS_TEMPLATE = [
-    # ── Brasil ──
+# ─── Eventos estáticos recorrentes (fallback de última instância) ───
+# Datas são APROXIMADAS (dia genérico do mês). Quando exibidos, são marcados
+# como "(Estimado)" para que o usuário saiba que a data pode variar.
+# Cobrem apenas eventos brasileiros (a API internacional não cobre BRL).
+BRAZILIAN_EVENTS_TEMPLATE = [
     {
         "name": "IPCA (Inflação Oficial IBGE)",
-        "country": "Brasil", "flag": "🇧🇷",
         "importance": "Alta", "frequency": "Mensal",
         "day_of_month": 10, "time_str": "09:00",
     },
     {
         "name": "Ata do Copom (BCB)",
-        "country": "Brasil", "flag": "🇧🇷",
         "importance": "Alta", "frequency": "~45 dias",
         "day_of_month": 5, "time_str": "08:00",
     },
     {
         "name": "IBC-Br (Prévia do PIB BCB)",
-        "country": "Brasil", "flag": "🇧🇷",
         "importance": "Alta", "frequency": "Mensal",
         "day_of_month": 14, "time_str": "09:00",
     },
     {
         "name": "Novo CAGED (Emprego)",
-        "country": "Brasil", "flag": "🇧🇷",
         "importance": "Média", "frequency": "Mensal",
         "day_of_month": 27, "time_str": "14:30",
     },
     {
         "name": "Balança Comercial (Mensal)",
-        "country": "Brasil", "flag": "🇧🇷",
         "importance": "Média", "frequency": "Mensal",
         "day_of_month": 3, "time_str": "15:00",
     },
     {
         "name": "Copom - Decisão de Juros",
-        "country": "Brasil", "flag": "🇧🇷",
         "importance": "Alta", "frequency": "~45 dias",
         "day_of_month": 16, "time_str": "18:30",
     },
     {
         "name": "PIB Trimestral Brasil",
-        "country": "Brasil", "flag": "🇧🇷",
         "importance": "Alta", "frequency": "Trimestral",
         "day_of_month": 1, "time_str": "09:00",
     },
+]
 
-    # ── Estados Unidos ──
+# ─── Eventos internacionais de fallback (última instância) ───
+# Usados SOMENTE se: API não retorna dados futuros E cache persistente está vazio.
+# Marcados com "(Estimado)" para transparência.
+INTERNATIONAL_FALLBACK_TEMPLATE = [
+    # EUA
     {
         "name": "Payroll (Relatório de Emprego EUA)",
         "country": "EUA", "flag": "🇺🇸",
@@ -133,8 +137,7 @@ RECURRING_EVENTS_TEMPLATE = [
         "importance": "Alta", "frequency": "~45 dias",
         "day_of_month": 16, "time_str": "15:00",
     },
-
-    # ── Europa ──
+    # Europa
     {
         "name": "PIB Zona do Euro",
         "country": "Europa", "flag": "🇪🇺",
@@ -153,16 +156,14 @@ RECURRING_EVENTS_TEMPLATE = [
         "importance": "Alta", "frequency": "Mensal",
         "day_of_month": 17, "time_str": "06:00",
     },
-
-    # ── Japão ──
+    # Japão
     {
         "name": "BoJ - Decisão de Juros Japão",
         "country": "Japão", "flag": "🇯🇵",
         "importance": "Alta", "frequency": "~45 dias",
         "day_of_month": 18, "time_str": "00:00",
     },
-
-    # ── Reino Unido ──
+    # Reino Unido
     {
         "name": "BoE - Decisão de Juros UK",
         "country": "Reino Unido", "flag": "🇬🇧",
@@ -172,11 +173,44 @@ RECURRING_EVENTS_TEMPLATE = [
 ]
 
 
-def _generate_recurring_events(now: datetime) -> list:
+# ─────────────────────────────────────────
+# Cache persistente (sobrevive entre page refreshes)
+# ─────────────────────────────────────────
+@st.cache_resource
+def _get_persistent_cache():
     """
-    Gera eventos recorrentes para o mês corrente e o próximo.
-    Retorna lista de eventos no formato padrão do app.
+    Armazena a última resposta válida da API com eventos futuros.
+    Usa cache_resource para persistir entre refreshes (só perde no reboot).
+    Retorna um dict mutável que funciona como storage singleton.
     """
+    return {"events": [], "fetched_at": None}
+
+
+def _save_to_persistent_cache(events: list, fetched_at: datetime):
+    """Salva eventos no cache persistente."""
+    cache = _get_persistent_cache()
+    cache["events"] = events
+    cache["fetched_at"] = fetched_at
+
+
+def _load_from_persistent_cache() -> tuple:
+    """Carrega eventos do cache persistente. Retorna (events, fetched_at)."""
+    cache = _get_persistent_cache()
+    return cache.get("events", []), cache.get("fetched_at")
+
+
+# ─────────────────────────────────────────
+# Geração de eventos estáticos (fallback)
+# ─────────────────────────────────────────
+def _generate_static_events(templates: list, country: str = None,
+                            flag: str = None, now: datetime = None) -> list:
+    """
+    Gera eventos a partir de templates para o mês corrente e o próximo.
+    Eventos gerados são marcados com source='estimated'.
+    """
+    if now is None:
+        now = datetime.now(BRT)
+
     events = []
     for month_offset in range(2):  # mês atual e próximo
         target_month = now.month + month_offset
@@ -185,41 +219,44 @@ def _generate_recurring_events(now: datetime) -> list:
             target_month -= 12
             target_year += 1
 
-        for tmpl in RECURRING_EVENTS_TEMPLATE:
+        for tmpl in templates:
             try:
                 day = tmpl["day_of_month"]
                 h, m = [int(x) for x in tmpl["time_str"].split(":")]
                 dt_obj = datetime(target_year, target_month, day, h, m, tzinfo=BRT)
 
-                # Formata data para exibição (DD/MM · HH:MM)
                 date_str = dt_obj.strftime("%d/%m")
                 date_formatted = f"{date_str} · {tmpl['time_str']}"
 
+                ev_country = tmpl.get("country", country)
+                ev_flag = tmpl.get("flag", flag)
+
                 events.append({
                     "name": tmpl["name"],
-                    "country": tmpl["country"],
-                    "flag": tmpl["flag"],
+                    "country": ev_country,
+                    "flag": ev_flag,
                     "importance": tmpl["importance"],
-                    "frequency": tmpl["frequency"],
+                    "frequency": tmpl.get("frequency", ""),
                     "date": date_str,
                     "time": tmpl["time_str"],
-                    "date_formatted": date_formatted,
+                    "date_formatted": f"~{date_formatted}",  # ~ indica estimativa
                     "dt": dt_obj,
-                    "source": "static",
+                    "source": "estimated",
                 })
             except ValueError:
-                # dia inválido para o mês (ex: 31 em fevereiro)
                 continue
 
     return events
 
 
+# ─────────────────────────────────────────
+# Fetch da API (com cache de 30 min)
+# ─────────────────────────────────────────
 @st.cache_data(ttl=1800, show_spinner=False)
 def _fetch_api_events() -> list:
     """
     Busca eventos de ambos os endpoints da API (semana atual e próxima).
     Cache de 30 minutos para não sobrecarregar a API.
-    Retorna lista combinada de eventos ou lista vazia em caso de erro.
     """
     all_events = []
     headers = {
@@ -243,13 +280,10 @@ def _fetch_api_events() -> list:
 
 
 def _parse_api_events(raw_events: list, now: datetime) -> list:
-    """
-    Converte eventos crus da API para o formato padrão do app.
-    """
+    """Converte eventos crus da API para o formato padrão do app."""
     parsed = []
     for ev in raw_events:
         try:
-            # Ignora feriados
             if ev.get("impact") == "Holiday":
                 continue
 
@@ -258,16 +292,12 @@ def _parse_api_events(raw_events: list, now: datetime) -> list:
             if not mapping:
                 continue
 
-            # Parse da data ISO 8601
             date_str_raw = ev.get("date", "")
             if not date_str_raw:
                 continue
 
-            # A API retorna datas como "2026-09-23T21:30:00-04:00" (ET)
-            # Converte para horário de Brasília
             dt_obj = datetime.fromisoformat(date_str_raw).astimezone(BRT)
 
-            # Formata para exibição
             date_display = dt_obj.strftime("%d/%m")
             time_display = dt_obj.strftime("%H:%M")
             date_formatted = f"{date_display} · {time_display}"
@@ -292,44 +322,78 @@ def _parse_api_events(raw_events: list, now: datetime) -> list:
     return parsed
 
 
+# ─────────────────────────────────────────
+# Funções públicas (interface do módulo)
+# ─────────────────────────────────────────
 def get_economic_calendar(include_past: bool = False) -> list:
     """
-    Retorna a lista de eventos econômicos ordenados cronologicamente
-    (da data/hora mais próxima à mais distante).
-    Por padrão, oculta eventos cujas datas já ultrapassaram o dia atual.
+    Retorna a lista de eventos econômicos ordenados cronologicamente.
 
-    Combina dados da API ao vivo com eventos recorrentes de fallback.
-    Quando a API tem dados futuros, eles são priorizados sobre os estáticos.
+    Estratégia de dados em 3 camadas:
+      1. API ao vivo → dados precisos com datas reais
+      2. Cache persistente → última resposta válida da API (sobrevive refreshes)
+      3. Eventos estimados → datas aproximadas, marcados com "~" na data
+
+    Eventos brasileiros são SEMPRE incluídos como complemento (API não cobre BRL).
     """
     now = datetime.now(BRT)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # 1. Busca eventos da API (ao vivo)
+    # ── Camada 1: API ao vivo ──
     raw_api = _fetch_api_events()
     api_events = _parse_api_events(raw_api, now)
 
-    # 2. Gera eventos recorrentes (fallback) para todos os países
-    recurring_events = _generate_recurring_events(now)
+    # Filtra apenas eventos futuros da API
+    api_future = [e for e in api_events if e["dt"] >= today_start]
 
-    # 3. Combina: API primeiro, depois recorrentes
-    all_events = api_events + recurring_events
+    # Se a API tem eventos internacionais futuros, salva no cache persistente
+    api_intl_future = [e for e in api_future if e["country"] != "Brasil"]
+    if api_intl_future:
+        _save_to_persistent_cache(api_events, now)
 
-    # 4. Remove duplicatas — prioriza API sobre estáticos
-    # Chave: (país, data DD/MM, prefixo do nome) para detectar duplicatas
+    # ── Decidir fonte de dados internacionais ──
+    intl_events = []
+
+    if api_intl_future:
+        # Camada 1: API tem dados futuros → usar API
+        intl_events = api_events
+    else:
+        # Camada 2: Tentar cache persistente
+        cached_events, cached_at = _load_from_persistent_cache()
+        cached_future = [e for e in cached_events
+                         if e["dt"] >= today_start and e["country"] != "Brasil"]
+        if cached_future:
+            intl_events = cached_events
+        else:
+            # Camada 3: Fallback com eventos estimados (marcados com ~)
+            intl_events = _generate_static_events(
+                INTERNATIONAL_FALLBACK_TEMPLATE, now=now
+            )
+
+    # ── Eventos brasileiros (sempre complementares) ──
+    br_events = _generate_static_events(
+        BRAZILIAN_EVENTS_TEMPLATE, country="Brasil", flag="🇧🇷", now=now
+    )
+
+    # ── Combina tudo ──
+    all_events = intl_events + br_events
+
+    # ── Remove duplicatas (prioriza API > cache > estimated) ──
+    source_priority = {"api": 0, "cached": 1, "estimated": 2, "static": 2}
     seen_keys = set()
     unique_events = []
-    # Ordena por fonte (api primeiro) e depois por data
-    for ev in sorted(all_events, key=lambda x: (x.get("source", "") != "api", x["dt"])):
-        key = (ev["country"], ev["date"], ev["name"][:15].lower())
+    for ev in sorted(all_events,
+                     key=lambda x: (source_priority.get(x.get("source", ""), 9), x["dt"])):
+        key = (ev["country"], ev["date"].lstrip("~"), ev["name"][:15].lower())
         if key not in seen_keys:
             seen_keys.add(key)
             unique_events.append(ev)
 
-    # 5. Filtra eventos passados (se solicitado)
+    # ── Filtra eventos passados ──
     if not include_past:
         unique_events = [e for e in unique_events if e["dt"] >= today_start]
 
-    # 6. Ordena cronologicamente
+    # ── Ordena cronologicamente ──
     unique_events.sort(key=lambda x: x["dt"])
 
     return unique_events
