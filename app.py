@@ -1193,6 +1193,9 @@ def page_dashboard():
             imp_class = "alta" if ev["importance"] == "Alta" else "media"
             events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><div style="flex:1;min-width:0"><div class="cal-name">{ev["name"]}</div><div style="font-size:0.68rem;color:#00c8ff">📅 Divulgação: {ev["date_formatted"]}</div></div><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
 
+        if not events_html:
+            events_html = '<div style="color:rgba(255,255,255,0.5); font-size:0.78rem; padding:0.5rem 0;">Nenhum evento agendado para os próximos dias. Atualizando em breve…</div>'
+
         st_html(f"""
         <div class="section-panel">
             <div class="section-title">📅 Agenda Econômica</div>
@@ -1625,9 +1628,13 @@ def page_calendar():
     tab_all, tab_br, tab_eua, tab_global = st.tabs(["📋 Todos", "Brasil", "EUA", "🌎 Global"])
 
     def render_events(events):
+        if not events:
+            st_html('<div style="color:rgba(255,255,255,0.5); font-size:0.8rem; padding:0.5rem 0;">Nenhum evento encontrado neste período.</div>')
+            return
         for ev in events:
             imp_class = "alta" if ev["importance"] == "Alta" else "media"
-            st_html(f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><div style="flex:1;min-width:0"><div class="cal-name" style="font-size:0.88rem;font-weight:600;color:#fff">{ev["name"]}</div><div style="font-size:0.75rem;color:#00c8ff">📅 Divulgação: {ev["date_formatted"]} ({ev["frequency"]})</div></div><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>')
+            freq_text = f' ({ev["frequency"]})' if ev.get("frequency") else ""
+            st_html(f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><div style="flex:1;min-width:0"><div class="cal-name" style="font-size:0.88rem;font-weight:600;color:#fff">{ev["name"]}</div><div style="font-size:0.75rem;color:#00c8ff">📅 Divulgação: {ev["date_formatted"]}{freq_text}</div></div><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>')
 
     with tab_all:
         render_events(get_economic_calendar())
@@ -1636,7 +1643,7 @@ def page_calendar():
     with tab_eua:
         render_events(get_events_by_country("EUA"))
     with tab_global:
-        global_events = [e for e in get_economic_calendar() if e["country"] in ("Europa", "Japão")]
+        global_events = [e for e in get_economic_calendar() if e["country"] not in ("Brasil", "EUA")]
         render_events(global_events)
 
 
