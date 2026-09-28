@@ -1187,9 +1187,29 @@ def page_dashboard():
 
     # ── Col 3: 📅 Agenda Econômica ──
     with col_agenda:
-        events = get_economic_calendar()
+        all_cal = get_economic_calendar()
+        # Filtra eventos de alta e média relevância para a visão do painel
+        relevant = [e for e in all_cal if e.get("importance") in ("Alta", "Média")]
+        if not relevant:
+            relevant = all_cal
+
+        # Garante visibilidade balanceada: Brasil + Internacional no painel principal
+        br_top = [e for e in relevant if e.get("country") == "Brasil"][:5]
+        intl_top = [e for e in relevant if e.get("country") != "Brasil"][:5]
+        dashboard_events = sorted(br_top + intl_top, key=lambda x: x["dt"])
+        if len(dashboard_events) < 10:
+            seen_ids = {(e["country"], e["date"], e["name"]) for e in dashboard_events}
+            for e in relevant:
+                k = (e["country"], e["date"], e["name"])
+                if k not in seen_ids:
+                    dashboard_events.append(e)
+                    seen_ids.add(k)
+                    if len(dashboard_events) >= 10:
+                        break
+            dashboard_events.sort(key=lambda x: x["dt"])
+
         events_html = ""
-        for ev in events[:10]:
+        for ev in dashboard_events[:10]:
             imp_class = "alta" if ev["importance"] == "Alta" else "media"
             est_badge = '<span style="font-size:0.55rem;color:#ffab40;background:rgba(255,171,64,0.15);border:1px solid rgba(255,171,64,0.3);padding:1px 4px;border-radius:3px;margin-left:4px;">Estimado</span>' if ev.get("source") == "estimated" else ""
             events_html += f'<div class="cal-event"><span class="cal-flag">{ev["flag"]}</span><div style="flex:1;min-width:0"><div class="cal-name">{ev["name"]}{est_badge}</div><div style="font-size:0.68rem;color:#00c8ff">📅 Divulgação: {ev["date_formatted"]}</div></div><span class="cal-importance {imp_class}">{ev["importance"]}</span></div>'
@@ -1626,7 +1646,7 @@ def page_calendar():
     st.markdown("### 📅 Agenda Econômica")
     st.caption("Datas e horários exatos de divulgação dos principais eventos macroeconômicos.")
 
-    tab_all, tab_br, tab_eua, tab_global = st.tabs(["📋 Todos", "Brasil", "EUA", "🌎 Global"])
+    tab_all, tab_br, tab_eua, tab_global = st.tabs(["📋 Todos", "🇧🇷 Brasil", "🇺🇸 EUA", "🌎 Global"])
 
     def render_events(events):
         if not events:

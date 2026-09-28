@@ -1,17 +1,20 @@
 """
-economic_calendar.py — Agenda econômica com dados ao vivo e cache de fim de semana.
+economic_calendar.py — Agenda econômica com dados ao vivo, API oficial IBGE e cache de fim de semana.
 
 Estratégia:
-  - Dias úteis (seg-sex): busca dados frescos da API a cada 30 minutos
-  - Fim de semana (sáb-dom): mantém os dados obtidos na sexta-feira,
-    sem tentar atualizar (a API não publica dados novos no fim de semana)
-  - Após reboot no fim de semana: tenta API; se vazia, usa fallback estimado
-    marcado com badge "Estimado" para transparência
-  - Eventos brasileiros: sempre complementados via template (API não cobre BRL)
+  - Dias úteis (seg-sex): busca dados frescos da API internacional (30min) e IBGE (1h)
+  - Fim de semana (sáb-dom): mantém os dados obtidos na sexta-feira sem tentar atualizar
+  - Eventos brasileiros:
+      1. API Oficial do IBGE (ao vivo: IPCA, PNAD Desemprego, PIB, Indústria, Varejo, Serviços)
+      2. Eventos semanais recorrentes do BCB (Boletim Focus seg 08:25, Fluxo Cambial qua 14:30)
+      3. Calendário Copom, Ata, IBC-Br, Novo CAGED, IGP-M e Balança Comercial
+  - Fallback internacional: eventos estimados caso a API internacional esteja indisponível
 """
 
 import streamlit as st
 import requests
+import csv
+import io
 from datetime import datetime, timedelta, timezone
 
 
@@ -40,31 +43,11 @@ IMPACT_MAP = {
 # ─── Fuso horário de Brasília (UTC-3) ───
 BRT = timezone(timedelta(hours=-3))
 
-# ─── URLs da API pública ───
-API_URLS = [
-    "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
-    "https://nfs.faireconomy.media/ff_calendar_nextweek.json",
-]
+# ─── URLs da API internacional (ForexFactory via CDN) ───
+API_URL_JSON = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
+API_URL_CSV = "https://nfs.faireconomy.media/ff_calendar_thisweek.csv"
 
-# ─── Eventos brasileiros recorrentes (API não cobre BRL) ───
-BRAZILIAN_EVENTS_TEMPLATE = [
-    {"name": "IPCA (Inflação Oficial IBGE)", "importance": "Alta",
-     "frequency": "Mensal", "day_of_month": 10, "time_str": "09:00"},
-    {"name": "Ata do Copom (BCB)", "importance": "Alta",
-     "frequency": "~45 dias", "day_of_month": 5, "time_str": "08:00"},
-    {"name": "IBC-Br (Prévia do PIB BCB)", "importance": "Alta",
-     "frequency": "Mensal", "day_of_month": 14, "time_str": "09:00"},
-    {"name": "Novo CAGED (Emprego)", "importance": "Média",
-     "frequency": "Mensal", "day_of_month": 27, "time_str": "14:30"},
-    {"name": "Balança Comercial (Mensal)", "importance": "Média",
-     "frequency": "Mensal", "day_of_month": 3, "time_str": "15:00"},
-    {"name": "Copom - Decisão de Juros", "importance": "Alta",
-     "frequency": "~45 dias", "day_of_month": 16, "time_str": "18:30"},
-    {"name": "PIB Trimestral Brasil", "importance": "Alta",
-     "frequency": "Trimestral", "day_of_month": 1, "time_str": "09:00"},
-]
-
-# ─── Fallback internacional (última instância, após reboot no fim de semana) ───
+# ─── Fallback internacional (usado em caso de indisponibilidade da API) ───
 INTERNATIONAL_FALLBACK_TEMPLATE = [
     {"name": "Payroll (Relatório de Emprego EUA)", "country": "EUA",
      "flag": "🇺🇸", "importance": "Alta", "frequency": "Mensal",
@@ -104,16 +87,37 @@ INTERNATIONAL_FALLBACK_TEMPLATE = [
      "day_of_month": 5, "time_str": "08:00"},
 ]
 
+# ─── Template de eventos brasileiros complementares (BCB, FGV, MDIC) ───
+BRAZILIAN_EVENTS_TEMPLATE = [
+    {"name": "Copom - Decisão de Juros", "importance": "Alta",
+     "frequency": "~45 dias", "day_of_month": 16, "time_str": "18:30"},
+    {"name": "Ata do Copom (BCB)", "importance": "Alta",
+     "frequency": "~45 dias", "day_of_month": 5, "time_str": "08:00"},
+    {"name": "IBC-Br (Prévia do PIB BCB)", "importance": "Alta",
+     "frequency": "Mensal", "day_of_month": 14, "time_str": "09:00"},
+    {"name": "Novo CAGED (Emprego MTE)", "importance": "Média",
+     "frequency": "Mensal", "day_of_month": 28, "time_str": "14:30"},
+    {"name": "Balança Comercial (Mensal Secex)", "importance": "Média",
+     "frequency": "Mensal", "day_of_month": 3, "time_str": "15:00"},
+    {"name": "IGP-M (Inflação FGV)", "importance": "Alta",
+     "frequency": "Mensal", "day_of_month": 29, "time_str": "08:00"},
+    {"name": "PIB Trimestral Brasil", "importance": "Alta",
+     "frequency": "Trimestral", "day_of_month": 1, "time_str": "09:00"},
+    {"name": "IPCA (Inflação Oficial IBGE)", "importance": "Alta",
+     "frequency": "Mensal", "day_of_month": 10, "time_str": "09:00"},
+    {"name": "Taxa de Desemprego (PNAD Contínua)", "importance": "Alta",
+     "frequency": "Mensal", "day_of_month": 29, "time_str": "09:00"},
+]
+
 
 # ─────────────────────────────────────────
-# Store persistente (sobrevive entre page refreshes, perde no reboot)
+# Store persistente (sobrevive entre page refreshes)
 # ─────────────────────────────────────────
 @st.cache_resource
 def _get_event_store():
     """
-    Singleton que armazena os dados da API entre refreshes da página.
-    Funciona como a "memória" do módulo entre sessões do usuário.
-    Só é limpo quando o app é reiniciado (reboot).
+    Singleton que armazena os dados da API internacional entre refreshes da página.
+    Funciona como memória do módulo entre sessões do usuário.
     """
     return {"parsed_events": [], "fetched_at": None}
 
@@ -125,51 +129,72 @@ def _is_weekend(now: datetime) -> bool:
 
 def _should_fetch_from_api(now: datetime) -> bool:
     """
-    Decide se deve buscar dados frescos da API.
-
-    Regras:
-      - Store vazio → sempre busca (primeiro acesso ou pós-reboot)
-      - Fim de semana → NÃO busca (mantém dados de sexta)
-      - Dia útil + dados com mais de 30min → busca
-      - Dia útil + dados frescos → não busca
+    Decide se deve buscar dados frescos da API internacional.
+    - Store vazio → sempre busca
+    - Fim de semana → NÃO busca (mantém dados de sexta)
+    - Dia útil + dados >30min → busca
     """
     store = _get_event_store()
-
-    # Store vazio: sempre tenta buscar
     if not store["parsed_events"] or store["fetched_at"] is None:
         return True
-
-    # Fim de semana: mantém dados da sexta
     if _is_weekend(now):
         return False
-
-    # Dia útil: refresh a cada 30 minutos
     elapsed = (now - store["fetched_at"]).total_seconds()
     return elapsed > 1800
 
 
 # ─────────────────────────────────────────
-# Fetch e parse da API
+# Fetch da API Internacional (JSON com fallback para CSV)
 # ─────────────────────────────────────────
 def _fetch_raw_api() -> list:
-    """Busca eventos crus de ambos endpoints da API."""
-    all_events = []
+    """Busca eventos da API internacional (JSON com fallback para CSV)."""
     headers = {
-        "User-Agent": "TraderSupport/1.0 (Economic Calendar Widget)",
-        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/csv, */*",
     }
-    for url in API_URLS:
-        try:
-            resp = requests.get(url, timeout=15, headers=headers)
-            if resp.status_code == 200:
-                text = resp.text.strip()
-                if text and text.startswith("["):
-                    data = resp.json()
-                    if isinstance(data, list):
-                        all_events.extend(data)
-        except Exception:
-            continue
-    return all_events
+
+    # Tentativa 1: Endpoint JSON
+    try:
+        resp = requests.get(API_URL_JSON, timeout=8, headers=headers)
+        if resp.status_code == 200:
+            text = resp.text.strip()
+            if text and text.startswith("["):
+                data = resp.json()
+                if isinstance(data, list) and len(data) > 0:
+                    return data
+    except Exception:
+        pass
+
+    # Tentativa 2: Endpoint CSV (fallback caso JSON esteja com rate-limit)
+    try:
+        resp = requests.get(API_URL_CSV, timeout=8, headers=headers)
+        if resp.status_code == 200:
+            reader = csv.DictReader(io.StringIO(resp.text))
+            csv_rows = []
+            for row in reader:
+                # Converte formato CSV para o mesmo formato do JSON
+                date_val = row.get("Date", "")
+                time_val = row.get("Time", "")
+                if not date_val or not time_val or time_val.lower() in ("all day", "tentative"):
+                    continue
+                try:
+                    dt_naive = datetime.strptime(f"{date_val} {time_val.upper()}", "%m-%d-%Y %I:%M%p")
+                    # FairEconomy usa horário do leste americano (ET, UTC-4 no horário de verão)
+                    dt_iso = dt_naive.replace(tzinfo=timezone(timedelta(hours=-4))).isoformat()
+                    csv_rows.append({
+                        "title": row.get("Title", ""),
+                        "country": row.get("Country", ""),
+                        "impact": row.get("Impact", ""),
+                        "date": dt_iso,
+                    })
+                except Exception:
+                    continue
+            if csv_rows:
+                return csv_rows
+    except Exception:
+        pass
+
+    return []
 
 
 def _parse_api_events(raw_events: list) -> list:
@@ -209,34 +234,200 @@ def _parse_api_events(raw_events: list) -> list:
 
 
 def _get_api_events(now: datetime) -> list:
-    """
-    Obtém eventos internacionais da API com lógica de cache inteligente.
-
-    Durante a semana: atualiza a cada 30min e armazena no store.
-    No fim de semana: retorna os dados armazenados de sexta-feira.
-    Após reboot: tenta API; se vazia, store está vazio → retorna [].
-    """
+    """Obtém eventos internacionais com cache inteligente de fim de semana."""
     store = _get_event_store()
-
     if _should_fetch_from_api(now):
         raw = _fetch_raw_api()
         parsed = _parse_api_events(raw)
-
-        # Só atualiza o store se a API retornou dados
         if parsed:
             store["parsed_events"] = parsed
             store["fetched_at"] = now
 
-    return list(store["parsed_events"])  # cópia para evitar mutação
+    return list(store["parsed_events"])
 
 
 # ─────────────────────────────────────────
-# Geração de eventos estáticos
+# Eventos do Brasil (API Oficial IBGE + BCB Semanal + Complementos)
+# ─────────────────────────────────────────
+@st.cache_data(ttl=3600, show_spinner=False)
+def _fetch_ibge_events() -> list:
+    """
+    Busca divulgações econômicas oficiais do calendário público do IBGE.
+    Cobre: IPCA, IPCA-15, PNAD Contínua (Desemprego), PIB, PIM-PF, PMC, PMS, IPP.
+    """
+    now = datetime.now(BRT)
+    today_str = (now - timedelta(days=2)).strftime("%Y-%m-%d")
+    future_str = (now + timedelta(days=45)).strftime("%Y-%m-%d")
+    url = f"https://servicodados.ibge.gov.br/api/v3/calendario/?de={today_str}&ate={future_str}"
+
+    KEY_SERIES = [
+        ("Índice Nacional de Preços ao Consumidor Amplo 15", "IPCA-15 (Prévia da Inflação IBGE)", "Alta", "Mensal"),
+        ("Índice Nacional de Preços ao Consumidor Amplo", "IPCA (Inflação Oficial IBGE)", "Alta", "Mensal"),
+        ("Pesquisa Nacional por Amostra de Domicílios Contínua Mensal", "Taxa de Desemprego (PNAD Contínua IBGE)", "Alta", "Mensal"),
+        ("Contas Nacionais Trimestrais", "PIB Trimestral Brasil (IBGE)", "Alta", "Trimestral"),
+        ("Pesquisa Industrial Mensal: Produção Física", "Produção Industrial (PIM-PF IBGE)", "Média", "Mensal"),
+        ("Pesquisa Mensal de Comércio", "Vendas no Varejo (PMC IBGE)", "Média", "Mensal"),
+        ("Pesquisa Mensal de Serviços", "Volume de Serviços (PMS IBGE)", "Média", "Mensal"),
+        ("Índice de Preços ao Produtor", "IPP - Preços ao Produtor (IBGE)", "Média", "Mensal"),
+    ]
+
+    events = []
+    seen = set()
+    try:
+        resp = requests.get(url, timeout=8)
+        if resp.status_code == 200:
+            data = resp.json()
+            for item in data.get("items", []):
+                titulo = item.get("titulo", "")
+                matched = None
+                for key_search, name, imp, freq in KEY_SERIES:
+                    if key_search.lower() in titulo.lower():
+                        matched = (name, imp, freq)
+                        break
+                if not matched:
+                    continue
+
+                raw_dt = item.get("data_divulgacao", "")
+                try:
+                    dt_obj = datetime.strptime(raw_dt, "%d/%m/%Y %H:%M:%S").replace(
+                        tzinfo=BRT, hour=9, minute=0, second=0
+                    )
+                except Exception:
+                    continue
+
+                key = (matched[0], dt_obj.strftime("%Y-%m-%d"))
+                if key in seen:
+                    continue
+                seen.add(key)
+
+                d_str = dt_obj.strftime("%d/%m")
+                events.append({
+                    "name": matched[0],
+                    "country": "Brasil",
+                    "flag": "🇧🇷",
+                    "importance": matched[1],
+                    "frequency": matched[2],
+                    "date": d_str,
+                    "time": "09:00",
+                    "date_formatted": f"{d_str} · 09:00",
+                    "dt": dt_obj,
+                    "source": "api",
+                })
+    except Exception:
+        pass
+
+    return events
+
+
+def _get_brazilian_weekly_events(now: datetime) -> list:
+    """
+    Gera os eventos semanais regulares do Banco Central do Brasil:
+      - Boletim Focus: toda segunda-feira às 08:25
+      - Fluxo Cambial Estrangeiro: toda quarta-feira às 14:30
+    """
+    events = []
+    for d in range(45):
+        day = now + timedelta(days=d)
+        d_str = day.strftime("%d/%m")
+        if day.weekday() == 0:  # Segunda-feira
+            dt_focus = day.replace(hour=8, minute=25, second=0, microsecond=0)
+            events.append({
+                "name": "Boletim Focus (Expectativas BCB)",
+                "country": "Brasil",
+                "flag": "🇧🇷",
+                "importance": "Alta",
+                "frequency": "Semanal",
+                "date": d_str,
+                "time": "08:25",
+                "date_formatted": f"{d_str} · 08:25",
+                "dt": dt_focus,
+                "source": "api",
+            })
+        elif day.weekday() == 2:  # Quarta-feira
+            dt_fluxo = day.replace(hour=14, minute=30, second=0, microsecond=0)
+            events.append({
+                "name": "Fluxo Cambial Estrangeiro (BCB)",
+                "country": "Brasil",
+                "flag": "🇧🇷",
+                "importance": "Média",
+                "frequency": "Semanal",
+                "date": d_str,
+                "time": "14:30",
+                "date_formatted": f"{d_str} · 14:30",
+                "dt": dt_fluxo,
+                "source": "api",
+            })
+    return events
+
+
+def _get_brazilian_events(now: datetime) -> list:
+    """
+    Combina:
+      1. API ao vivo do IBGE (datas oficiais e exatas)
+      2. Eventos semanais recorrentes do BCB (Focus, Fluxo Cambial)
+      3. Calendário complementar (Copom, Ata, IBC-Br, Novo CAGED, IGP-M, etc.)
+    """
+    ibge_events = _fetch_ibge_events()
+    weekly_events = _get_brazilian_weekly_events(now)
+
+    # Identifica indicadores já cobertos pela API do IBGE neste mês
+    covered_in_month = set()
+    for ev in ibge_events:
+        # Usa os primeiros 6 caracteres do nome como chave (ex: 'ipca (', 'taxa d')
+        covered_in_month.add((ev["name"][:6].lower(), ev["dt"].year, ev["dt"].month))
+
+    tmpl_events = []
+    for month_offset in range(2):
+        t_month = now.month + month_offset
+        t_year = now.year
+        if t_month > 12:
+            t_month -= 12
+            t_year += 1
+
+        for tmpl in BRAZILIAN_EVENTS_TEMPLATE:
+            # Se a API já trouxe a data real desse indicador neste mês, pula o template
+            if (tmpl["name"][:6].lower(), t_year, t_month) in covered_in_month:
+                continue
+
+            try:
+                day = tmpl["day_of_month"]
+                h, m = [int(x) for x in tmpl["time_str"].split(":")]
+                dt_obj = datetime(t_year, t_month, day, h, m, tzinfo=BRT)
+                d_str = dt_obj.strftime("%d/%m")
+                tmpl_events.append({
+                    "name": tmpl["name"],
+                    "country": "Brasil",
+                    "flag": "🇧🇷",
+                    "importance": tmpl["importance"],
+                    "frequency": tmpl.get("frequency", ""),
+                    "date": d_str,
+                    "time": tmpl["time_str"],
+                    "date_formatted": f"~{d_str} · {tmpl['time_str']}",
+                    "dt": dt_obj,
+                    "source": "estimated",
+                })
+            except ValueError:
+                continue
+
+    combined = ibge_events + weekly_events + tmpl_events
+    unique = []
+    seen = set()
+    for ev in sorted(combined, key=lambda x: (x.get("source") != "api", x["dt"])):
+        key = (ev["name"][:12].lower(), ev["date"].lstrip("~"))
+        if key not in seen:
+            seen.add(key)
+            unique.append(ev)
+
+    return unique
+
+
+# ─────────────────────────────────────────
+# Geração de eventos estáticos de fallback internacional
 # ─────────────────────────────────────────
 def _generate_static_events(templates: list, country: str = None,
                             flag: str = None, now: datetime = None,
                             source: str = "estimated") -> list:
-    """Gera eventos a partir de templates para mês atual e próximo."""
+    """Gera eventos a partir de templates para o mês atual e o próximo."""
     if now is None:
         now = datetime.now(BRT)
 
@@ -257,8 +448,6 @@ def _generate_static_events(templates: list, country: str = None,
                 date_str = dt_obj.strftime("%d/%m")
                 ev_country = tmpl.get("country", country)
                 ev_flag = tmpl.get("flag", flag)
-
-                # Prefixo "~" apenas para eventos estimados
                 date_prefix = "~" if source == "estimated" else ""
 
                 events.append({
@@ -283,37 +472,32 @@ def _generate_static_events(templates: list, country: str = None,
 # ─────────────────────────────────────────
 def get_economic_calendar(include_past: bool = False) -> list:
     """
-    Retorna eventos econômicos ordenados cronologicamente.
+    Retorna a lista completa de eventos econômicos ordenados cronologicamente.
 
-    Fluxo:
-      Seg-Sex: API fresca (30min cache) → dados reais da semana
-      Sáb-Dom: Dados replicados de sexta (sem nova consulta à API)
-      Reboot no fim de semana: tenta API → se vazia, usa fallback estimado
-      Brasil: sempre via template (API não cobre BRL)
+    Fontes de dados:
+      - Internacional: API ao vivo com cache de 30min / persistência no fim de semana
+      - Brasil: API oficial IBGE + Banco Central do Brasil semanal + Copom / FGV
+      - Fallback: estimativas para dias sem conexão à API
     """
     now = datetime.now(BRT)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # ── Eventos internacionais (API + cache de fim de semana) ──
+    # 1. Eventos internacionais
     intl_events = _get_api_events(now)
-
-    # Se após tudo não há eventos internacionais futuros,
-    # usa fallback estimado (marcado com badge "Estimado")
     intl_future = [e for e in intl_events if e["dt"] >= today_start]
     if not intl_future:
         intl_events = _generate_static_events(
             INTERNATIONAL_FALLBACK_TEMPLATE, now=now, source="estimated"
         )
 
-    # ── Eventos brasileiros (sempre complementares) ──
-    br_events = _generate_static_events(
-        BRAZILIAN_EVENTS_TEMPLATE,
-        country="Brasil", flag="🇧🇷", now=now, source="estimated"
-    )
+    # 2. Eventos brasileiros (IBGE ao vivo + BCB semanal + complementos)
+    br_events = _get_brazilian_events(now)
 
-    # ── Combina e remove duplicatas ──
+    # 3. Combina tudo
     all_events = intl_events + br_events
-    source_priority = {"api": 0, "estimated": 1}
+
+    # 4. Remove duplicatas (prioriza api > cached > estimated)
+    source_priority = {"api": 0, "cached": 1, "estimated": 2, "static": 2}
     seen_keys = set()
     unique_events = []
     for ev in sorted(all_events,
@@ -323,7 +507,7 @@ def get_economic_calendar(include_past: bool = False) -> list:
             seen_keys.add(key)
             unique_events.append(ev)
 
-    # ── Filtra passados ──
+    # 5. Filtra passados
     if not include_past:
         unique_events = [e for e in unique_events if e["dt"] >= today_start]
 
