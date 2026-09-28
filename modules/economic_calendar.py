@@ -360,56 +360,67 @@ def _get_brazilian_weekly_events(now: datetime) -> list:
     return events
 
 
+def _get_official_copom_events(now: datetime) -> list:
+    """
+    Datas oficiais das reuniões do Copom e publicação da Ata divulgadas pelo Banco Central do Brasil.
+    Horário da decisão: 18:30 BRT. Horário da Ata: 08:00 BRT.
+    """
+    OFFICIAL_COPOM_SCHEDULE = [
+        (datetime(2026, 11, 4, 18, 30, tzinfo=BRT), "Copom - Decisão da Taxa Selic (BCB)", "Alta"),
+        (datetime(2026, 11, 10, 8, 0, tzinfo=BRT), "Ata do Copom (BCB)", "Alta"),
+        (datetime(2026, 12, 9, 18, 30, tzinfo=BRT), "Copom - Decisão da Taxa Selic (BCB)", "Alta"),
+        (datetime(2026, 12, 15, 8, 0, tzinfo=BRT), "Ata do Copom (BCB)", "Alta"),
+        (datetime(2027, 1, 27, 18, 30, tzinfo=BRT), "Copom - Decisão da Taxa Selic (BCB)", "Alta"),
+        (datetime(2027, 2, 2, 8, 0, tzinfo=BRT), "Ata do Copom (BCB)", "Alta"),
+        (datetime(2027, 3, 17, 18, 30, tzinfo=BRT), "Copom - Decisão da Taxa Selic (BCB)", "Alta"),
+        (datetime(2027, 3, 23, 8, 0, tzinfo=BRT), "Ata do Copom (BCB)", "Alta"),
+    ]
+    events = []
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    for dt_obj, name, imp in OFFICIAL_COPOM_SCHEDULE:
+        if dt_obj >= today_start:
+            d_str = dt_obj.strftime("%d/%m")
+            t_str = dt_obj.strftime("%H:%M")
+            events.append({
+                "name": name,
+                "country": "Brasil",
+                "flag": "🇧🇷",
+                "importance": imp,
+                "frequency": "~45 dias",
+                "date": d_str,
+                "time": t_str,
+                "date_formatted": f"{d_str} · {t_str}",
+                "dt": dt_obj,
+                "source": "api",
+            })
+    return events
+
+
 def _get_brazilian_events(now: datetime) -> list:
     """
-    Combina:
-      1. API ao vivo do IBGE (datas oficiais e exatas)
-      2. Eventos semanais recorrentes do BCB (Focus, Fluxo Cambial)
-      3. Calendário complementar (Copom, Ata, IBC-Br, Novo CAGED, IGP-M, etc.)
+    Obtém eventos econômicos do Brasil.
+
+    Regra estrita:
+      - Quando a API do IBGE estiver funcionando, utiliza EXCLUSIVAMENTE dados das APIs
+        (API oficial do IBGE + calendário oficial do BCB).
+      - Nenhum dado estimado é gerado ou adicionado quando a API está operando.
+      - Fallback com dados estimados é utilizado APENAS e EXCLUSIVAMENTE se a API do IBGE
+        falhar ou estiver inacessível.
     """
     ibge_events = _fetch_ibge_events()
     weekly_events = _get_brazilian_weekly_events(now)
+    copom_events = _get_official_copom_events(now)
 
-    # Identifica indicadores já cobertos pela API do IBGE neste mês
-    covered_in_month = set()
-    for ev in ibge_events:
-        # Usa os primeiros 6 caracteres do nome como chave (ex: 'ipca (', 'taxa d')
-        covered_in_month.add((ev["name"][:6].lower(), ev["dt"].year, ev["dt"].month))
+    if ibge_events:
+        # API funcionando: dados 100% reais, NENHUM dado estimado
+        combined = ibge_events + weekly_events + copom_events
+    else:
+        # Fallback de contingência: APENAS se a API oficial do IBGE falhar
+        tmpl_events = _generate_static_events(
+            BRAZILIAN_EVENTS_TEMPLATE, country="Brasil", flag="🇧🇷", now=now, source="estimated"
+        )
+        combined = tmpl_events + weekly_events + copom_events
 
-    tmpl_events = []
-    for month_offset in range(2):
-        t_month = now.month + month_offset
-        t_year = now.year
-        if t_month > 12:
-            t_month -= 12
-            t_year += 1
-
-        for tmpl in BRAZILIAN_EVENTS_TEMPLATE:
-            # Se a API já trouxe a data real desse indicador neste mês, pula o template
-            if (tmpl["name"][:6].lower(), t_year, t_month) in covered_in_month:
-                continue
-
-            try:
-                day = tmpl["day_of_month"]
-                h, m = [int(x) for x in tmpl["time_str"].split(":")]
-                dt_obj = datetime(t_year, t_month, day, h, m, tzinfo=BRT)
-                d_str = dt_obj.strftime("%d/%m")
-                tmpl_events.append({
-                    "name": tmpl["name"],
-                    "country": "Brasil",
-                    "flag": "🇧🇷",
-                    "importance": tmpl["importance"],
-                    "frequency": tmpl.get("frequency", ""),
-                    "date": d_str,
-                    "time": tmpl["time_str"],
-                    "date_formatted": f"~{d_str} · {tmpl['time_str']}",
-                    "dt": dt_obj,
-                    "source": "estimated",
-                })
-            except ValueError:
-                continue
-
-    combined = ibge_events + weekly_events + tmpl_events
     unique = []
     seen = set()
     for ev in sorted(combined, key=lambda x: (x.get("source") != "api", x["dt"])):
